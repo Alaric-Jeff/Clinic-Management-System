@@ -1,5 +1,5 @@
 {
-  "name": "Clinic Management System",
+  "name": "Clinic-Management-System",
   "version": "1.0.0",
   "description": "Clinic Management System for leonardo medical services.",
   "main": "./src/server.ts",
@@ -27,7 +27,8 @@
     "@sinclair/typebox": "^0.34.41",
     "dotenv": "^17.2.2",
     "fastify": "^5.6.1",
-    "nodemailer": "^6.9.15"
+    "fastify-plugin": "^5.0.1",
+    "nodemailer": "7.0.6"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",

@@ -13,3 +13,65 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  admin
+  encoder
+}
+
+enum Service_Categories {
+    Hematology,
+    Bacteriology,
+    ClinicalMicroscopy,
+    TwentyFourHourUrineTest,
+    SerologyAndImmunology,
+    ClinicalChemistry,]
+    Electrolytes,
+    Vaccine,
+    Hispatology,
+    ToBeReadByPathologist,
+    TumorMarkers,
+    ThyroidFunctionTest,
+    Hormones,
+    Hepatitis,
+    Enzymes,
+    Others
+}
+
+
+model Accounts_Table {
+  account_id 
+  first_name
+  last_name
+  middle_name
+  email
+  password
+  role
+}
+
+model Patients_Table {
+  patient_id
+  first_name
+  last_name
+  middle_name
+  birth_date
+  csd_id_or_pwd_id 
+  mobile_number
+  residentual_address
+  is_archived
+  created_by
+  last_updated_by
+  created_at
+  updated_at
+}
+
+model Services_Table {
+  services_id
+  service_name
+  service_category
+  service_price
+  is_activated
+  is_available
+  created_at
+  last_updated_by
+}
