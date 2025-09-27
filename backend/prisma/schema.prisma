@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -20,58 +17,60 @@ enum Role {
 }
 
 enum Service_Categories {
-    Hematology,
-    Bacteriology,
-    ClinicalMicroscopy,
-    TwentyFourHourUrineTest,
-    SerologyAndImmunology,
-    ClinicalChemistry,]
-    Electrolytes,
-    Vaccine,
-    Hispatology,
-    ToBeReadByPathologist,
-    TumorMarkers,
-    ThyroidFunctionTest,
-    Hormones,
-    Hepatitis,
-    Enzymes,
-    Others
+  Hematology
+  Bacteriology
+  ClinicalMicroscopy
+  TwentyFourHourUrineTest
+  SerologyAndImmunology
+  ClinicalChemistry
+  Electrolytes
+  Vaccine
+  Hispatology
+  ToBeReadByPathologist
+  TumorMarkers
+  ThyroidFunctionTest
+  Hormones
+  Hepatitis
+  Enzymes
+  Others
 }
 
-
 model Accounts_Table {
-  account_id 
-  first_name
-  last_name
-  middle_name
-  email
-  password
-  role
+  account_id  String   @id @default(uuid())
+  first_name  String
+  last_name   String
+  middle_name String?  @default("N/A")
+  email       String   @unique
+  password    String
+  role        Role     @default(encoder)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }
 
 model Patients_Table {
-  patient_id
-  first_name
-  last_name
-  middle_name
-  birth_date
-  csd_id_or_pwd_id 
-  mobile_number
-  residentual_address
-  is_archived
-  created_by
-  last_updated_by
-  created_at
-  updated_at
+  patient_id           String   @id @default(uuid())
+  first_name           String
+  last_name            String
+  middle_name          String?  @default("N/A")
+  birth_date           DateTime
+  csd_id_or_pwd_id     String?
+  mobile_number        String?
+  residentual_address  String?
+  is_archived          Boolean  @default(false)
+  created_by           String
+  last_updated_by      String
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
 }
 
 model Services_Table {
-  services_id
-  service_name
-  service_category
-  service_price
-  is_activated
-  is_available
-  created_at
-  last_updated_by
+  services_id      String             @id @default(uuid())
+  service_name     String
+  service_category Service_Categories
+  service_price    Float
+  is_activated     Boolean            @default(true)
+  is_available     Boolean            @default(true)
+  created_at       DateTime           @default(now())
+  last_updated_by  String
 }
