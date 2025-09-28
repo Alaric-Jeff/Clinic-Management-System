@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { loginType } from "../../type-schemas/accounts.-schemas.js"
+import type { loginType } from "../../type-schemas/accounts.-schemas.js";
 import { loginAccount } from "../../services/account-services/login-account-service.js";
 
 export async function accountLoginController(
@@ -25,7 +25,7 @@ export async function accountLoginController(
     });
 
     // Return success response
-    return reply.status(200).send({
+    return reply.send({
       success: true,
       message: 'Login successful',
       data: {
@@ -35,35 +35,24 @@ export async function accountLoginController(
     });
 
   } catch (err: unknown) {
-    // Handle specific error types
+    // Handle specific error types using fastify-sensible
     if (err instanceof Error) {
       request.server.log.error({ err, email }, 'Login controller failed');
       
       switch (err.message) {
         case 'Invalid email or password':
-          return reply.status(401).send({
-            success: false,
-            message: 'Invalid email or password'
-          });
+          throw request.server.httpErrors.unauthorized('Invalid email or password');
         
         case 'Account must be activated to log in':
-          return reply.status(403).send({
-            success: false,
-            message: 'Account must be activated to log in'
-          });
+          throw request.server.httpErrors.forbidden('Account must be activated to log in');
         
         default:
-          return reply.status(500).send({
-            success: false,
-            message: 'Internal server error'
-          });
+          throw request.server.httpErrors.internalServerError('Internal server error');
       }
     }
-    
+
+    // Handle unknown errors
     request.server.log.error({ err, email }, 'Login controller failed with unknown error');
-    return reply.status(500).send({
-      success: false,
-      message: 'Internal server error'
-    });
+    throw request.server.httpErrors.internalServerError('Internal server error');
   }
 }
