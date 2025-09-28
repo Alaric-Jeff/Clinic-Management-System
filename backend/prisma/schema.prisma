@@ -1,76 +1,111 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+  // This is your Prisma schema file,
+  // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
 
-enum Role {
-  admin
-  encoder
-}
+  enum Role {
+    admin
+    encoder
+  }
 
-enum Service_Categories {
-  Hematology
-  Bacteriology
-  ClinicalMicroscopy
-  TwentyFourHourUrineTest
-  SerologyAndImmunology
-  ClinicalChemistry
-  Electrolytes
-  Vaccine
-  Hispatology
-  ToBeReadByPathologist
-  TumorMarkers
-  ThyroidFunctionTest
-  Hormones
-  Hepatitis
-  Enzymes
-  Others
-}
+  enum ServiceCategory {
+    hematology
+    bacteriology
+    clinical_microscopy
+    twenty_four_hour_urine_test
+    serology_immunology
+    clinical_chemistry
+    electrolytes
+    vaccine
+    histopathology
+    to_be_read_by_pathologist
+    tumor_markers
+    thyroid_function_test
+    hormones
+    hepatitis
+    enzymes
+    others
+  }
 
-model Accounts_Table {
-  account_id  String   @id @default(uuid())
-  first_name  String
-  last_name   String
-  middle_name String?  @default("N/A")
-  email       String   @unique
-  password    String
-  role        Role     @default(encoder)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-}
+  enum AccountStatus {
+    activated
+    deactivated
+    pending
+  }
 
-model Patients_Table {
-  patient_id           String   @id @default(uuid())
-  first_name           String
-  last_name            String
-  middle_name          String?  @default("N/A")
-  birth_date           DateTime
-  csd_id_or_pwd_id     String?
-  mobile_number        String?
-  residentual_address  String?
-  is_archived          Boolean  @default(false)
-  created_by           String
-  last_updated_by      String
-  created_at           DateTime @default(now())
-  updated_at           DateTime @updatedAt
+  model Account {
+    id           String        @id @default(uuid())
+    firstName    String
+    lastName     String
+    middleName   String?       @default("N/A")
+    email        String        @unique
+    password     String
+    role         Role          @default(encoder)
+    status       AccountStatus @default(deactivated)
+    
+    // Relations
+    createdPatients    Patient[] @relation("PatientCreator")
+    updatedPatients    Patient[] @relation("PatientUpdater")
+    createdServices    Service[] @relation("ServiceCreator")
+    updatedServices    Service[] @relation("ServiceUpdater")
+    
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
 
-}
+    @@index([email])
+    @@index([role])
+    @@index([status])
+  }
 
-model Services_Table {
-  services_id      String             @id @default(uuid())
-  service_name     String
-  service_category Service_Categories
-  service_price    Float
-  is_activated     Boolean            @default(true)
-  is_available     Boolean            @default(true)
-  created_at       DateTime           @default(now())
-  last_updated_by  String
-}
+  model Patient {
+    id                  String    @id @default(uuid())
+    firstName           String
+    lastName            String
+    middleName          String?   @default("N/A")
+    birthDate           DateTime
+    csdIdOrPwdId        String?
+    mobileNumber        String?
+    residentialAddress  String?
+    isArchived          Boolean   @default(false)
+    
+    // Relations - can be created/updated by any role
+    createdById         String
+    updatedById         String
+    creator             Account   @relation("PatientCreator", fields: [createdById], references: [id])
+    updater             Account   @relation("PatientUpdater", fields: [updatedById], references: [id])
+    
+    createdAt           DateTime  @default(now())
+    updatedAt           DateTime  @updatedAt
+
+    @@index([createdById])
+    @@index([updatedById])
+    @@index([isArchived])
+  }
+
+  model Service {
+    id              String          @id @default(uuid())
+    name            String
+    category        ServiceCategory
+    price           Float
+    isActivated     Boolean         @default(true)
+    isAvailable     Boolean         @default(true)
+    
+    // Relations - Services can only be updated by admin
+    createdById     String
+    updatedById     String
+    creator         Account         @relation("ServiceCreator", fields: [createdById], references: [id])
+    updater         Account         @relation("ServiceUpdater", fields: [updatedById], references: [id])
+    
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
+
+    @@index([category])
+    @@index([isActivated])
+  }

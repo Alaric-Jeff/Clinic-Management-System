@@ -1,19 +1,16 @@
 import Fastify from 'fastify'
 import dotenv from 'dotenv'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
-import prismaPlug from './plugins/prisma-plug.js'
+import prismaPlugin from './plugins/prisma-plug.js'
+import sensiblePlug from '@fastify/sensible'
 dotenv.config()
 
 const server = Fastify({
     logger: true
 }).withTypeProvider<TypeBoxTypeProvider>()
 
-server.register(prismaPlug, {
-  maxConnectionRetries: 5,
-  retryDelay: 1000,
-  enableLogging: process.env.NODE_ENV === 'development',
-  timeout: 15000
-});
+server.register(prismaPlugin);
+server.register(sensiblePlug);
 
 const port: number = Number(process.env.HTTP_PORT)? Number(process.env.HTTP_PORT) : 3000;
 const host: string = process.env.HOST? String(process.env.HOST) : '127.0.0.1';
