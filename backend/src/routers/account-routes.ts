@@ -1,14 +1,14 @@
 import type{ FastifyInstance } from "fastify";
-import { loginSchema } from "../type-schemas/accounts.-schemas.js";
+import { loginSchema, loginSuccessSchema } from "../type-schemas/accounts.-schemas.js";
 import { accountLoginController } from "../controllers/account-controllers/account-login-controller.js";
 export async function accountRoutes(fastify: FastifyInstance){
     fastify.route({
         method: 'POST',
-        url: '/account-login',
+        url: '/login',
         schema: {
             body: loginSchema, 
             response: {
-                
+                200: loginSuccessSchema
             }
         },
         handler: accountLoginController
