@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { loginType } from "../../type-schemas/accounts.-schemas.js"
+import type { loginType } from "../../type-schemas/accounts-schemas.js"
 import bcrypt from 'bcrypt'
 
 export async function loginAccount(

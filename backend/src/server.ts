@@ -5,6 +5,8 @@ import prismaPlugin from './plugins/prisma-plug.js'
 import sensiblePlug from '@fastify/sensible'
 import cookiePlugin from './plugins/cookies-plug.js'
 import jwtPlugin from './plugins/jwt-plug.js'
+import routeInit from './routers/routeInit.js'
+import { ServerResponse } from 'http'
 dotenv.config()
 
 const server = Fastify({
@@ -15,6 +17,7 @@ server.register(prismaPlugin);
 server.register(sensiblePlug);
 server.register(cookiePlugin);
 server.register(jwtPlugin);
+server.register(routeInit);
 
 
 const port: number = Number(process.env.HTTP_PORT)? Number(process.env.HTTP_PORT) : 3000;
@@ -29,5 +32,6 @@ try{
 }catch(err: unknown){
     server.log.info("Server failed to run")
     server.close();
+    console.log(err)
 }
     
