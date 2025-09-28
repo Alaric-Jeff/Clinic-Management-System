@@ -3,6 +3,8 @@ import dotenv from 'dotenv'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import prismaPlugin from './plugins/prisma-plug.js'
 import sensiblePlug from '@fastify/sensible'
+import cookiePlugin from './plugins/cookies-plug.js'
+import jwtPlugin from './plugins/jwt-plug.js'
 dotenv.config()
 
 const server = Fastify({
@@ -11,6 +13,9 @@ const server = Fastify({
 
 server.register(prismaPlugin);
 server.register(sensiblePlug);
+server.register(cookiePlugin);
+server.register(jwtPlugin);
+
 
 const port: number = Number(process.env.HTTP_PORT)? Number(process.env.HTTP_PORT) : 3000;
 const host: string = process.env.HOST? String(process.env.HOST) : '127.0.0.1';
