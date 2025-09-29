@@ -17,6 +17,7 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "dependencies": {
+    "@fastify/compress": "^8.1.0",
     "@fastify/cookie": "11.0.2",
     "@fastify/cors": "11.1.0",
     "@fastify/helmet": "13.0.1",
@@ -30,7 +31,8 @@
     "dotenv": "^17.2.2",
     "fastify": "^5.6.1",
     "fastify-plugin": "^5.0.1",
-    "nodemailer": "7.0.6"
+    "nodemailer": "7.0.6",
+    "simple-statistics": "^7.8.8"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
