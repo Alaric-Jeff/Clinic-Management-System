@@ -7,7 +7,7 @@ import cookiePlugin from './plugins/cookies-plug.js'
 import jwtPlugin from './plugins/jwt-plug.js'
 import routeInit from './routers/routeInit.js'
 import compressionPlugin from './plugins/compression-route-plug.js'
-import { ServerResponse } from 'http'
+import rateLimitPlugin from './plugins/rate-limit-plug.js'
 dotenv.config()
 
 const server = Fastify({
@@ -18,6 +18,7 @@ server.register(prismaPlugin);
 server.register(sensiblePlug);
 server.register(cookiePlugin);
 server.register(jwtPlugin);
+server.register(rateLimitPlugin);
 server.register(compressionPlugin);
 server.register(routeInit);
 
