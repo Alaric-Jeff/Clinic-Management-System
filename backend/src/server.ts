@@ -8,6 +8,7 @@ import jwtPlugin from './plugins/jwt-plug.js'
 import routeInit from './routers/routeInit.js'
 import compressionPlugin from './plugins/compression-route-plug.js'
 import rateLimitPlugin from './plugins/rate-limit-plug.js'
+import mailerPlugin from './plugins/node-mailer-plug.js'
 dotenv.config()
 
 const server = Fastify({
@@ -19,6 +20,7 @@ server.register(sensiblePlug);
 server.register(cookiePlugin);
 server.register(jwtPlugin);
 server.register(rateLimitPlugin);
+server.register(mailerPlugin);
 server.register(compressionPlugin);
 server.register(routeInit);
 
