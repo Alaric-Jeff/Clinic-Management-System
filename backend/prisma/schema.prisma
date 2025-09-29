@@ -60,6 +60,7 @@ model Account {
   updatedAt    DateTime      @updatedAt
 
   @@map("accounts") // Explicit table name
+  
   @@index([email])
   @@index([role])
   @@index([status])
@@ -86,6 +87,7 @@ model Patient {
   updatedAt           DateTime  @updatedAt
 
   @@map("patients") // Explicit table name
+  // I'm relucated for the createdBy and updatedBy indexes, I mean I'm not gonna query with that as where condition but only as an additional field
   @@index([createdById])
   @@index([updatedById])
   @@index([isArchived])
@@ -109,7 +111,43 @@ model Service {
   updatedAt       DateTime        @updatedAt
 
   @@map("services") // Explicit table name
+  //I need to index categories for name and categories analytics queries
   @@index([category])
   @@index([isActivated])
   @@index([name])
+}
+
+
+/*
+ lalagay aq documentation dito when time comes
+*/
+
+enum DocumentationStatus {
+  complete
+  incomplete
+  draft
+}
+
+model MedicalDocumentation {
+  id           String   @id @default(cuid())
+  patientId    String
+  createdById  String
+  
+  subjective   String?
+  objective    String?
+  assessment   String?
+  prescription String?
+  
+  status       DocumentationStatus @default(draft)
+  
+  patient      Patient @relation(fields: [patientId], references: [id])
+  creator      Account @relation(fields: [createdById], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("medical_documentations")
+  @@index([patientId])
+  @@index([createdById])
+  @@index([status])
 }
