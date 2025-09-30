@@ -69,7 +69,7 @@ export async function accountLoginController(
      * Do not include sensitive info (like password hashes).
      * Return only minimal required metadata.
      */
-    return reply.send({
+    return reply.status(200).send({
       success: true,
       message: "Login successful",
       data: {
