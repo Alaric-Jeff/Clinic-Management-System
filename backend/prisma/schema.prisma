@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file
+// Learn more at: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -10,11 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------------- ENUMS ----------------
+
+// Roles for staff accounts
 enum Role {
   admin
   encoder
 }
 
+// Categories for lab services
 enum ServiceCategory {
   hematology
   bacteriology
@@ -34,11 +38,21 @@ enum ServiceCategory {
   others
 }
 
+// Status for accounts
 enum AccountStatus {
   activated
   deactivated
   pending
 }
+
+// Status for medical documentation progress
+enum DocumentationStatus {
+  complete
+  incomplete
+  draft
+}
+
+// ---------------- MODELS ----------------
 
 model Account {
   id           String        @id @default(cuid())
@@ -51,16 +65,16 @@ model Account {
   status       AccountStatus @default(pending)
   
   // Relations
-  createdPatients    Patient[] @relation("PatientCreator")
-  updatedPatients    Patient[] @relation("PatientUpdater")
-  createdServices    Service[] @relation("ServiceCreator")
-  updatedServices    Service[] @relation("ServiceUpdater")
-  
+  createdPatients       Patient[] @relation("PatientCreator")
+  updatedPatients       Patient[] @relation("PatientUpdater")
+  createdServices       Service[] @relation("ServiceCreator")
+  updatedServices       Service[] @relation("ServiceUpdater")
+  medicalDocumentations MedicalDocumentation[]
+
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  @@map("accounts") // Explicit table name
-  
+  @@map("accounts")
   @@index([email])
   @@index([role])
   @@index([status])
@@ -82,14 +96,12 @@ model Patient {
   updatedById         String
   creator             Account   @relation("PatientCreator", fields: [createdById], references: [id])
   updater             Account   @relation("PatientUpdater", fields: [updatedById], references: [id])
+  medicalDocumentations MedicalDocumentation[]
   
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  @@map("patients") // Explicit table name
-  // I'm relucated for the createdBy and updatedBy indexes, I mean I'm not gonna query with that as where condition but only as an additional field
-  @@index([createdById])
-  @@index([updatedById])
+  @@map("patients")
   @@index([isArchived])
 }
 
@@ -110,22 +122,10 @@ model Service {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  @@map("services") // Explicit table name
-  //I need to index categories for name and categories analytics queries
+  @@map("services")
   @@index([category])
   @@index([isActivated])
   @@index([name])
-}
-
-
-/*
- lalagay aq documentation dito when time comes
-*/
-
-enum DocumentationStatus {
-  complete
-  incomplete
-  draft
 }
 
 model MedicalDocumentation {
@@ -151,3 +151,18 @@ model MedicalDocumentation {
   @@index([createdById])
   @@index([status])
 }
+
+// ---------------- DOCUMENTATION NOTES ----------------
+/*
+- Medical documentation should not be updated after creation for audit trail.
+  (ENFORCE in app layer or DB triggers — Prisma does not natively support immutability)
+
+- At least one field (subjective, objective, assessment, or prescription) must be filled.
+  (ENFORCE in app layer with validation OR via a Postgres CHECK constraint)
+
+- Patient records are never deleted, only archived (isArchived flag).
+
+- Accounts start as pending and must be activated before use.
+
+- Services have unique names, can be activated/deactivated, and tied to categories for analytics.
+*/
