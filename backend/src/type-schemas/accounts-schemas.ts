@@ -29,3 +29,22 @@ export const loginSuccessSchema = Type.Object({
     })
 });
 
+
+export const createAccountSuccessfulResponse = Type.Object({
+    id: Type.String(),
+    first_name: Type.String(),
+    last_name: Type.String(),
+    middle_name: Type.Union([Type.String(), Type.Null(), Type.Undefined()]),
+    email: Type.String({format: 'email'}),  
+});
+
+
+/**
+ * 
+ *                 id: true,
+                firstName: true,
+                lastName: true,
+                middleName: true,
+                email: true
+ */
+

@@ -24,4 +24,6 @@ export async function accountRoutes(fastify: FastifyInstance){
         },
         handler: accountLoginController
     });
+
+
 };
