@@ -23,7 +23,7 @@ export async function createAccountController(
     const result = await createAccountService(request.server, {
       firstName,
       lastName,
-      middleName,
+      middleName: middleName ?? null,
       email,
       password,
     });

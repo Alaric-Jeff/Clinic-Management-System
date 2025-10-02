@@ -4,11 +4,10 @@ import { Type, type Static } from "@fastify/type-provider-typebox";
 export const createAccountSchema = Type.Object({
     firstName: Type.String({minLength: 2, maxLength: 50}),
     lastName: Type.String({minLength: 2, maxLength: 50}),
-    middleName: Type.Union([Type.String({minLength: 2, maxLength: 50}), Type.Undefined(), Type.Null()]),
+    middleName: Type.Optional(Type.Union([Type.String(), Type.Null()])), 
     email: Type.String({format: 'email'}),
     password: Type.String({minLength: 8})
 })
-
 export type createAccountType = Static<typeof createAccountSchema>;
 
 //schema for log in
@@ -37,18 +36,9 @@ export const createAccountSuccessfulResponse = Type.Object({
         id: Type.String(),
         first_name: Type.String(),
         last_name: Type.String(),
-        middle_name: Type.Union([Type.String(), Type.Null(), Type.Undefined()]),
+        middle_name: Type.Union([Type.String(), Type.Null()]),
         email: Type.String({format: 'email'}),  
     })
 });
 
-
-/**
- * 
- *                 id: true,
-                firstName: true,
-                lastName: true,
-                middleName: true,
-                email: true
- */
 
