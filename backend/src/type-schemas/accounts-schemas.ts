@@ -31,11 +31,15 @@ export const loginSuccessSchema = Type.Object({
 
 
 export const createAccountSuccessfulResponse = Type.Object({
-    id: Type.String(),
-    first_name: Type.String(),
-    last_name: Type.String(),
-    middle_name: Type.Union([Type.String(), Type.Null(), Type.Undefined()]),
-    email: Type.String({format: 'email'}),  
+    success: Type.Boolean(),
+    message: Type.String(),
+    data: Type.Object({
+        id: Type.String(),
+        first_name: Type.String(),
+        last_name: Type.String(),
+        middle_name: Type.Union([Type.String(), Type.Null(), Type.Undefined()]),
+        email: Type.String({format: 'email'}),  
+    })
 });
 
 
