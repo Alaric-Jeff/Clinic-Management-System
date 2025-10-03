@@ -3,8 +3,8 @@ import dotenv from 'dotenv'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import prismaPlugin from './plugins/prisma-plug.js'
 import sensiblePlug from '@fastify/sensible'
-import cookiePlugin from './plugins/cookies-plug.js'
-import jwtPlugin from './plugins/jwt-plug.js'
+import cookiePlugin from '@fastify/cookie'
+import fjwt from '@fastify/jwt'
 import routeInit from './routers/routeInit.js'
 import compressionPlugin from './plugins/compression-route-plug.js'
 import rateLimitPlugin from './plugins/rate-limit-plug.js'
@@ -18,7 +18,17 @@ const server = Fastify({
 server.register(prismaPlugin);
 server.register(sensiblePlug);
 server.register(cookiePlugin);
-server.register(jwtPlugin);
+server.register(fjwt, {
+    secret: process.env.JWT_SECRET || 'Secret',
+    sign: {
+        iss: process.env.JWT_ISSUER || 'clinic-app',
+        aud: process.env.JWT_AUDIENCE || 'clinic-users',
+        expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    },
+    verify: {
+        maxAge: process.env.JWT_MAX_AGE || '15m',
+    },
+});
 server.register(rateLimitPlugin);
 server.register(mailerPlugin);
 server.register(compressionPlugin);
@@ -39,4 +49,3 @@ try{
     server.close();
     console.log(err)
 }
-    
