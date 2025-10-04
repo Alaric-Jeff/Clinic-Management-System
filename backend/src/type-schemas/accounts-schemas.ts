@@ -34,11 +34,17 @@ export const createAccountSuccessfulResponse = Type.Object({
     message: Type.String(),
     data: Type.Object({
         id: Type.String(),
-        first_name: Type.String(),
-        last_name: Type.String(),
-        middle_name: Type.Union([Type.String(), Type.Null()]),
-        email: Type.String({format: 'email'}),  
+        firstName: Type.String(),  
+        lastName: Type.String(),   
+        middleName: Type.Union([Type.String(), Type.Null()]), 
+        email: Type.String()
     })
+})
+
+export const verifyAccountSchema = Type.Object({
+    id: Type.String(),
+    token: Type.String()
 });
 
+export type verifyAccountType = Static<typeof verifyAccountSchema>;
 

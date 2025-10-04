@@ -1,7 +1,13 @@
 import type{ FastifyInstance } from "fastify";
-import { loginSchema, loginSuccessSchema, createAccountSuccessfulResponse, createAccountSchema } from "../type-schemas/accounts-schemas.js";
+import { 
+  loginSchema, 
+  loginSuccessSchema, 
+  createAccountSuccessfulResponse, 
+  createAccountSchema 
+} from "../type-schemas/accounts-schemas.js";
 import { accountLoginController } from "../controllers/account-controllers/account-login-controller.js";
 import { createAccountController } from "../controllers/account-controllers/account-create-controller.js";
+import { accountVerifyController } from "../controllers/account-controllers/account-verify-controller.js";
 
 export async function accountRoutes(fastify: FastifyInstance){
     // Health check for account routes
@@ -26,16 +32,31 @@ export async function accountRoutes(fastify: FastifyInstance){
         handler: accountLoginController
     });
 
-    //creating account
+    // Create account route
     fastify.route({
         method: 'POST',
         url: '/create-account',
         schema: {
             body: createAccountSchema, 
             response: {
-                200: createAccountSuccessfulResponse
+                201: createAccountSuccessfulResponse
             }
         }, 
         handler: createAccountController
-    })
+    });
+
+    fastify.route({
+        method: 'GET',
+        url: '/activate',
+        schema: {
+            querystring: {
+                type: 'object',
+                properties: {
+                    token: { type: 'string' }
+                },
+                required: ['token']
+            }
+        },
+        handler: accountVerifyController
+    });
 };
