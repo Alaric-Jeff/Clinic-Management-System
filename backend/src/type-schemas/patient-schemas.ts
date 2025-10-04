@@ -5,8 +5,7 @@ export const createPatientSchema = Type.Object({
     lastName: Type.String({minLength: 2, maxLength: 30}),
     middleName: Type.Union(
         [
-            Type.String({minLength: 3, maxLength: 30}), 
-            Type.Undefined(),
+            Type.String({minLength: 3, maxLength: 30}),
             Type.Null()
         ]
     ),

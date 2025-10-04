@@ -65,6 +65,7 @@ export async function accountVerifyController(
 
     } catch (err: unknown) {
         // Handle specific JWT errors
+        //I'll need to extend this error for wrong authentications or tampered jwts
         if (err instanceof Error) {
             request.server.log.error(
                 { err: err.message, token }, 
