@@ -18,3 +18,12 @@ export const createPatientSchema = Type.Object({
 });
 
 export type createPatientType = Static<typeof createPatientSchema>;
+
+export const getTodayPatientSchemaResponse = Type.Object({
+    id: Type.String(),
+    firstName: Type.String(),
+    lastName: Type.String(),
+    middleName: Type.String(),
+    createdAt: Type.String()
+});
+

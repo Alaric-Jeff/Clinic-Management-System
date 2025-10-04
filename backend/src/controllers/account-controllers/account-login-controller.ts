@@ -52,7 +52,7 @@ export async function accountLoginController(
      * Cookie carries the JWT to the client for subsequent requests.
      * - HttpOnly prevents JavaScript from accessing it.
      * - Secure ensures HTTPS only (in production).
-     * - SameSite helps mitigate CSRF.
+     * - SameSite helps mitigate CSRF.  
      * - MaxAge keeps session time-limited.
      */
     reply.setCookie("token", token, {
@@ -72,10 +72,6 @@ export async function accountLoginController(
     return reply.status(200).send({
       success: true,
       message: "Login successful",
-      data: {
-        id: result.id,
-        role: result.role,
-      },
     });
   } catch (err: unknown) {
     /**
