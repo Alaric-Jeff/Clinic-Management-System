@@ -45,6 +45,7 @@ export async function accountRoutes(fastify: FastifyInstance){
         handler: createAccountController
     });
 
+    //verify-account
     fastify.route({
         method: 'GET',
         url: '/activate',
