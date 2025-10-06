@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt'
 export async function loginAccount(
     fastify: FastifyInstance,
     body: loginType
-): Promise<{ id: string; role: string }> {
+): Promise<{ id: string; role: string, firstName: string, lastName: string }> {
   const { email, password } = body;
 
   fastify.log.debug(`Starting login process with these payloads: email ${email}`);
@@ -17,6 +17,8 @@ export async function loginAccount(
       where: { email },
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
         status: true,
         password: true,
         role: true
@@ -53,7 +55,9 @@ export async function loginAccount(
     // We will only return these as payload to make it light but useful
     return {
       id: account.id,
-      role: account.role
+      role: account.role,
+      firstName: account.firstName,
+      lastName: account.lastName
     };
 
   } catch (err: unknown) {

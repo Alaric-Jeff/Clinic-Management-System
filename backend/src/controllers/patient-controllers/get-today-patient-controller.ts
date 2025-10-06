@@ -6,10 +6,8 @@ export async function getTodayPatientController(
 ){
     try{
         const todayPatients = await getTodayAllPatientService(request.server);
-
         
-
     }catch(err: unknown){
-        
+
     }
 }

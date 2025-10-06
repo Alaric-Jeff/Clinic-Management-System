@@ -34,7 +34,7 @@ export async function getOnePatientService(
     const patient = await fastify.prisma.patient.findUnique({
       where: { id },
       select: {
-        // Basic patient info - essential demographics
+        // Basic patient info - essential demograpwhics
         id: true,
         firstName: true,
         lastName: true,
@@ -45,22 +45,7 @@ export async function getOnePatientService(
         residentialAddress: true,
         createdAt: true,
         updatedAt: true,
-        
-        // Staff info (lightweight) - for audit trail display
-        creator: {
-          select: {
-            firstName: true,
-            lastName: true,
-            role: true
-          }
-        },
-        updater: {
-          select: {
-            firstName: true,
-            lastName: true,
-            role: true
-          }
-        },
+      
         
         // Medical documentation PREVIEW only - optimized for table display
         medicalDocumentations: {

@@ -29,7 +29,8 @@ export async function getTodayAllPatientService(fastify: FastifyInstance) {
                 createdAt: {
                     gte: startOfToday, 
                     lt: endOfToday     
-                }
+                }, 
+                isArchived: false 
             },
             select: {
                 id: true,

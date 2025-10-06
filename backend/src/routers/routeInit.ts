@@ -1,6 +1,7 @@
 // routes/index.ts
 import type { FastifyInstance } from "fastify";
 import { accountRoutes } from "./account-routes.js";
+import { patientRoutes } from "./patient-routes.js";
 
 const routeInit = async (fastify: FastifyInstance) => {
     // Add a root route to verify server is working
@@ -14,6 +15,7 @@ const routeInit = async (fastify: FastifyInstance) => {
     });
 
     fastify.register(accountRoutes, { prefix: "/api/v1/account" });
+    fastify.register(patientRoutes, {prefix: "api/v1/patient"})
 };
 
 export default routeInit;

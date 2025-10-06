@@ -44,8 +44,11 @@ export async function accountLoginController(
      * Use reply.jwtSign (added by @fastify/jwt) to sign a token containing
      * essential user claims. Avoid embedding sensitive data here.
      */
-    const token = await reply.jwtSign(result);
-
+    const token = await reply.jwtSign({
+      id: result.id,
+      role: result.role,
+      name:  `${result.firstName} ${result.lastName}` 
+    });
     /**
      * Set authentication cookie
      * -------------------------

@@ -18,6 +18,12 @@ enum Role {
   encoder
 }
 
+// Patient gender
+enum Gender {
+  male
+  female
+}
+
 // Categories for lab services
 enum ServiceCategory {
   hematology
@@ -65,10 +71,6 @@ model Account {
   status       AccountStatus @default(pending)
   
   // Relations
-  createdPatients       Patient[] @relation("PatientCreator")
-  updatedPatients       Patient[] @relation("PatientUpdater")
-  createdServices       Service[] @relation("ServiceCreator")
-  updatedServices       Service[] @relation("ServiceUpdater")
   medicalDocumentations MedicalDocumentation[]
 
   createdAt    DateTime      @default(now())
@@ -80,29 +82,42 @@ model Account {
   @@index([status])
 }
 
+model Doctors {
+  id String @id @default(cuid())
+  firstName String
+  lastName String
+  middleInitial String?
+  medicalDocumentations MedicalDocumentation[] // Relation to medical docs
+}
+
 model Patient {
   id                  String    @id @default(cuid())
   firstName           String
   lastName            String
   middleName          String?   @default("N/A")
   birthDate           DateTime
+  gender              Gender    // ✅ Added gender enum
   csdIdOrPwdId        String?
   mobileNumber        String?
   residentialAddress  String?
   isArchived          Boolean   @default(false)
   
-  // Relations - can be created/updated by any role
-  createdById         String
-  updatedById         String
-  creator             Account   @relation("PatientCreator", fields: [createdById], references: [id])
-  updater             Account   @relation("PatientUpdater", fields: [updatedById], references: [id])
-  medicalDocumentations MedicalDocumentation[]
+  // Denormalized audit fields only (no relations needed!)
+  createdByName       String   
+  updatedByName       String?    
+  createdByRole       Role     
+  updatedByRole       Role?   
+  
+  medicalDocumentations MedicalDocumentation[] //this could be null
   
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
   @@map("patients")
   @@index([isArchived])
+  @@index([createdAt])
+  @@index([lastName])
+  @@index([gender])   
 }
 
 model Service {
@@ -113,11 +128,10 @@ model Service {
   isActivated     Boolean         @default(true)
   isAvailable     Boolean         @default(true)
   
-  // Relations - Services can only be updated by admin
-  createdById     String
-  updatedById     String
-  creator         Account         @relation("ServiceCreator", fields: [createdById], references: [id])
-  updater         Account         @relation("ServiceUpdater", fields: [updatedById], references: [id])
+  createdByName   String?        
+  updatedByName   String?      
+  createdByRole   Role?     
+  updatedByRole   Role?       
   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -126,12 +140,14 @@ model Service {
   @@index([category])
   @@index([isActivated])
   @@index([name])
+  @@index([createdByRole]) 
 }
 
 model MedicalDocumentation {
   id           String   @id @default(cuid())
   patientId    String
   createdById  String
+  admittedById String? 
   
   subjective   String?
   objective    String?
@@ -142,6 +158,7 @@ model MedicalDocumentation {
   
   patient      Patient @relation(fields: [patientId], references: [id])
   creator      Account @relation(fields: [createdById], references: [id])
+  admittedBy   Doctors? @relation(fields: [admittedById], references: [id]) // Doctor relation
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -149,6 +166,7 @@ model MedicalDocumentation {
   @@map("medical_documentations")
   @@index([patientId])
   @@index([createdById])
+  @@index([admittedById]) 
   @@index([status])
 }
 
@@ -165,4 +183,10 @@ model MedicalDocumentation {
 - Accounts start as pending and must be activated before use.
 
 - Services have unique names, can be activated/deactivated, and tied to categories for analytics.
+
+- Patient audit trail uses denormalized fields for performance (no Account relations needed).
+
+- Services are standalone entities with denormalized audit fields for performance.
+
+- Gender field added for patient demographics and reporting.
 */
