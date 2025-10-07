@@ -10,8 +10,8 @@ export async function getTodayPatientController(
         
         return reply.send({
             success: true,
+            message: "Today's patients retrieved successfully",
             data: todayPatients,
-            message: "Today's patients retrieved successfully"
         });
         
     } catch (err: unknown) {
