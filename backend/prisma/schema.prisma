@@ -140,7 +140,6 @@ model Service {
   @@index([category])
   @@index([isActivated])
   @@index([name])
-  @@index([createdByRole]) 
 }
 
 model MedicalDocumentation {
@@ -168,6 +167,22 @@ model MedicalDocumentation {
   @@index([createdById])
   @@index([admittedById]) 
   @@index([status])
+}
+
+model ServicesProvided {
+  id String @id @default(cuid())
+  
+}
+
+model MedicalBills {
+  id String @id @default(cuid())
+
+
+  createdByName String
+  createdByRole Role
+  lastUpdatedByName String?
+  lastUpdateByRole Role?
+
 }
 
 // ---------------- DOCUMENTATION NOTES ----------------

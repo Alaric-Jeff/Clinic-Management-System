@@ -43,3 +43,12 @@ export const createMedicalServiceSuccessResponse = Type.Object({
         price: Type.Number()
     })
 })
+
+export const updateMedicalServiceSchema = Type.Object({
+    id: Type.String(),
+    name: Type.Union([Type.String({}), Type.Null()]),
+    category: Type.Union([Type.String({}), Type.Null()]),
+    price: Type.Union([Type.Number(), Type.Null()])
+})
+
+export type updateMedicalServiceType = Static<typeof updateMedicalServiceSchema>;

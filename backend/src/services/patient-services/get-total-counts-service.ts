@@ -22,6 +22,6 @@ export async function getPatientTotalCountService(fastify: FastifyInstance): Pro
                 "Failed to retrieve total patient count with unknown error type"
             );
         }
-        throw err; 
+        throw err;
     }
 }
