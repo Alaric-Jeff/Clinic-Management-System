@@ -40,7 +40,7 @@ export const createMedicalServiceFull = Type.Object({
     category: Type.Enum(ServiceCategory),
     price: Type.Number(),
     createdByName: Type.String(),
-    createdByRole: Type.Enum(Role)
+    createdByRole: Type.Enum(Role),
 })
 
 export type createMedicalServiceFull = Static<typeof createMedicalServiceFull>;
@@ -85,7 +85,7 @@ export const getAllMedicalServicesResponse = Type.Object({
         category: Type.String(),
         price: Type.Number(),
         createdByName: Type.Union([Type.String(), Type.Null()]),
-        createdAt: Type.Date()
+        createdAt: Type.String({format: 'date'})
     }))
 })
 

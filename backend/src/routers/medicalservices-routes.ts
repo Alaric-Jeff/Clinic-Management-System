@@ -31,9 +31,9 @@ export async function medicalServiceRoutes(fastify: FastifyInstance){
     //delete medical service
     fastify.route({
         method: 'DELETE',
-        url: '/delete-medical-service',
+        url: '/delete-medical-service/:id',
         schema: {
-            body: medicalServiceId,
+            params: medicalServiceId,
             response: {
                 200: deleteServiceResponse
             }

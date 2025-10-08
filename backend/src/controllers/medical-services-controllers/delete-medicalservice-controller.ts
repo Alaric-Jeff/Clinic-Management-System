@@ -2,12 +2,12 @@ import { type FastifyRequest, type FastifyReply } from "fastify";
 import { deleteMedicalService } from "../../services/medical-services/delete-medicalservice.js";
 
 export async function deleteMedicalServiceController(
-    request: FastifyRequest<{Body: {id: string}}>,
+    request: FastifyRequest<{Params: {id: string}}>,
     reply: FastifyReply
 ){
     const {
         id
-    } = request.body;
+    } = request.params;
     
     try{
         await deleteMedicalService(request.server, {id});
@@ -19,9 +19,7 @@ export async function deleteMedicalServiceController(
 
     }catch(err: unknown){
         if(err instanceof Error){
-
-            
-
+            request.log.error("Server doesn't exist");
             if(err.message == "Service doesn't exist"){
                 throw request.server.httpErrors.notFound();
             }
