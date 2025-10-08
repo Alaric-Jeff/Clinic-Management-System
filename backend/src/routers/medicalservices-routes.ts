@@ -41,7 +41,7 @@ export async function medicalServiceRoutes(fastify: FastifyInstance){
         handler: deleteMedicalServiceController
     })
 
-    //delete medical service
+    //get all medical services
     fastify.route({
         method: 'GET',
         url: '/get-all-medical-services',
@@ -52,7 +52,5 @@ export async function medicalServiceRoutes(fastify: FastifyInstance){
         }, preHandler: requireRole([Role.admin]),
         handler: getAllMedicalServiceController
     })    
-
-
 }
 
