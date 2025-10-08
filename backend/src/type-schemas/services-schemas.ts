@@ -24,6 +24,8 @@
 
 import { Type, type Static } from "@sinclair/typebox";
 import { ServiceCategory } from "@prisma/client";
+import { Role } from "@prisma/client";
+
 
 export const createMedicalServiceSchema = Type.Object({
     name: Type.String({minLength: 3}),
@@ -33,6 +35,15 @@ export const createMedicalServiceSchema = Type.Object({
 
 export type createMedicalServiceType = Static<typeof createMedicalServiceSchema>;
 
+export const createMedicalServiceFull = Type.Object({
+    name: Type.String({minLength: 3}),
+    category: Type.Enum(ServiceCategory),
+    price: Type.Number(),
+    createdByName: Type.String(),
+    createdByRole: Type.Enum(Role)
+})
+
+export type createMedicalServiceFull = Static<typeof createMedicalServiceFull>;
 
 export const createMedicalServiceSuccessResponse = Type.Object({
     success: Type.Boolean(),
@@ -52,3 +63,38 @@ export const updateMedicalServiceSchema = Type.Object({
 })
 
 export type updateMedicalServiceType = Static<typeof updateMedicalServiceSchema>;
+
+export const deleteServiceResponse = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String()
+})
+
+
+export const medicalServiceId = Type.Object({
+    id: Type.String()
+})
+
+export type medicalServiceType = Static<typeof medicalServiceId>;
+
+export const getAllMedicalServicesResponse = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String(),
+    data: Type.Array(Type.Object({
+        id: Type.String(),
+        name: Type.String(),
+        category: Type.String(),
+        price: Type.Number(),
+        createdByName: Type.Union([Type.String(), Type.Null()]),
+        createdAt: Type.Date()
+    }))
+})
+
+
+/**
+ *              id: true,
+                name: true,
+                category: true,
+                price: true,
+                createdByName: true,
+                createdAt: true
+ */

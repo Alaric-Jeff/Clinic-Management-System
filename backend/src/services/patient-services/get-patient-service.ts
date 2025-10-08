@@ -45,20 +45,12 @@ export async function getOnePatientService(
         residentialAddress: true,
         createdAt: true,
         updatedAt: true,
-      
-        
-        // Medical documentation PREVIEW only - optimized for table display
         medicalDocumentations: {
           select: {
             id: true,
-            createdAt: true,    // Date for table sorting and display
-            status: true,       // Status for visual badges
-            // EXCLUDED: subjective, objective, assessment, prescription (heavy text fields)
-          },
-          orderBy: {
-            createdAt: 'desc'   // Most recent first for quick access
-          },
-          take: 10              // Limit to prevent data overload in preview
+            createdAt: true,
+            admittedByName: true
+          }
         }
       }
     });

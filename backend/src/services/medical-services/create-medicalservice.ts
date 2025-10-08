@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import type { createMedicalServiceType } from "../../type-schemas/services-schemas.js";
+import type { createMedicalServiceFull } from "../../type-schemas/services-schemas.js";
+
 
 /**
  * Service: to create medical services
@@ -9,13 +10,16 @@ import type { createMedicalServiceType } from "../../type-schemas/services-schem
  * @returns - the created product
  */
 
-export async function createMedicalServices(fastify: FastifyInstance, body: createMedicalServiceType){
+export async function createMedicalServices(fastify: FastifyInstance, body: createMedicalServiceFull){
 
     const {
         name,
         category,
-        price
+        price,
+        createdByName,
+        createdByRole
     } = body;
+
 
     try{
         // we will check if there's an existing medical service with the same name
@@ -34,7 +38,9 @@ export async function createMedicalServices(fastify: FastifyInstance, body: crea
             data: {
                 name,
                 category,
-                price
+                price,
+                createdByName,
+                createdByRole
             }, select: {
                 id: true,
                 name: true,
@@ -45,15 +51,6 @@ export async function createMedicalServices(fastify: FastifyInstance, body: crea
 
 
     }catch(err: unknown){
-        if(err instanceof Error){
-            fastify.log.error({
-                error: err.message, complete_err: err
-            }, 'Failed to create medical service')
-        }else{
-            fastify.log.error({
-                error: err
-            }, 'Failed to create medical service with unknown error')
-        }
         throw err;
     }
 }
