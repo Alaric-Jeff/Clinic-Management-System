@@ -6,6 +6,7 @@ import { getTotalPatientCountsController } from "../controllers/patient-controll
 import { archivePatientController } from '../controllers/patient-controllers/archive-patient-controller.js';
 import { patchPatientController } from "../controllers/patient-controllers/patch-patient-controller.js";
 import { getAllArchivedPatientController } from "../controllers/patient-controllers/get-all-archived-patient.js";
+import { getOnePatientController } from "../controllers/patient-controllers/get-one-patient-controller.js";
 import { Role } from "@prisma/client";
 import {
     createPatientSchema,
@@ -14,7 +15,8 @@ import {
     patientIdSchema,
     patchPatientSchema,
     getTotalPatientsCountResponse,
-    patchPatientSuccessResponse
+    patchPatientSuccessResponse,
+    getOnePatientResponseSchema
 } from '../type-schemas/patient-schemas.js';
 import { unarchivePatientController } from "../controllers/patient-controllers/unarchive-patient-controller.js";
 
@@ -146,6 +148,22 @@ export async function patientRoutes(fastify: FastifyInstance) {
         preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getAllArchivedPatientController
     });
+
+        /**
+     * Get the selected patient information, and his previewed documentations.
+     * Access: Admin, Encoder
+     */
+    fastify.route({
+        method: 'GET',
+        url: "/get-one-patient/:id",
+        schema: {
+            response: {
+                200: getOnePatientResponseSchema
+            }
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getOnePatientController
+    })
+
 }
 
 /**
@@ -234,7 +252,62 @@ export async function patientRoutes(fastify: FastifyInstance) {
  *      "residentialAddress": "456 Updated Avenue, Townsville"
  *    }
  * 
- * 4. GET RESPONSES
+ * 4. GET ONE PATIENT (/get-one-patient/:id)
+ *    URL: GET /api/v1/patients/get-one-patient/cmggmseni0001t0qkbho4k9xb
+ *    Optional Query: ?limit=10
+ * 
+ *    Response:
+ *    {
+ *      "success": true,
+ *      "message": "Patient retrieved successfully",
+ *      "data": {
+ *        "id": "cmggmseni0001t0qkbho4k9xb",
+ *        "firstName": "Juan",
+ *        "lastName": "Dela Cruz",
+ *        "middleName": "Santos",
+ *        "birthDate": "1978-05-15T00:00:00.000Z",
+ *        "age": 47,
+ *        "gender": "male",
+ *        "csdIdOrPwdId": "CSD123456",
+ *        "mobileNumber": "+639171234567",
+ *        "residentialAddress": "123 Rizal St, Manila",
+ *        "isArchived": false,
+ *        "createdByName": "Maria Santos",
+ *        "createdByRole": "encoder",
+ *        "updatedByName": "Juan Garcia",
+ *        "updatedByRole": "admin",
+ *        "createdAt": "2025-10-07T14:04:23.191Z",
+ *        "updatedAt": "2025-10-08T10:30:15.456Z",
+ *        "medicalDocumentations": [
+ *          {
+ *            "id": "doc_abc123",
+ *            "status": "complete",
+ *            "createdAt": "2025-10-08T09:00:00.000Z",
+ *            "updatedAt": "2025-10-08T09:30:00.000Z",
+ *            "createdByName": "Dr. Maria Santos",
+ *            "admittedByName": "Dr. Jose Rizal"
+ *          },
+ *          {
+ *            "id": "doc_def456",
+ *            "status": "draft",
+ *            "createdAt": "2025-10-07T15:00:00.000Z",
+ *            "updatedAt": "2025-10-07T15:00:00.000Z",
+ *            "createdByName": "Nurse Anna Cruz",
+ *            "admittedByName": null
+ *          }
+ *        ]
+ *      }
+ *    }
+ * 
+ *    Notes:
+ *    - Returns up to 20 most recent medical documentations by default
+ *    - Use ?limit=N query parameter to change number of documentations returned (max 100)
+ *    - Documentation previews exclude heavy text fields (assessment, diagnosis, treatment, prescription)
+ *    - Click on individual documentation to fetch full details via separate endpoint
+ *    - Age is calculated automatically from birthDate
+ *    - All dates are ISO 8601 formatted strings
+ * 
+ * 5. GET RESPONSES
  *    Today's Patients Response:
  *    {
  *      "success": true,

@@ -10,23 +10,24 @@ import type { FastifyInstance } from "fastify";
  *  - Handles patient not found and database errors gracefully
  * 
  * Performance Optimizations:
- *  - Limits medical documentation to 10 most recent records
- *  - Excludes large text fields (subjective, objective, assessment, prescription)
+ *  - Limits medical documentation to most recent records (configurable)
+ *  - Excludes large text fields (assessment, diagnosis, treatment, prescription)
  *  - Uses selective field loading to minimize data transfer
+ *  - Orders by most recent first for better UX
  * 
  * @param fastify - Fastify instance for database and logging
- * @param body - Object containing patient ID to retrieve
+ * @param body - Object containing patient ID and optional limit
  * @returns Patient object with basic info and documentation preview
  * @throws {Error} When patient is not found or database operation fails
  */
 export async function getOnePatientService(
   fastify: FastifyInstance, 
-  body: { id: string }
+  body: { id: string; limit?: number } // ✅ Make limit configurable
 ) {
-  const { id } = body;
+  const { id, limit = 20 } = body; // ✅ Default to 20 most recent
 
   fastify.log.debug(
-    { patientId: id, operation: 'getOnePatientService' },
+    { patientId: id, limit, operation: 'getOnePatientService' },
     "Starting patient retrieval service"
   );
 
@@ -34,23 +35,42 @@ export async function getOnePatientService(
     const patient = await fastify.prisma.patient.findUnique({
       where: { id },
       select: {
-        // Basic patient info - essential demograpwhics
+        // Basic patient info - essential demographics
         id: true,
         firstName: true,
         lastName: true,
         middleName: true,
         birthDate: true,
+        gender: true, // ✅ Add gender for complete profile
         csdIdOrPwdId: true,
         mobileNumber: true,
         residentialAddress: true,
+        isArchived: true, // ✅ Important to know if archived
+        
+        // Audit trail
+        createdByName: true,
+        createdByRole: true,
+        updatedByName: true,
+        updatedByRole: true,
         createdAt: true,
         updatedAt: true,
+        
+        // Medical documentation preview
         medicalDocumentations: {
           select: {
             id: true,
+            status: true, // ✅ Show if draft/complete/incomplete
             createdAt: true,
-            admittedByName: true
-          }
+            updatedAt: true, // ✅ Show last update time
+            createdByName: true, // ✅ Who created the document
+            admittedByName: true, // Doctor name
+            // Optionally include brief summary fields if they exist
+            // diagnosis: true, // Could show diagnosis in preview
+          },
+          orderBy: {
+            createdAt: 'desc' // ✅ Most recent first
+          },
+          take: limit // ✅ Configurable limit
         }
       }
     });
@@ -63,27 +83,44 @@ export async function getOnePatientService(
       throw new Error("Patient not found");
     }
 
+    // ✅ Add calculated age for UI convenience
+    const age = calculateAge(patient.birthDate);
+
     fastify.log.info(
       { 
         patientId: id, 
-        previewDocsCount: patient.medicalDocumentations.length,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        age,
+        isArchived: patient.isArchived,
+        totalDocs: patient.medicalDocumentations.length,
         operation: 'getOnePatientService'
       },
-      "Patient profile preview retrieved successfully"
+      "Patient profile retrieved successfully"
     );
 
-    return patient;
+    return {
+      ...patient,
+      age, // ✅ Include calculated age
+      birthDate: patient.birthDate.toISOString(), // ✅ Serialize date
+      createdAt: patient.createdAt.toISOString(),
+      updatedAt: patient.updatedAt.toISOString(),
+      medicalDocumentations: patient.medicalDocumentations.map(doc => ({
+        ...doc,
+        createdAt: doc.createdAt.toISOString(),
+        updatedAt: doc.updatedAt.toISOString()
+      }))
+    };
 
   } catch (err: unknown) {
     if (err instanceof Error) {
       fastify.log.error(
         { 
-          err: err.message, 
+          error: err.message, 
           patientId: id, 
           operation: 'getOnePatientService',
           errorType: 'KnownError'
         },
-        "Failed to retrieve patient details - known error occurred"
+        "Failed to retrieve patient details"
       );
     } else {
       fastify.log.error(
@@ -93,10 +130,24 @@ export async function getOnePatientService(
           operation: 'getOnePatientService',
           errorType: 'UnknownError'
         },
-        "Failed to retrieve patient details - unknown error type encountered"
+        "Failed to retrieve patient details - unknown error"
       );
     }
     
     throw err;
   }
+}
+
+// ✅ Helper function to calculate age
+function calculateAge(birthDate: Date): number {
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  
+  return age;
 }

@@ -1,5 +1,5 @@
 import { Type, type Static } from "@fastify/type-provider-typebox";
-import { Role, Gender } from "@prisma/client";
+import { Role, Gender, DocumentationStatus } from "@prisma/client";
 
 export const createPatientSchema = Type.Object({
     firstName: Type.String({ minLength: 2, maxLength: 30 }),
@@ -141,31 +141,42 @@ export const patchPatientServiceSchema = Type.Object({
 
 export type patchPatientServiceType = Static<typeof patchPatientServiceSchema>;
 
-// model Patient {
-//   id                  String    @id @default(cuid())
-//   firstName           String
-//   lastName            String
-//   middleName          String?   @default("N/A")
-//   birthDate           DateTime
-//   gender              Gender    // ✅ Added gender enum
-//   csdIdOrPwdId        String?
-//   mobileNumber        String?
-//   residentialAddress  String?
-//   isArchived          Boolean   @default(false)
 
-//   createdByName       String    // "Dr. Jeffrey Aspiras" 
-//   updatedByName       String    // "Nurse Maria Santos"
-//   createdByRole       Role      // "admin"
-//   updatedByRole       Role      // "encoder"
-  
-//   medicalDocumentations MedicalDocumentation[] //this could be null
-  
-//   createdAt           DateTime  @default(now())
-//   updatedAt           DateTime  @updatedAt
 
-//   @@map("patients")
-//   @@index([isArchived])
-//   @@index([createdAt])
-//   @@index([lastName])
-//   @@index([gender])    // ✅ Added index for gender-based queries
-// }
+export const patientWithDocPreviewSchema = Type.Object({
+  id: Type.String(),
+  firstName: Type.String(),
+  lastName: Type.String(),
+  middleName: Type.Union([Type.String(), Type.Null()]),
+  birthDate: Type.String({ format: 'date-time' }),
+  age: Type.Number(), // Calculated field
+  gender: Type.Enum(Gender),
+  csdIdOrPwdId: Type.Union([Type.String(), Type.Null()]),
+  mobileNumber: Type.Union([Type.String(), Type.Null()]),
+  residentialAddress: Type.Union([Type.String(), Type.Null()]),
+  isArchived: Type.Boolean(),
+  
+  // Audit fields
+  createdByName: Type.String(),
+  createdByRole: Type.Enum(Role),
+  updatedByName: Type.Union([Type.String(), Type.Null()]),
+  updatedByRole: Type.Union([Type.Enum(Role), Type.Null()]),
+  createdAt: Type.String({ format: 'date-time' }),
+  updatedAt: Type.String({ format: 'date-time' }),
+  
+  // Medical documentation preview
+  medicalDocumentations: Type.Array(Type.Object({
+    id: Type.String(),
+    status: Type.Enum(DocumentationStatus),
+    createdAt: Type.String({ format: 'date-time' }),
+    updatedAt: Type.String({ format: 'date-time' }),
+    createdByName: Type.String(),
+    admittedByName: Type.Union([Type.String(), Type.Null()])
+  }))
+});
+
+export const getOnePatientResponseSchema = Type.Object({
+  success: Type.Boolean(),
+  message: Type.String(),
+  data: patientWithDocPreviewSchema
+});
