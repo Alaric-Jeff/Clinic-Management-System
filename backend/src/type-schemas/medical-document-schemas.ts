@@ -15,18 +15,24 @@ export const createMedicalDocumentationSchema = Type.Object({
 
 export type createMedicalDocumentationType = Static<typeof createMedicalDocumentationSchema>;
 
-// Schema for updating medical documentation
-export const updateMedicalDocumentationSchema = Type.Object({
-    id: Type.String(), // Document ID to update
-    assessment: Type.Union([Type.String(), Type.Null()]),
-    diagnosis: Type.Union([Type.String(), Type.Null()]),
-    treatment: Type.Union([Type.String(), Type.Null()]),
-    prescription: Type.Union([Type.String(), Type.Null()]),
-    status: Type.Union([Type.Enum(DocumentationStatus), Type.Null()]), // Allow status changes
-    admittedById: Type.Union([Type.String(), Type.Null()]) // Allow changing doctor
+// Schema for updating medical documentation (body only - id comes from params)
+export const updateMedicalDocumentationBodySchema = Type.Object({
+    assessment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    diagnosis: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    treatment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    prescription: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    status: Type.Optional(Type.Enum(DocumentationStatus)),
+    admittedById: Type.Optional(Type.Union([Type.String(), Type.Null()]))
 });
 
-export type updateMedicalDocumentationType = Static<typeof updateMedicalDocumentationSchema>;
+export type updateMedicalDocumentationBodyType = Static<typeof updateMedicalDocumentationBodySchema>;
+
+// Params schema for update route
+export const updateMedicalDocumentationParamsSchema = Type.Object({
+    id: Type.String()
+});
+
+export type updateMedicalDocumentationParamsType = Static<typeof updateMedicalDocumentationParamsSchema>;
 
 // ==================== SERVICE LAYER SCHEMAS ====================
 
@@ -53,13 +59,13 @@ export const updateMedicalDocumentationServiceInput = Type.Object({
     // Document to update
     id: Type.String(),
     
-    // Fields that can be updated
-    assessment: Type.Union([Type.String(), Type.Null()]),
-    diagnosis: Type.Union([Type.String(), Type.Null()]),
-    treatment: Type.Union([Type.String(), Type.Null()]),
-    prescription: Type.Union([Type.String(), Type.Null()]),
-    status: Type.Union([Type.Enum(DocumentationStatus), Type.Null()]),
-    admittedById: Type.Union([Type.String(), Type.Null()]),
+    // Fields that can be updated (all optional)
+    assessment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    diagnosis: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    treatment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    prescription: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    status: Type.Optional(Type.Enum(DocumentationStatus)),
+    admittedById: Type.Optional(Type.Union([Type.String(), Type.Null()])),
     
     // From JWT/auth in controller (for audit trail)
     lastUpdatedByName: Type.String(),
@@ -106,6 +112,15 @@ export const createMedicalDocumentationResponseSchema = Type.Object({
 });
 
 export type createMedicalDocumentationResponseType = Static<typeof createMedicalDocumentationResponseSchema>;
+
+// Update response (same structure as create)
+export const updateMedicalDocumentationResponseSchema = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String(),
+    data: medicalDocumentationResponseSchema
+});
+
+export type updateMedicalDocumentationResponseType = Static<typeof updateMedicalDocumentationResponseSchema>;
 
 // Response for get all documentations
 export const getAllMedicalDocumentationsResponseSchema = Type.Object({
