@@ -29,7 +29,7 @@ export async function medicalDocumentationRoutes(
 
     fastify.route({
         method: 'POST',
-        url: '/update-medical-documentation',
+        url: '/update-medical-documentation/:id',
         schema: {
             params: updateMedicalDocumentationParamsSchema,
             body: updateMedicalDocumentationBodySchema,
