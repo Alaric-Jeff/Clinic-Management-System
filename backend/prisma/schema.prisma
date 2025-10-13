@@ -401,6 +401,9 @@ model DocumentAuditLog {
   
   createdAt               DateTime @default(now())
   
+
+
+  
   @@map("document_audit_logs")
   @@index([medicalDocumentationId])
   @@index([createdAt])
