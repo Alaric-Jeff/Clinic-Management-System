@@ -1,10 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import Dashboard from './Dashboard'
+import PatientList from './Patient_Record-List.jsx'
+import PatientDetailsView from './Patient_Record-View.jsx'
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <Dashboard />
+    <PatientList />
+    <PatientDetailsView />
   </StrictMode>,
 )
