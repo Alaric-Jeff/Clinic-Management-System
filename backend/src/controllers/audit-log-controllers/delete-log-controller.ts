@@ -3,10 +3,10 @@ import { deleteAuditLogService } from "../../audit-logs/delete-audit-log.js";
 import type { auditLogType } from "../../type-schemas/audit-log-schema.js";
 
 export async function deleteAuditLogController(
-    request: FastifyRequest<{Body: auditLogType}>,
+    request: FastifyRequest<{Params: auditLogType}>,
     reply: FastifyReply
 ){
-    const { id } = request.body;
+    const { id } = request.params;
 
     try {
         await deleteAuditLogService(request.server, {id});
