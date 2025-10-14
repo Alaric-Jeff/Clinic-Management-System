@@ -27,7 +27,7 @@ export async function createMedicalBillWithServices(
     fastify: FastifyInstance,
     body: createMedicalBillServiceInputType
 ) {
-    const { medicalDocumentationId, services, notes, createdByName, createdByRole } = body;
+    const { medicalDocumentationId, services, notes, paymentStatus,createdByName, createdByRole } = body;
 
     try {
         // 1. Verify medical documentation exists and get its status
@@ -111,14 +111,13 @@ export async function createMedicalBillWithServices(
                     totalAmount,
                     amountPaid: 0, // Initially unpaid
                     balance: totalAmount, // Initially full balance
-                    paymentStatus: 'unpaid',
+                    paymentStatus,
                     createdByName,
                     createdByRole,
                     ...(notes !== undefined && { notes }) // Only include notes if provided
                 }
             });
 
-            // Create all billed services
             const billedServices = await prisma.billedService.createMany({
                 data: billedServicesData.map(service => ({
                     ...service,

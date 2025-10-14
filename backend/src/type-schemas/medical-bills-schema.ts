@@ -15,7 +15,8 @@ export type billedServiceItemType = Static<typeof billedServiceItemSchema>;
 export const createMedicalBillSchema = Type.Object({
     medicalDocumentationId: Type.String(),
     services: Type.Array(billedServiceItemSchema, { minItems: 1 }), // At least one service
-    notes: Type.Optional(Type.Union([Type.String(), Type.Null()]))
+    notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    paymentStatus: Type.Enum(PaymentStatus)
 });
 
 export type createMedicalBillType = Static<typeof createMedicalBillSchema>;
@@ -37,20 +38,18 @@ export type getMedicalBillParamsType = Static<typeof getMedicalBillParamsSchema>
 
 // ==================== SERVICE LAYER SCHEMAS ====================
 
-// Service input for creating medical bill (includes auth fields)
 export const createMedicalBillServiceInput = Type.Object({
     medicalDocumentationId: Type.String(),
     services: Type.Array(billedServiceItemSchema, { minItems: 1 }),
     notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-    
-    // From JWT/auth in controller
+    paymentStatus: Type.Enum(PaymentStatus),
     createdByName: Type.String(),
     createdByRole: Type.Enum(Role)
 });
 
 export type createMedicalBillServiceInputType = Static<typeof createMedicalBillServiceInput>;
 
-// Service input for adding services to bill
+
 export const addServicesToBillServiceInput = Type.Object({
     medicalBillId: Type.String(),
     services: Type.Array(billedServiceItemSchema, { minItems: 1 }),
@@ -186,3 +185,5 @@ export const errorResponseSchema = Type.Object({
 });
 
 export type errorResponseType = Static<typeof errorResponseSchema>;
+
+

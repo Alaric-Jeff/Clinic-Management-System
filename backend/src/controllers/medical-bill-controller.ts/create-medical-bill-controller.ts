@@ -27,7 +27,8 @@ export async function createMedicalBillController(
     const {
         medicalDocumentationId,
         services,
-        notes
+        notes,
+        paymentStatus
     } = request.body;
 
     try {
@@ -57,6 +58,7 @@ export async function createMedicalBillController(
             medicalDocumentationId,
             services,
             notes: notes ?? null,
+            paymentStatus,
             createdByName: name,
             createdByRole: role
         });
