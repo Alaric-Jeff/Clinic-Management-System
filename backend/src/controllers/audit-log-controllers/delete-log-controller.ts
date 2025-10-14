@@ -1,9 +1,9 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { deleteAuditLogService } from "../../audit-logs/delete-audit-log.js";
-import type { auditLogType } from "../../type-schemas/audit-log-schema.js";
+import type { AuditLogIdType } from "../../type-schemas/audit-log-schema.js";
 
 export async function deleteAuditLogController(
-    request: FastifyRequest<{Params: auditLogType}>,
+    request: FastifyRequest<{Params: AuditLogIdType}>,
     reply: FastifyReply
 ){
     const { id } = request.params;

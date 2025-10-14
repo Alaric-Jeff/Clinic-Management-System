@@ -1,12 +1,12 @@
 import type { FastifyInstance } from "fastify";
 
 import type {
-    auditLogType
+    AuditLogIdType
 } from '../type-schemas/audit-log-schema.js'
 
 export async function deleteAuditLogService(
     fastify: FastifyInstance,
-    body: auditLogType
+    body: AuditLogIdType
 ){
 
     const {
