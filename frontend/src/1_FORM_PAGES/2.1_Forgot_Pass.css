@@ -1,0 +1,235 @@
+/* Remove these lines from the top:
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+}
+*/
+
+/* Container - Full Screen Centered */
+.forgot-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFF3F3;
+  overflow: hidden;
+}
+
+.forgot-wrapper {
+  width: 100%;
+  max-width: 500px;
+  padding: 0 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Rest of your CSS stays the same... */
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+  width: 100%;
+}
+
+.company-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #FFF3F3;
+  margin: 0 0 0.5rem 0;
+}
+
+.address {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin: 0 0 1rem 0;
+}
+
+.divider {
+  width: 150%;
+  max-width: 1000px;
+  height: 4px;
+  background-color: #891315;
+  margin: 0 auto;
+  margin-left: -25%;
+}
+
+/* Form */
+.forgot-form {
+  background-color: transparent;
+  width: 100%;
+}
+
+.form-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #891315;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Input Groups */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.icon {
+  color: #891315;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon svg {
+  width: 35px;
+  height: 35px;
+  stroke-width: 2.5;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  flex: 1;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 2.5px solid #891315;
+  border-radius: 0.65rem;
+  background-color: white;
+  color: #374151;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input-field.with-icon {
+  padding-right: 3rem;
+}
+
+.input-field:focus {
+  border-color: #991b1b;
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
+}
+
+.input-field::placeholder {
+  color: #9ca3af;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #7f1d1d;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.toggle-password svg {
+  width: 22px;
+  height: 22px;
+}
+
+.toggle-password:hover {
+  color: #b91c1c;
+}
+
+/* Button */
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.icon-spacer {
+  width: 35px;
+  flex-shrink: 0;
+}
+
+.confirm-button {
+  width: 100%;
+  background-color: #7f1d1d;
+  color: white;
+  padding: 0.85rem 1.25rem;
+  border-radius: 0.65rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.confirm-button:hover {
+  background-color: #991b1b;
+  box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.confirm-button:active {
+  transform: translateY(0);
+}
+
+/* Links */
+.link-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.link-wrapper {
+  width: 100%;
+  text-align: center;
+}
+
+.send-email-link {
+  color: #7f1d1d;
+  text-decoration: underline;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.send-email-link:hover {
+  color: #b91c1c;
+}
+
+.back-link {
+  color: #7f1d1d;
+  text-decoration: underline;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #b91c1c;
+}
