@@ -8,9 +8,36 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-  console.log('Login attempted with:', { email, password });
-  // Add your login logic here
+// Remove the full URL, use just the path
+const login_url = '/api/v1/account/login';
+
+const handleLogin = async () => {
+  try {
+    console.log('Login attempted with:', { email, password });
+    
+    const response = await fetch(login_url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Login successful:', result);
+    
+    // Handle successful login here
+    
+  } catch (error) {
+    console.error('Login error:', error);
+  }
 };
 
   return (
