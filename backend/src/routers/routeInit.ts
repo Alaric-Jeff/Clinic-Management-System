@@ -6,14 +6,27 @@ import { medicalServiceRoutes } from "./medicalservices-routes.js";
 import { medicalBillRoutes } from "./medical-bill-routes.js";
 import { medicalDocumentationRoutes } from "./medical-documentation-routes.js";
 import { doctorRoutes } from "./doctor-routes.js";
+import { requireRole } from "../hooks/authorization.js";
+import { Role } from "@prisma/client";
 
 const routeInit = async (fastify: FastifyInstance) => {
-    // Add a root route to verify server is working
     fastify.get('/', async () => {
         return { message: 'Server is running!' }
     });
 
-    // Add health check
+    fastify.get(
+    "/validate",
+    {
+      preHandler: requireRole([Role.admin, Role.encoder]), 
+    },
+    async (req, reply) => {
+      return {
+        user: req.currentUser,
+        message: "Token valid",
+      };
+    }
+  );
+
     fastify.get('/health', async () => {
         return { status: 'OK', timestamp: new Date().toISOString() }
     });
