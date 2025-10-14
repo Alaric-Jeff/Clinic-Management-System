@@ -1,25 +1,23 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import api from '../axios/api.js'
 
 const AuthContext = createContext();
 
-// ✅ Custom hook for easy access in components
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // will hold { id, name, role }
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ✅ Runs on app load — check if user already logged in
   useEffect(() => {
     const validateUser = async () => {
       try {
-        const res = await api.get("/auth/validate");
+        const res = await api.get("/validate");
         setUser(res.data.user);
-      } catch (err) {
-        setUser(null); // invalid or expired session
+      } catch {
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -27,12 +25,12 @@ export const AuthProvider = ({ children }) => {
     validateUser();
   }, []);
 
-  // ✅ Login handler (you can call it from your LoginPage)
+
   const login = async (credentials) => {
     try {
       const res = await api.post("/auth/login", credentials);
       setUser(res.data.user);
-      navigate("/dashboard"); 
+      navigate("/dashboard");
     } catch (err) {
       throw err;
     }
@@ -43,14 +41,14 @@ export const AuthProvider = ({ children }) => {
       await api.post("/auth/logout");
     } finally {
       setUser(null);
-      navigate("/");
+      navigate("/"); 
     }
   };
 
   const hasRole = (role) => user?.role === role;
 
   return (
-    <AuthContext.Provider value={{ user, loading, zlogin, logout, hasRole }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, hasRole }}>
       {!loading && children}
     </AuthContext.Provider>
   );
