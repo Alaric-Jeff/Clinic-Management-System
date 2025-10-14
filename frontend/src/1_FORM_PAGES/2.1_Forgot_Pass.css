@@ -1,15 +1,3 @@
-/* Remove these lines from the top:
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  overflow: hidden;
-}
-*/
-
 /* Container - Full Screen Centered */
 .forgot-container {
   width: 100vw;
@@ -17,7 +5,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFF3F3;
+  background-color: #fdf2f8;
   overflow: hidden;
 }
 
@@ -30,8 +18,6 @@ body {
   align-items: center;
 }
 
-/* Rest of your CSS stays the same... */
-
 /* Header */
 .header {
   text-align: center;
@@ -39,10 +25,35 @@ body {
   width: 100%;
 }
 
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.medical-symbol {
+  color: #b91c1c;
+}
+
+.medical-symbol svg {
+  width: 50px;
+  height: 50px;
+}
+
+.lms-text {
+  font-size: 0.9rem;
+  color: #b91c1c;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
 .company-name {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #FFF3F3;
+  color: #b91c1c;
   margin: 0 0 0.5rem 0;
 }
 
@@ -56,7 +67,7 @@ body {
   width: 150%;
   max-width: 1000px;
   height: 4px;
-  background-color: #891315;
+  background-color: #7f1d1d;
   margin: 0 auto;
   margin-left: -25%;
 }
@@ -70,7 +81,7 @@ body {
 .form-title {
   font-size: 3rem;
   font-weight: 700;
-  color: #891315;
+  color: #7f1d1d;
   text-align: center;
   margin-bottom: 2.5rem;
   width: 100%;
@@ -92,7 +103,7 @@ body {
 }
 
 .icon {
-  color: #891315;
+  color: #7f1d1d;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -114,17 +125,13 @@ body {
 .input-field {
   width: 100%;
   padding: 0.85rem 1rem;
-  border: 2.5px solid #891315;
+  border: 2.5px solid #7f1d1d;
   border-radius: 0.65rem;
   background-color: white;
   color: #374151;
   font-size: 1rem;
   outline: none;
   transition: all 0.2s;
-}
-
-.input-field.with-icon {
-  padding-right: 3rem;
 }
 
 .input-field:focus {
@@ -134,30 +141,6 @@ body {
 
 .input-field::placeholder {
   color: #9ca3af;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #7f1d1d;
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
-}
-
-.toggle-password svg {
-  width: 22px;
-  height: 22px;
-}
-
-.toggle-password:hover {
-  color: #b91c1c;
 }
 
 /* Button */
@@ -173,7 +156,7 @@ body {
   flex-shrink: 0;
 }
 
-.confirm-button {
+.send-password-button {
   width: 100%;
   background-color: #7f1d1d;
   color: white;
@@ -187,13 +170,13 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
-.confirm-button:hover {
+.send-password-button:hover {
   background-color: #991b1b;
   box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
 }
 
-.confirm-button:active {
+.send-password-button:active {
   transform: translateY(0);
 }
 
@@ -208,18 +191,6 @@ body {
 .link-wrapper {
   width: 100%;
   text-align: center;
-}
-
-.send-email-link {
-  color: #7f1d1d;
-  text-decoration: underline;
-  font-weight: 500;
-  font-size: 1rem;
-  transition: color 0.2s;
-}
-
-.send-email-link:hover {
-  color: #b91c1c;
 }
 
 .back-link {
