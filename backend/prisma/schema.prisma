@@ -64,12 +64,6 @@ enum PaymentStatus {
   partially_paid
 }
 
-enum ResolutionStatus {
-  pending
-  resolved
-  cancelled
-}
-
 // ---------------- MODELS ----------------
 
 model Account {
@@ -242,9 +236,8 @@ model MedicalBill {
   medicalDocumentation  MedicalDocumentation @relation(fields: [medicalDocumentationId], references: [id])
   billedServices        BilledService[]
   paymentHistory        PaymentHistory[]
-  paymentResolution     PaymentResolution?
   
-  notes                 String?       // For special arrangements, discounts, etc.
+  notes                 String?       // For payment arrangements, discounts, special notes
   
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -274,36 +267,6 @@ model PaymentHistory {
   @@map("payment_history")
   @@index([medicalBillId])
   @@index([createdAt])
-}
-
-// Table for unpaid and partially paid bills to be settled
-model PaymentResolution {
-  id                String           @id @default(cuid())
-  medicalBillId     String           @unique
-  
-  originalBalance   Float            // Original unpaid/partially paid amount
-  agreedPaymentPlan String?          // Description of payment arrangement
-  dueDate           DateTime?        // When payment should be settled
-  status            ResolutionStatus @default(pending)
-  
-  resolutionNotes   String?          // Notes about the arrangement, trusted patient history, etc.
-  
-  // Audit trail
-  createdByName     String
-  createdByRole     Role
-  resolvedByName    String?
-  resolvedByRole    Role?
-  resolvedAt        DateTime?
-  
-  medicalBill       MedicalBill @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
-  
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
-  @@map("payment_resolutions")
-  @@index([medicalBillId])
-  @@index([status])
-  @@index([dueDate])
 }
 
 // ---------------- ANALYTICS MODELS ----------------
@@ -401,9 +364,6 @@ model DocumentAuditLog {
   
   createdAt               DateTime @default(now())
   
-
-
-  
   @@map("document_audit_logs")
   @@index([medicalDocumentationId])
   @@index([createdAt])
@@ -412,6 +372,7 @@ model DocumentAuditLog {
 
 // ---------------- DOCUMENTATION NOTES ----------------
 /*
+SIMPLIFIED PAYMENT SYSTEM:
 - Medical documentation can be edited with full audit trail via DocumentAuditLog.
 
 - At least one field (assessment, diagnosis, treatment, or prescription) must be filled.
@@ -435,10 +396,18 @@ model DocumentAuditLog {
 - BilledService acts as a snapshot: When a service is billed, its details (name, category, price) 
   are copied to preserve billing history even if the service is later modified or deleted.
 
-- PaymentResolution tracks unpaid/partially paid bills for trusted patients with payment arrangements.
-  Status can be pending (awaiting payment), resolved (paid), or cancelled (forgiven/written off).
+SIMPLIFIED PAYMENT TRACKING:
+- MedicalBill tracks current payment state (totalAmount, amountPaid, balance, paymentStatus)
+- PaymentHistory records every payment transaction for complete audit trail
+- Use MedicalBill.notes for payment arrangements (e.g., "Will pay Oct 20 after pension")
+- PaymentStatus automatically updates based on amountPaid vs totalAmount
+- No need for separate PaymentResolution table - simpler and more maintainable
 
-- PaymentHistory records every payment transaction for complete audit trail and supports partial payments.
+PAYMENT WORKFLOW:
+1. Create bill with initial paymentStatus (paid/unpaid/partially_paid)
+2. Record payments in PaymentHistory
+3. Update MedicalBill status and amounts automatically
+4. Use notes field for special arrangements or installment plans
 
 ANALYTICS SYSTEM:
 - DailySalesAnalytics: Aggregated daily metrics (total revenue, bills, payment status distribution)

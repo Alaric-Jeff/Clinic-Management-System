@@ -44,3 +44,21 @@ export const verifyAccountSchema = Type.Object({
 
 export type verifyAccountType = Static<typeof verifyAccountSchema>;
 
+// Password reset request schema
+export const passwordResetRequestSchema = Type.Object({
+    email: Type.String({format: 'email'})
+});
+
+export type passwordResetRequestType = Static<typeof passwordResetRequestSchema>;
+
+// Password reset response schemas
+export const passwordResetRequestResponse = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String()
+});
+
+export const passwordResetConfirmResponse = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String()
+});
+

@@ -10,6 +10,7 @@ import type { Prisma } from "@prisma/client";
  *  - Adds multiple services to the bill in a single transaction
  *  - Snapshots service details (name, category, price) at time of billing
  *  - Calculates total amounts automatically
+ *  - Handles immediate payment if status is 'paid'
  *  - Ensures data integrity with database transaction
  * 
  * Validation Rules:
@@ -18,16 +19,21 @@ import type { Prisma } from "@prisma/client";
  *  - All services must exist and be available
  *  - At least one service must be provided
  * 
+ * Payment Handling:
+ *  - If paymentStatus is 'paid', automatically sets amountPaid to totalAmount
+ *  - Creates PaymentHistory entry for immediate payments
+ *  - Calculates balance automatically (totalAmount - amountPaid)
+ * 
  * @param fastify - Fastify instance for database and logging
  * @param body - Bill creation data with services array and auth fields
- * @returns Created bill with service count
+ * @returns Created bill with service count and payment details
  * @throws {Error} When validation fails or documentation not found
  */
 export async function createMedicalBillWithServices(
     fastify: FastifyInstance,
     body: createMedicalBillServiceInputType
 ) {
-    const { medicalDocumentationId, services, notes, paymentStatus,createdByName, createdByRole } = body;
+    const { medicalDocumentationId, services, notes, paymentStatus, paymentMethod, createdByName, createdByRole } = body;
 
     try {
         // 1. Verify medical documentation exists and get its status
@@ -102,15 +108,19 @@ export async function createMedicalBillWithServices(
             });
         }
 
-        // 4. Create bill and all billed services in a transaction
+        // 4. Determine payment amounts based on status
+        const amountPaid = paymentStatus === 'paid' ? totalAmount : 0;
+        const balance = totalAmount - amountPaid;
+
+        // 5. Create bill, billed services, and payment history in a transaction
         const result = await fastify.prisma.$transaction(async (prisma) => {
             // Create the medical bill
             const medicalBill = await prisma.medicalBill.create({
                 data: {
                     medicalDocumentationId,
                     totalAmount,
-                    amountPaid: 0, // Initially unpaid
-                    balance: totalAmount, // Initially full balance
+                    amountPaid,
+                    balance,
                     paymentStatus,
                     createdByName,
                     createdByRole,
@@ -118,12 +128,27 @@ export async function createMedicalBillWithServices(
                 }
             });
 
+            // Create all billed services
             const billedServices = await prisma.billedService.createMany({
                 data: billedServicesData.map(service => ({
                     ...service,
                     medicalBillId: medicalBill.id
                 }))
             });
+
+            // If paid immediately, create payment history entry
+            if (paymentStatus === 'paid') {
+                await prisma.paymentHistory.create({
+                    data: {
+                        medicalBillId: medicalBill.id,
+                        amountPaid: totalAmount,
+                        paymentMethod: paymentMethod ?? 'cash',
+                        notes: 'Full payment at billing',
+                        recordedByName: createdByName,
+                        recordedByRole: createdByRole
+                    }
+                });
+            }
 
             return {
                 medicalBill,
@@ -137,6 +162,9 @@ export async function createMedicalBillWithServices(
                 documentationId: medicalDocumentationId,
                 patientId: documentation.patientId,
                 totalAmount,
+                amountPaid,
+                balance,
+                paymentStatus,
                 servicesCount: result.billedServicesCount,
                 createdBy: createdByName
             },

@@ -16,7 +16,8 @@ export const createMedicalBillSchema = Type.Object({
     medicalDocumentationId: Type.String(),
     services: Type.Array(billedServiceItemSchema, { minItems: 1 }), // At least one service
     notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-    paymentStatus: Type.Enum(PaymentStatus)
+    paymentStatus: Type.Enum(PaymentStatus),
+    paymentMethod: Type.Optional(Type.String()) // cash, card, insurance, etc.
 });
 
 export type createMedicalBillType = Static<typeof createMedicalBillSchema>;
@@ -43,6 +44,7 @@ export const createMedicalBillServiceInput = Type.Object({
     services: Type.Array(billedServiceItemSchema, { minItems: 1 }),
     notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
     paymentStatus: Type.Enum(PaymentStatus),
+    paymentMethod: Type.Optional(Type.Union([Type.String(), Type.Undefined()])),
     createdByName: Type.String(),
     createdByRole: Type.Enum(Role)
 });
@@ -176,6 +178,48 @@ export const getMedicalBillDetailsResponseSchema = Type.Object({
 });
 
 export type getMedicalBillDetailsResponseType = Static<typeof getMedicalBillDetailsResponseSchema>;
+
+// Unsettled bill with patient info schema
+export const unsettledBillWithPatientSchema = Type.Object({
+    id: Type.String(),
+    medicalDocumentationId: Type.String(),
+    totalAmount: Type.Number(),
+    amountPaid: Type.Number(),
+    balance: Type.Number(),
+    paymentStatus: Type.Enum(PaymentStatus),
+    createdByName: Type.String(),
+    createdByRole: Type.Enum(Role),
+    lastUpdatedByName: Type.Union([Type.String(), Type.Null()]),
+    lastUpdatedByRole: Type.Union([Type.Enum(Role), Type.Null()]),
+    notes: Type.Union([Type.String(), Type.Null()]),
+    createdAt: Type.String({ format: 'date-time' }),
+    updatedAt: Type.String({ format: 'date-time' }),
+    medicalDocumentation: Type.Object({
+        id: Type.String(),
+        status: Type.String(),
+        createdAt: Type.String({ format: 'date-time' }),
+        patient: Type.Object({
+            id: Type.String(),
+            firstName: Type.String(),
+            lastName: Type.String(),
+            middleName: Type.Union([Type.String(), Type.Null()]),
+            mobileNumber: Type.Union([Type.String(), Type.Null()]),
+            birthDate: Type.String({ format: 'date-time' }),
+            gender: Type.String()
+        })
+    })
+});
+
+export type unsettledBillWithPatientType = Static<typeof unsettledBillWithPatientSchema>;
+
+// Wrapped response for unsettled bills
+export const getUnsettledBillsResponseSchema = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String(),
+    data: Type.Array(unsettledBillWithPatientSchema)
+});
+
+export type getUnsettledBillsResponseType = Static<typeof getUnsettledBillsResponseSchema>;
 
 // Error response schema
 export const errorResponseSchema = Type.Object({

@@ -33,10 +33,10 @@ const routeInit = async (fastify: FastifyInstance) => {
 
     fastify.register(accountRoutes, { prefix: "/api/v1/account" });
     fastify.register(patientRoutes, {prefix: "/api/v1/patient"});
-    fastify.register(medicalServiceRoutes, {prefix: "/api/v1/service"})
+    fastify.register(medicalServiceRoutes, {prefix: "/api/v1/service"});
     fastify.register(medicalBillRoutes, {prefix: "/api/v1/bills"});
-    fastify.register(medicalDocumentationRoutes, {prefix: "/api/v1/document"})
-    fastify.register(doctorRoutes, {prefix: "/api/v1/doctors"})
+    fastify.register(medicalDocumentationRoutes, {prefix: "/api/v1/document"});
+    fastify.register(doctorRoutes, {prefix: "/api/v1/doctors"});
 };
 
 export default routeInit;

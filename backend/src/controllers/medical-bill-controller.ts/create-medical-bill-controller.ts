@@ -28,7 +28,8 @@ export async function createMedicalBillController(
         medicalDocumentationId,
         services,
         notes,
-        paymentStatus
+        paymentStatus,
+        paymentMethod
     } = request.body;
 
     try {
@@ -48,7 +49,8 @@ export async function createMedicalBillController(
                 medicalDocumentationId,
                 servicesCount: services.length,
                 createdBy: name,
-                userRole: role
+                userRole: role,
+                paymentMethod
             },
             'Medical bill creation requested'
         );
@@ -59,6 +61,7 @@ export async function createMedicalBillController(
             services,
             notes: notes ?? null,
             paymentStatus,
+            paymentMethod: paymentMethod ?? undefined,
             createdByName: name,
             createdByRole: role
         });
