@@ -42,6 +42,7 @@ export async function createPatientService(
     csdIdOrPwdId,
     mobileNumber,
     residentialAddress,
+    registerDate,
     createdByName,
     createdByRole,
     updatedByName,
@@ -79,6 +80,7 @@ export async function createPatientService(
         csdIdOrPwdId: csdIdOrPwdId ?? null,
         mobileNumber,
         residentialAddress: residentialAddress ?? null,
+        registeredAt: registerDate ? new Date(registerDate) : new Date(Date.now()),
         createdByName,
         createdByRole,
         updatedByName: updatedByName ?? null,
@@ -90,11 +92,9 @@ export async function createPatientService(
         lastName: true,
         middleName: true,
         createdAt: true 
-        // I only need minimal fields since it'll be previewed in the patient list. 
       }
     });
-
-    // Log successful creation for monitoring and compliance
+    
     fastify.log.info(
       { 
         patientId: patient.id,

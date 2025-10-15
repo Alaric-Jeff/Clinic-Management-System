@@ -9,6 +9,8 @@ import routeInit from './routers/routeInit.js'
 import compressionPlugin from './plugins/compression-route-plug.js'
 import rateLimitPlugin from './plugins/rate-limit-plug.js'
 import mailerPlugin from './plugins/node-mailer-plug.js'
+// import corsPlugin from './plugins/cors-plug.js'
+import cors from "@fastify/cors"
 dotenv.config()
 
 const server = Fastify({
@@ -17,6 +19,11 @@ const server = Fastify({
 
 server.register(prismaPlugin);
 server.register(sensiblePlug);
+await server.register(cors, {
+  origin: ["http://127.0.0.1:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+});
 server.register(cookiePlugin);
 server.register(fjwt, {
     secret: process.env.JWT_SECRET || 'Secret',

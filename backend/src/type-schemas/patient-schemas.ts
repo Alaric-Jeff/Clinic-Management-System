@@ -15,7 +15,8 @@ export const createPatientSchema = Type.Object({
     gender: Type.Enum(Gender),
     csdIdOrPwdId: Type.Union([Type.String({ minLength: 1 }), Type.Null()]), 
     mobileNumber: Type.Union([Type.String({ minLength: 1, pattern: '^\\+?[\\d\\s\\-()]+$' }), Type.Null()]),   
-    residentialAddress: Type.Union([Type.String({ minLength: 1 }), Type.Null()])
+    residentialAddress: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
+    registerDate: Type.Union([Type.String({format: 'date'}), Type.Null()])
 });
 
 export const createPatientServiceSchemaType = Type.Object({
@@ -30,6 +31,7 @@ export const createPatientServiceSchemaType = Type.Object({
     csdIdOrPwdId: Type.Union([Type.String(), Type.Null()]), 
     mobileNumber: Type.Union([Type.String(), Type.Null()]),   
     residentialAddress: Type.Union([Type.String(), Type.Null()]),
+    registerDate: Type.Union([Type.String({format: 'date'}), Type.Null()]),
     createdByName: Type.String(),
     createdByRole: Type.Enum(Role),
     updatedByName: Type.Union([Type.String(), Type.Null()]),

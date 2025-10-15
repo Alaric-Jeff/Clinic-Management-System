@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const res = await api.post("/auth/login", credentials);
+      const res = await api.post("/account/login", credentials);
       setUser(res.data.user);
-      navigate("/dashboard");
+      navigate("/dashboard"); // will this cause an error? i meant it's just http://localhost:5173/dashboard right?
     } catch (err) {
       throw err;
     }
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout");
+      await api.post("/account/logout");
     } finally {
       setUser(null);
       navigate("/"); 

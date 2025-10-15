@@ -15,7 +15,7 @@ const routeInit = async (fastify: FastifyInstance) => {
     });
 
     fastify.get(
-    "/validate",
+    "/api/v1/validate",
     {
       preHandler: requireRole([Role.admin, Role.encoder]), 
     },

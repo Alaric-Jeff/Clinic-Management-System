@@ -17,7 +17,7 @@ export async function createPatientController(
         gender,
         csdIdOrPwdId,
         mobileNumber,
-        residentialAddress
+        residentialAddress, registerDate
     } = request.body;
 
     const user = request.currentUser;
@@ -42,6 +42,7 @@ export async function createPatientController(
                 csdIdOrPwdId,
                 mobileNumber,
                 residentialAddress,
+                registerDate,
                 createdByName: userName,
                 createdByRole: userRole as Role,
                 updatedByName: userName,

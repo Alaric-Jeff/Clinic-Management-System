@@ -1,44 +1,33 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './1.1_Login.css';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-// Remove the full URL, use just the path
-const login_url = '/api/v1/account/login';
-
-const handleLogin = async () => {
-  try {
-    console.log('Login attempted with:', { email, password });
-    
-    const response = await fetch(login_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      console.log('Login attempted with:', { email, password });
+      
+      await login({ email, password });
+      console.log('Login successful');
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    const result = await response.json();
-    console.log('Login successful:', result);
-    
-    // Handle successful login here
-    
-  } catch (error) {
-    console.error('Login error:', error);
-  }
-};
+  };
 
   return (
     <div className="login-container">

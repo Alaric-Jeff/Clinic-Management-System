@@ -1,0 +1,108 @@
+.archive-container {
+  background-color: #fef3f3;
+  min-height: 100vh;
+  padding: 40px 60px;
+  font-family: "Poppins", sans-serif;
+  color: #2b2b2b;
+}
+
+/* Header */
+.archive-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.archive-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #7a0000;
+}
+
+/* Table Wrapper */
+.archive-table-container {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(128, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.archive-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.archive-table th {
+  background-color: #7a0000;
+  color: white;
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 15px;
+}
+
+.archive-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #e6b8b8;
+  font-size: 15px;
+  color: #2b2b2b;
+}
+
+/* Alternating Rows */
+.archive-table tr:nth-child(even) {
+  background-color: #fbe3e3;
+}
+
+/* Row Hover */
+.archive-table tr:hover {
+  background-color: #ffe8e8;
+}
+
+/* Action Buttons */
+.restore-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background-color: #800000;
+  color: #fff;
+  transition: 0.2s;
+}
+
+.restore-btn:hover {
+  background-color: #a00000;
+}
+
+.restore-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* No Data State */
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  font-style: italic;
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: #7a0000;
+  font-size: 16px;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #ffe0e0;
+  color: #c00;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c00;
+}

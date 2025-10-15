@@ -1,4 +1,5 @@
 import type{ FastifyInstance } from "fastify";
+import { Type } from "@fastify/type-provider-typebox";
 import { 
   loginSchema, 
   loginSuccessSchema, 
@@ -11,6 +12,7 @@ import {
 import { accountLoginController } from "../controllers/account-controllers/account-login-controller.js";
 import { createAccountController } from "../controllers/account-controllers/account-create-controller.js";
 import { accountVerifyController } from "../controllers/account-controllers/account-verify-controller.js";
+import { accountLogoutController } from "../controllers/account-controllers/account-logout-controller.js";
 import { requestPasswordReset } from "../controllers/account-controllers/verify-reset-password.js";
 import { confirmPasswordReset } from "../controllers/account-controllers/confirm-password-reset.js";
 
@@ -35,6 +37,21 @@ export async function accountRoutes(fastify: FastifyInstance){
             }
         },
         handler: accountLoginController
+    });
+
+    // Logout route
+    fastify.route({
+        method: 'POST',
+        url: '/logout',
+        schema: {
+            response: {
+                200: Type.Object({
+                    success: Type.Boolean(),
+                    message: Type.String()
+                })
+            }
+        },
+        handler: accountLogoutController
     });
 
     // Create account route

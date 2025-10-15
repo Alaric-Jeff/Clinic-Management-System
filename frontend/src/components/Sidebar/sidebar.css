@@ -1,0 +1,83 @@
+/* --- Sidebar Container --- */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #7b0f0f;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* --- Welcome Section --- */
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.sidebar-header span {
+  display: block;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  color: #ffcccc;
+}
+
+/* --- Navigation Section --- */
+.sidebar-nav {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  border-left: 5px solid transparent;
+}
+
+.sidebar-link:hover {
+  background-color: #ffcccc;
+  cursor: pointer;
+}
+
+/* --- Active Link --- */
+.sidebar-link.active {
+  background-color: white;
+  color: #7b0f0f;
+  font-weight: 600;
+  border-left-color: #7b0f0f;
+}
+
+/* --- Logout Button --- */
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px 15px;
+  background-color: #a71d1d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #8c0c0c;
+}

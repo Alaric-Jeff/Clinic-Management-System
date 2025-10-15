@@ -75,7 +75,6 @@ model Account {
   password     String
   role         Role          @default(encoder)
   status       AccountStatus @default(pending)
-  
   // Relations
   medicalDocumentations MedicalDocumentation[]
 
@@ -108,6 +107,7 @@ model Patient {
   csdIdOrPwdId        String?
   mobileNumber        String?
   residentialAddress  String?
+  registeredAt DateTime  @default(now())
   isArchived          Boolean   @default(false)
   
   // Denormalized audit fields only (no relations needed!)
