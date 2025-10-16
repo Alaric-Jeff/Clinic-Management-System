@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../axios/api";
 import "./MedicalServices.css";
+import AddServiceModal from "../../modals/add-service/AddServiceModal";
 import DeleteServiceModal from "../../modals/delete-service/DeleteServiceModal";
+import EditServiceModal from "../../modals/edit-service/EditServiceModal";
 
 const MedicalServices = () => {
   const [services, setServices] = useState([]);

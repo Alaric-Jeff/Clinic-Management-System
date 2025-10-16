@@ -89,6 +89,18 @@ export const getAllMedicalServicesResponse = Type.Object({
     }))
 })
 
+export const updateMedicalServiceResponse = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String(),
+    data: Type.Object({  
+        name: Type.String(),
+        category: Type.String(),
+        price: Type.Number(),
+        createdByName: Type.Union([Type.String(), Type.Null()]),
+        createdAt: Type.String({format: 'date'})
+    })
+})
+
 
 /**
  *              id: true,

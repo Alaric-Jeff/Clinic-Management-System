@@ -9,6 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 import PatientList from "./components/PatientList/PatientList";
 import AdminLayout from "./layouts/admin-layout/AdminLayout";
 import Archive from "./components/Archive/Archive";
+import MedicalServices from "./components/MedicalServices/MedicalServices";
 import "./App.css";
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
               </ProtectedRoute>
             }
           >
+             <Route path="/services" element={<MedicalServices />} />
             <Route path="/archive" element={<Archive />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/patient-list" element={<PatientList />} />

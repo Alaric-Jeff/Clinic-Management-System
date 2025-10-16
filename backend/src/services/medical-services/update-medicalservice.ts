@@ -34,14 +34,15 @@ export async function updateMedicalService(
             throw new Error('No fields provided for update');
         }
 
-        // Assuming you're using Prisma
         const updatedService = await fastify.prisma.service.update({
             where: { id },
             data: updateData, 
             select: {
                 name: true,
                 category: true,
-                price: true
+                price: true,
+                createdByName: true,
+                createdAt: true,
             }
         });
 

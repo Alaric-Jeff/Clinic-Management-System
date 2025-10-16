@@ -4,13 +4,17 @@ import {
     createMedicalServiceSuccessResponse,
     medicalServiceId,
     deleteServiceResponse,
-    getAllMedicalServicesResponse
+    getAllMedicalServicesResponse,
+    updateMedicalServiceSchema,
+    updateMedicalServiceResponse
+    
 } from '../type-schemas/services-schemas.js'
 
 
 import { createMedicalServiceController } from "../controllers/medical-services-controllers/create-medicalservice-controller.js";
 import { deleteMedicalServiceController } from "../controllers/medical-services-controllers/delete-medicalservice-controller.js";
 import { getAllMedicalServiceController } from "../controllers/medical-services-controllers/get-all-medicalservice-controller.js";
+import { patchMedicalServiceController } from "../controllers/medical-services-controllers/patch-medicalservice-controller.js";
 import { requireRole } from "../hooks/authorization.js";
 import { Role } from "@prisma/client";
 
@@ -52,5 +56,19 @@ export async function medicalServiceRoutes(fastify: FastifyInstance){
         }, preHandler: requireRole([Role.admin]),
         handler: getAllMedicalServiceController
     })    
+
+
+    fastify.route({
+        method: 'PATCH',
+        url: '/patch-medical-services',
+        schema: {
+            body: updateMedicalServiceSchema,
+            response: {
+                200: updateMedicalServiceResponse
+            }
+        }, preHandler: requireRole([Role.admin]),
+        handler: patchMedicalServiceController
+    })    
+
 }
 

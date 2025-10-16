@@ -8,7 +8,7 @@ const Sidebar = () => {
   const navItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: "🏠" },
     { name: "Patient Records", path: "/patient-list", icon: "📋" },
-    { name: "Services", path: "/admin/services", icon: "🧾" },
+    { name: "Services", path: "/services", icon: "🧾" },
     { name: "Payment Details", path: "/admin/payments", icon: "💳" },
     { name: "User Management", path: "/admin/users", icon: "👥" },
     { name: "Archive", path: "/archive", icon: "🗂️" },
