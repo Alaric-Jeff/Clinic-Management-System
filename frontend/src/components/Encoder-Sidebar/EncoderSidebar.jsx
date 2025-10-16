@@ -6,9 +6,10 @@ const EncoderSidebar = () => {
   const { user, logout } = useAuth();
 
   const navItems = [
-    { name: "Patient Records", path: "encoder/patient-list", icon: "📋" },
-    { name: "Payment Details", path: "encoder/payments", icon: "💳" },
-    { name: "Archive", path: "encoder/archive", icon: "🗂️" },
+    { name: "Dashboard", path: "/encoder/dashboard", icon: "🏠" },
+    { name: "Patient Records", path: "/encoder/patient-list", icon: "📋" },
+    { name: "Payment Details", path: "/encoder/payments", icon: "💳" },
+    { name: "Archive", path: "/encoder/archive", icon: "🗂️" },
   ];
 
   return (

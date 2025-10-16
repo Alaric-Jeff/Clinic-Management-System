@@ -42,20 +42,21 @@ function App() {
             <Route path="add-new-user" element={<AddNewUserPage />} />
           </Route>
 
-          {/* Encoder Routes */}
-          <Route
-            path="/encoder"
-            element={
-              <ProtectedRoute allowedRoles={["encoder"]}>
-                <EncoderLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="patient-list" element={<PatientList />} />
-            <Route path="patient-details/:id" element={<PatientDetail />} />
-            <Route path="payments" element={<div>Payment Details Page</div>} />
-            <Route path="archive" element={<Archive />} />
-          </Route>
+{/* Encoder Routes */}
+<Route
+  path="/encoder"
+  element={
+    <ProtectedRoute allowedRoles={["encoder"]}>
+      <EncoderLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route path="dashboard" element={<Dashboard />} />
+  <Route path="patient-list" element={<PatientList />} />
+  <Route path="patient-details/:id" element={<PatientDetail />} />
+  <Route path="payments" element={<div>Payment Details</div>} />
+  <Route path="archive" element={<Archive />} />
+</Route>
 
           {/* Fallback */}
           <Route path="*" element={<div>404 Not Found</div>} />
