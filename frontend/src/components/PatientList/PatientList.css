@@ -35,6 +35,54 @@
   background-color: #a30000;
 }
 
+/* Search and Sort Controls */
+.patient-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 14px;
+  border: 1px solid #e5b7b7;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  font-family: "Poppins", sans-serif;
+}
+
+.search-input:focus {
+  border-color: #800000;
+  box-shadow: 0 0 4px rgba(128, 0, 0, 0.2);
+}
+
+.sort-btn {
+  padding: 10px 16px;
+  background-color: #f9caca;
+  border: 1px solid #e5b7b7;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Poppins", sans-serif;
+  color: #800000;
+}
+
+.sort-btn:hover {
+  background-color: #d67b7b;
+  color: #fff;
+  border-color: #800000;
+}
+
+.sort-btn:active {
+  transform: scale(0.98);
+}
+
 /* Table Wrapper */
 .patient-table-container {
   width: 100%;
@@ -106,12 +154,28 @@
   background-color: #a00000;
 }
 
+.archive-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* No Data State */
 .no-data {
   text-align: center;
   padding: 20px;
   color: #777;
   font-style: italic;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #ffe0e0;
+  color: #c00;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c00;
 }
 
 /* Pagination */

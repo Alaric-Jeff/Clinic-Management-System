@@ -5,25 +5,26 @@ import AddPatient from "../../modals/add-patient/AddPatient";
 
 const PatientList = () => {
   const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddPatient, setShowAddPatient] = useState(false);
-  const [archivingIds, setArchivingIds] = useState(new Set()); // Fixed: should be archivingIds, not restoringIds
-  const [error, setError] = useState(""); // Added missing error state
+  const [archivingIds, setArchivingIds] = useState(new Set());
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc"); // "asc" or "desc"
 
   const handleArchive = async (patientId) => {
-    // Prevent multiple archive clicks
     if (archivingIds.has(patientId)) return;
 
     try {
       setArchivingIds((prev) => new Set(prev).add(patientId));
-      setError(""); // Clear previous errors
+      setError("");
 
       const res = await api.post("/patient/archive-patient", {
         id: patientId,
       });
 
       if (res.data.success) {
-        // Remove the patient from the list immediately for better UX
         setPatients((prev) =>
           prev.filter((patient) => patient.id !== patientId)
         );
@@ -60,6 +61,35 @@ const PatientList = () => {
     }
   };
 
+  // Filter and sort patients
+  useEffect(() => {
+    let filtered = patients;
+
+    // Search by name
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((patient) => {
+        const fullName = `${patient.lastName}, ${patient.firstName}${
+          patient.middleName ? ` ${patient.middleName}` : ""
+        }`.toLowerCase();
+        return fullName.includes(searchQuery.toLowerCase());
+      });
+    }
+
+    // Sort by name
+    filtered.sort((a, b) => {
+      const nameA = `${a.lastName}, ${a.firstName}`.toLowerCase();
+      const nameB = `${b.lastName}, ${b.firstName}`.toLowerCase();
+
+      if (sortOrder === "asc") {
+        return nameA.localeCompare(nameB);
+      } else {
+        return nameB.localeCompare(nameA);
+      }
+    });
+
+    setFilteredPatients(filtered);
+  }, [patients, searchQuery, sortOrder]);
+
   useEffect(() => {
     fetchPatients();
   }, []);
@@ -75,6 +105,24 @@ const PatientList = () => {
           onClick={() => setShowAddPatient(true)}
         >
           + Add Patient
+        </button>
+      </div>
+
+      {/* Search and Sort Controls */}
+      <div className="patient-controls">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button
+          className="sort-btn"
+          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          title={`Sort by name (${sortOrder === "asc" ? "A-Z" : "Z-A"})`}
+        >
+          {sortOrder === "asc" ? "↑ A-Z" : "↓ Z-A"}
         </button>
       </div>
 
@@ -95,8 +143,8 @@ const PatientList = () => {
             </tr>
           </thead>
           <tbody>
-            {patients.length > 0 ? (
-              patients.map((p) => (
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((p) => (
                 <tr key={p.id}>
                   <td>{`${p.lastName}, ${p.firstName}${p.middleName ? ` ${p.middleName}` : ""}`}</td>
                   <td>
@@ -111,7 +159,7 @@ const PatientList = () => {
                     <button 
                       className="archive-btn"
                       onClick={() => handleArchive(p.id)}
-                      disabled={archivingIds.has(p.id)} // Disable while archiving
+                      disabled={archivingIds.has(p.id)}
                     >
                       {archivingIds.has(p.id) ? "Archiving..." : "Archive"}
                     </button>
@@ -121,7 +169,7 @@ const PatientList = () => {
             ) : (
               <tr>
                 <td colSpan="3" className="no-data">
-                  No records found
+                  {searchQuery ? "No patients match your search" : "No records found"}
                 </td>
               </tr>
             )}
@@ -129,7 +177,7 @@ const PatientList = () => {
         </table>
       </div>
 
-      {/* ✅ Add Patient Modal */}
+      {/* Add Patient Modal */}
       {showAddPatient && (
         <AddPatient
           onClose={() => setShowAddPatient(false)} 
