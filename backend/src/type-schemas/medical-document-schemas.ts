@@ -157,3 +157,130 @@ export const getMedicalDocumentationWithRelationsSchema = Type.Object({
 });
 
 export type getMedicalDocumentationWithRelationsType = Static<typeof getMedicalDocumentationWithRelationsSchema>;
+
+/**
+ * Schema for GET medical documentation params validation
+ * Validates the :id parameter in the URL
+ */
+export const getMedicalDocumentationParamsSchema = Type.Object({
+  id: Type.String({
+    description: "The unique identifier of the medical documentation",
+    minLength: 1
+  })
+});
+
+/**
+ * Schema for GET medical documentation response
+ * Validates the full response with nested bill and billed services
+ */
+export const getMedicalDocumentationResponseSchema = Type.Object({
+  success: Type.Boolean({
+    description: "Indicates whether the request was successful"
+  }),
+  message: Type.String({
+    description: "Human-readable message about the operation"
+  }),
+  data: Type.Optional(
+    Type.Object({
+      id: Type.String({ description: "Medical documentation ID" }),
+      patientId: Type.String({ description: "Associated patient ID" }),
+      createdById: Type.String({ description: "Account ID of creator" }),
+      admittedById: Type.Union([Type.String(), Type.Null()], {
+        description: "Doctor ID who admitted the patient"
+      }),
+      createdByName: Type.String({ description: "Name of the creator" }),
+      createdByRole: Type.Enum(
+        { admin: "admin", encoder: "encoder" },
+        { description: "Role of the creator" }
+      ),
+      admittedByName: Type.Union([Type.String(), Type.Null()], {
+        description: "Name of admitting doctor"
+      }),
+      lastUpdatedByName: Type.Union([Type.String(), Type.Null()], {
+        description: "Name of last updater"
+      }),
+      lastUpdatedByRole: Type.Union(
+        [
+          Type.Enum({ admin: "admin", encoder: "encoder" }),
+          Type.Null()
+        ],
+        { description: "Role of last updater" }
+      ),
+      assessment: Type.Union([Type.String(), Type.Null()], {
+        description: "Patient assessment notes"
+      }),
+      diagnosis: Type.Union([Type.String(), Type.Null()], {
+        description: "Medical diagnosis"
+      }),
+      treatment: Type.Union([Type.String(), Type.Null()], {
+        description: "Treatment plan"
+      }),
+      prescription: Type.Union([Type.String(), Type.Null()], {
+        description: "Medication prescription"
+      }),
+      status: Type.Enum(
+        { complete: "complete", incomplete: "incomplete", draft: "draft" },
+        { description: "Documentation status" }
+      ),
+      createdAt: Type.String({
+        format: "date-time",
+        description: "Documentation creation timestamp"
+      }),
+      updatedAt: Type.String({
+        format: "date-time",
+        description: "Last update timestamp"
+      }),
+      patient: Type.Object({
+        id: Type.String(),
+        firstName: Type.String(),
+        lastName: Type.String(),
+        middleName: Type.Union([Type.String(), Type.Null()])
+      }),
+      medicalBill: Type.Union(
+        [
+          Type.Object({
+            id: Type.String({ description: "Medical bill ID" }),
+            totalAmount: Type.Number({
+              description: "Total bill amount"
+            }),
+            amountPaid: Type.Number({
+              description: "Amount already paid"
+            }),
+            balance: Type.Number({
+              description: "Remaining balance"
+            }),
+            paymentStatus: Type.Enum(
+              { paid: "paid", unpaid: "unpaid", partially_paid: "partially_paid" },
+              { description: "Current payment status" }
+            ),
+            billedServices: Type.Array(
+              Type.Object({
+                id: Type.String({ description: "Billed service ID" }),
+                serviceName: Type.String({ description: "Name of the service" }),
+                serviceCategory: Type.String({
+                  description: "Category of the service"
+                }),
+                servicePriceAtTime: Type.Number({
+                  description: "Price at time of billing"
+                }),
+                quantity: Type.Integer({
+                  description: "Quantity of service billed"
+                }),
+                subtotal: Type.Number({
+                  description: "Line-item total (quantity × price)"
+                }),
+                createdAt: Type.String({
+                  format: "date-time",
+                  description: "Billed service creation timestamp"
+                })
+              }),
+              { description: "List of services included in this bill" }
+            )
+          }),
+          Type.Null()
+        ],
+        { description: "Associated medical bill with billed services or null" }
+      )
+    })
+  )
+});

@@ -12,6 +12,8 @@ import Archive from "./components/Archive/Archive";
 import MedicalServices from "./components/MedicalServices/MedicalServices";
 import PatientDetail from "./components/PatientDetails/PatientDetails";
 import EncoderLayout from "./layouts/encoder-layout/EncoderLayout";
+import PatientRecordView from "./components/PatientRecord";
+import SuccesfulReset from "./modals/view-patient/SuccessfulReset";
 import "./App.css";
 
 function App() {
@@ -23,6 +25,7 @@ function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/verified-email" element={<VerifiedEmailPage />} />
+          <Route path="/success-reset" element={<SuccesfulReset />} />
 
           {/* Admin Routes */}
           <Route
