@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const validateUser = async () => {
       try {
         const res = await api.get("/validate");
-        setUser(res.data.user);
+        setUser(res.data.data);
       } catch {
         setUser(null);
       } finally {
@@ -25,16 +25,21 @@ export const AuthProvider = ({ children }) => {
     validateUser();
   }, []);
 
+const login = async (credentials) => {
+  try {
+    const res = await api.post("/account/login", credentials);
+    const userData = res.data?.data;
 
-  const login = async (credentials) => {
-    try {
-      const res = await api.post("/account/login", credentials);
-      setUser(res.data.user);
-      navigate("/dashboard"); // will this cause an error? i meant it's just http://localhost:5173/dashboard right?
-    } catch (err) {
-      throw err;
-    }
-  };
+    if (!userData) throw new Error("Invalid login response: user data missing");
+
+    setUser(userData);
+    navigate(`/${userData.role}/dashboard`);
+  } catch (err) {
+    console.error("Login failed:", err.response?.data || err.message);
+    throw err;
+  }
+};
+
 
   const logout = async () => {
     try {
@@ -53,3 +58,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

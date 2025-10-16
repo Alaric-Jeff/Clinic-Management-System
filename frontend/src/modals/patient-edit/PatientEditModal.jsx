@@ -1,25 +1,22 @@
 import { useState, useEffect } from "react";
 import api from "../../axios/api";
-import "./AddPatient.css";
+import "./PatientEditModal.css";
 
-const AddPatient = ({ onClose, onSuccess }) => {
+const EditPatientModal = ({ patient, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    lastName: "",
-    firstName: "",
-    middleName: "",
-    birthDate: "",
-    age: "",
-    gender: "",
-    mobileNumber: "",
-    residentialAddress: "",
-    csdIdOrPwdId: "",
-    registerDate: "",
+    firstName: patient.firstName || "",
+    lastName: patient.lastName || "",
+    middleName: patient.middleName || "",
+    birthDate: patient.birthDate ? patient.birthDate.split("T")[0] : "",
+    age: patient.age || "",
+    gender: patient.gender || "",
+    mobileNumber: patient.mobileNumber || "",
+    residentialAddress: patient.residentialAddress || "",
+    csdIdOrPwdId: patient.csdIdOrPwdId || "",
   });
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Auto-calculate age
   useEffect(() => {
     if (formData.birthDate) {
       const birth = new Date(formData.birthDate);
@@ -44,41 +41,43 @@ const AddPatient = ({ onClose, onSuccess }) => {
     setError("");
 
     try {
-      const today = new Date().toISOString().split("T")[0];
-      if (formData.registerDate > today) {
-        setError("Register date cannot be in the future.");
-        return;
-      }
+      const trimmedFirstName = formData.firstName.trim();
+      const trimmedLastName = formData.lastName.trim();
 
-      if (!formData.lastName.trim() || !formData.firstName.trim()) {
-        setError("Last name and first name are required.");
+      if (!trimmedFirstName || !trimmedLastName) {
+        setError("First name and last name are required.");
         return;
       }
 
       setLoading(true);
 
       const payload = {
-        ...formData,
-        birthDate: formData.birthDate
-          ? new Date(formData.birthDate).toISOString()
-          : null,
-        registerDate: formData.registerDate || null,
-        csdIdOrPwdId: formData.csdIdOrPwdId || null,
-        middleName: formData.middleName || null,
-        mobileNumber: formData.mobileNumber || null,
-        residentialAddress: formData.residentialAddress || null,
+        id: patient.id,
+        firstName: trimmedFirstName !== patient.firstName ? trimmedFirstName : null,
+        lastName: trimmedLastName !== patient.lastName ? trimmedLastName : null,
+        middleName: formData.middleName !== patient.middleName ? (formData.middleName || null) : null,
+        birthDate: formData.birthDate !== patient.birthDate?.split("T")[0] ? formData.birthDate : null,
+        gender: formData.gender !== patient.gender ? (formData.gender || null) : null,
+        mobileNumber: formData.mobileNumber !== patient.mobileNumber ? (formData.mobileNumber || null) : null,
+        residentialAddress: formData.residentialAddress !== patient.residentialAddress ? (formData.residentialAddress || null) : null,
+        csdIdOrPwdId: formData.csdIdOrPwdId !== patient.csdIdOrPwdId ? (formData.csdIdOrPwdId || null) : null,
       };
 
-      const res = await api.post("/patient/create-patient", payload);
+      console.log("Patient ID being sent:", payload.id);
+      console.log("Full Payload:", payload);
+      console.log("Patient object:", patient);
+
+      const res = await api.patch("/patient/patch-patient", payload);
+      console.log("Response:", res.data);
+
       if (res.data.success) {
         onSuccess?.();
-        onClose();
       } else {
-        setError(res.data.message || "Failed to create patient");
+        setError(res.data.message || "Failed to update patient");
       }
     } catch (err) {
-      console.error("Error creating patient:", err);
-      setError(err.response?.data?.message || "Unable to create patient. Please try again.");
+      console.error("Error updating patient:", err);
+      setError(err.response?.data?.message || "Unable to update patient. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -88,13 +87,13 @@ const AddPatient = ({ onClose, onSuccess }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Patient Details</h2>
+          <h2>Edit Patient</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="patient-form">
           {error && <div className="form-error">{error}</div>}
 
-          {/* PERSONAL INFO */}
+          {/* Name Section */}
           <div className="form-section">
             <h3 className="section-title">Personal Information</h3>
             <div className="form-row">
@@ -133,23 +132,11 @@ const AddPatient = ({ onClose, onSuccess }) => {
                   onChange={handleChange}
                 />
               </div>
-              <div className="form-group">
-                <label>Sex *</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">-- Select Sex --</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
+              <div></div>
             </div>
           </div>
 
-          {/* DEMOGRAPHICS */}
+          {/* Birth & Gender Section */}
           <div className="form-section">
             <h3 className="section-title">Demographics</h3>
             <div className="form-row">
@@ -174,48 +161,51 @@ const AddPatient = ({ onClose, onSuccess }) => {
                 />
               </div>
             </div>
-          </div>
 
-          {/* CONTACT INFO */}
-          <div className="form-section">
-            <h3 className="section-title">Contact Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Contact No.</label>
-                <input
-                  type="tel"
-                  name="mobileNumber"
-                  placeholder="Enter contact number"
-                  value={formData.mobileNumber}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Address</label>
-                <textarea
-                  name="residentialAddress"
-                  placeholder="Enter residential address"
-                  value={formData.residentialAddress}
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label>Sex *</label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Select Sex --</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
             </div>
           </div>
 
-          {/* ADDITIONAL INFO */}
+          {/* Contact Section */}
+          <div className="form-section">
+            <h3 className="section-title">Contact Information</h3>
+            <div className="form-group">
+              <label>Contact No.</label>
+              <input
+                type="tel"
+                name="mobileNumber"
+                placeholder="Enter contact number"
+                value={formData.mobileNumber}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Address</label>
+              <textarea
+                name="residentialAddress"
+                placeholder="Enter residential address"
+                value={formData.residentialAddress}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          {/* Additional Information Section */}
           <div className="form-section">
             <h3 className="section-title">Additional Information</h3>
             <div className="form-row">
-              <div className="form-group">
-                <label>Register Date</label>
-                <input
-                  type="date"
-                  name="registerDate"
-                  value={formData.registerDate}
-                  onChange={handleChange}
-                  max={new Date().toISOString().split("T")[0]}
-                />
-              </div>
               <div className="form-group">
                 <label>Senior/PWD ID No.</label>
                 <input
@@ -226,10 +216,11 @@ const AddPatient = ({ onClose, onSuccess }) => {
                   onChange={handleChange}
                 />
               </div>
+              <div></div>
             </div>
           </div>
 
-          {/* ACTION BUTTONS */}
+          {/* Action Buttons */}
           <div className="form-actions">
             <button
               type="button"
@@ -239,8 +230,12 @@ const AddPatient = ({ onClose, onSuccess }) => {
             >
               Cancel
             </button>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? "Saving..." : "Save Patient"}
+            <button
+              type="submit"
+              className="btn-save"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
@@ -249,4 +244,4 @@ const AddPatient = ({ onClose, onSuccess }) => {
   );
 };
 
-export default AddPatient;
+export default EditPatientModal;

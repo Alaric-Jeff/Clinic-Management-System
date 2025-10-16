@@ -75,6 +75,11 @@ export async function accountLoginController(
     return reply.status(200).send({
       success: true,
       message: "Login successful",
+      data: {
+        id: result.id,
+        role: result.role,
+        name: `${result.firstName} ${result.lastName}`
+      }
     });
   } catch (err: unknown) {
     /**

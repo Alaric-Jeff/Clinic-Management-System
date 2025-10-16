@@ -13,7 +13,7 @@
 /* ===== MODAL CONTAINER ===== */
 .modal-content {
   background: #fff;
-  width: 720px;
+  width: 700px;
   height: 85vh;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(128, 0, 0, 0.15);
@@ -29,6 +29,7 @@
   color: #fff;
   text-align: center;
   padding: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
 }
 
@@ -66,10 +67,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
-  background-color: #fff7f7;
-  border-radius: 10px;
-  border: 1px solid #f0d9d9;
 }
 
 .section-title {
@@ -77,21 +74,26 @@
   font-weight: 700;
   color: #7a0000;
   margin: 0 0 8px 0;
-  text-transform: uppercase;
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-/* ===== FORM LAYOUT ===== */
+/* ===== FORM GROUP ===== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ===== FORM ROW ===== */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.form-row .form-group {
+  width: 100%;
 }
 
 /* ===== LABELS ===== */
@@ -99,10 +101,12 @@
   font-size: 13px;
   font-weight: 600;
   color: #800000;
+  letter-spacing: 0.2px;
   text-align: left;
+  display: block;
 }
 
-/* ===== INPUTS ===== */
+/* ===== INPUT STYLES ===== */
 .patient-form input,
 .patient-form select,
 .patient-form textarea {
@@ -121,9 +125,9 @@
 
 .patient-form input::placeholder,
 .patient-form textarea::placeholder {
-  color: #aaa;
-  text-align: left;
+  color: #ccc;
   font-weight: 400;
+  text-align: left;
 }
 
 .patient-form input:focus,
@@ -134,7 +138,6 @@
   background-color: #fafafa;
 }
 
-/* ===== SELECT ===== */
 .patient-form select {
   cursor: pointer;
   appearance: none;
@@ -145,7 +148,7 @@
   padding-right: 36px;
 }
 
-/* ===== READONLY ===== */
+/* ===== READONLY INPUT ===== */
 .readonly-input {
   background-color: #f8f8f8 !important;
   color: #888 !important;
@@ -153,26 +156,32 @@
   border-color: #e0e0e0 !important;
 }
 
+.readonly-input:focus {
+  box-shadow: none !important;
+  border-color: #e0e0e0 !important;
+}
+
 /* ===== TEXTAREA ===== */
 .patient-form textarea {
   resize: none;
-  min-height: 60px;
+  min-height: 75px;
   max-height: 100px;
 }
 
-/* ===== BUTTONS ===== */
+/* ===== ACTION BUTTONS ===== */
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 16px;
+  flex-shrink: 0;
   padding-top: 16px;
   border-top: 1px solid #f0d9d9;
 }
 
 .btn-cancel,
 .btn-save {
-  padding: 10px 28px;
+  padding: 11px 28px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -180,6 +189,7 @@
   font-family: "Poppins", sans-serif;
   transition: all 0.2s ease;
   font-size: 14px;
+  letter-spacing: 0.3px;
 }
 
 .btn-cancel {
@@ -190,6 +200,12 @@
 
 .btn-cancel:hover:not(:disabled) {
   background-color: #fef3f3;
+}
+
+.btn-cancel:disabled {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: not-allowed;
 }
 
 .btn-save {
@@ -203,7 +219,12 @@
   box-shadow: 0 4px 12px rgba(128, 0, 0, 0.35);
 }
 
-/* ===== ANIMATION ===== */
+.btn-save:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -218,6 +239,10 @@
 /* ===== SCROLLBAR ===== */
 .patient-form::-webkit-scrollbar {
   width: 6px;
+}
+
+.patient-form::-webkit-scrollbar-track {
+  background: #f5f5f5;
 }
 
 .patient-form::-webkit-scrollbar-thumb {

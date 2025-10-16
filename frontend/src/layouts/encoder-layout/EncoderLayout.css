@@ -1,10 +1,10 @@
-.admin-layout {
+.layout {
   display: flex;
   min-height: 100vh;
   background-color: #fef3f3;
 }
 
-.admin-content {
+.content {
   flex: 1;
   margin-left: 250px;
   padding: 0;

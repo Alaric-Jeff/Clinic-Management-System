@@ -16,7 +16,7 @@ import {
     patchPatientSchema,
     getTotalPatientsCountResponse,
     patchPatientSuccessResponse,
-    getOnePatientResponseSchema
+    getOnePatientResponseSchema,
 } from '../type-schemas/patient-schemas.js';
 import { unarchivePatientController } from "../controllers/patient-controllers/unarchive-patient-controller.js";
 
@@ -157,6 +157,7 @@ export async function patientRoutes(fastify: FastifyInstance) {
         method: 'GET',
         url: "/get-one-patient/:id",
         schema: {
+            params: patientIdSchema,
             response: {
                 200: getOnePatientResponseSchema
             }

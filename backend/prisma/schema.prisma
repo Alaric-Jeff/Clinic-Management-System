@@ -172,7 +172,7 @@ model MedicalDocumentation {
   treatment    String?
   prescription String?
   
-  status       DocumentationStatus @default(draft)
+  status       DocumentationStatus @default(complete)
   
   patient      Patient @relation(fields: [patientId], references: [id])
   creator      Account @relation(fields: [createdById], references: [id])

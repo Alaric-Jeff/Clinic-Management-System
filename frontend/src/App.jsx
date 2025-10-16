@@ -10,6 +10,8 @@ import PatientList from "./components/PatientList/PatientList";
 import AdminLayout from "./layouts/admin-layout/AdminLayout";
 import Archive from "./components/Archive/Archive";
 import MedicalServices from "./components/MedicalServices/MedicalServices";
+import PatientDetail from "./components/PatientDetails/PatientDetails";
+import EncoderLayout from "./layouts/encoder-layout/EncoderLayout";
 import "./App.css";
 
 function App() {
@@ -17,36 +19,46 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* 🌐 Public routes */}
+          {/* Public Routes */}
           <Route path="/" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/verified-email" element={<VerifiedEmailPage />} />
 
-          {/* 🔐 Protected admin layout routes */}
+          {/* Admin Routes */}
           <Route
+            path="/admin"
             element={
-              <ProtectedRoute allowedRoles={["admin", "encoder"]}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout />
               </ProtectedRoute>
             }
           >
-             <Route path="/services" element={<MedicalServices />} />
-            <Route path="/archive" element={<Archive />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/patient-list" element={<PatientList />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="patient-list" element={<PatientList />} />
+            <Route path="patient-details/:id" element={<PatientDetail />} />
+            <Route path="services" element={<MedicalServices />} />
+            <Route path="payments" element={<div>Payment Details Page</div>} />
+            <Route path="archive" element={<Archive />} />
+            <Route path="add-new-user" element={<AddNewUserPage />} />
           </Route>
 
-          {/* 👑 Admin-only route */}
+          {/* Encoder Routes */}
           <Route
-            path="/add-new-user"
+            path="/encoder"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminLayout>
-                  <AddNewUserPage />
-                </AdminLayout>
+              <ProtectedRoute allowedRoles={["encoder"]}>
+                <EncoderLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route path="patient-list" element={<PatientList />} />
+            <Route path="patient-details/:id" element={<PatientDetail />} />
+            <Route path="payments" element={<div>Payment Details Page</div>} />
+            <Route path="archive" element={<Archive />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
       </AuthProvider>
     </Router>

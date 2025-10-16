@@ -182,3 +182,7 @@ export const getOnePatientResponseSchema = Type.Object({
   message: Type.String(),
   data: patientWithDocPreviewSchema
 });
+
+export const patientIdParams = Type.Object({
+    id: Type.String()
+})

@@ -1,4 +1,5 @@
 import { Type, type Static } from "@fastify/type-provider-typebox";
+import { Role } from "@prisma/client";
 
 //schemas for account creation
 export const createAccountSchema = Type.Object({
@@ -21,7 +22,12 @@ export type loginType = Static<typeof loginSchema>;
 //successful login schema
 export const loginSuccessSchema = Type.Object({
     success: Type.Boolean(),
-    message: Type.String()
+    message: Type.String(),
+    data: Type.Object({
+        id: Type.String(),
+        role: Type.Enum(Role),
+        name: Type.String()
+    })
 });
 
 

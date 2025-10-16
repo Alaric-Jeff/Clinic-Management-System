@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../axios/api";
+import { useAuth } from "../../context/AuthContext";
 import "./PatientList.css";
-import AddPatient from "../../modals/add-patient/AddPatient"; 
+import AddPatient from "../../modals/add-patient/AddPatient";
 
 const PatientList = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +15,7 @@ const PatientList = () => {
   const [archivingIds, setArchivingIds] = useState(new Set());
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc"); // "asc" or "desc"
+  const [sortOrder, setSortOrder] = useState("asc");
 
   const handleArchive = async (patientId) => {
     if (archivingIds.has(patientId)) return;
@@ -42,6 +46,11 @@ const PatientList = () => {
         return newSet;
       });
     }
+  };
+
+  const handleViewPatient = (patientId) => {
+    const prefix = user?.role === "admin" ? "/admin" : "/encoder";
+    navigate(`${prefix}/patient-details/${patientId}`);
   };
 
   const fetchPatients = async () => {
@@ -155,7 +164,12 @@ const PatientList = () => {
                     — {new Date(p.createdAt).toLocaleDateString()}
                   </td>
                   <td>
-                    <button className="view-btn">View</button>
+                    <button 
+                      className="view-btn"
+                      onClick={() => handleViewPatient(p.id)}
+                    >
+                      View
+                    </button>
                     <button 
                       className="archive-btn"
                       onClick={() => handleArchive(p.id)}

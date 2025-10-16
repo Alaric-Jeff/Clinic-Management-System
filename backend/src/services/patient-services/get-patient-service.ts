@@ -35,17 +35,16 @@ export async function getOnePatientService(
     const patient = await fastify.prisma.patient.findUnique({
       where: { id },
       select: {
-        // Basic patient info - essential demographics
         id: true,
         firstName: true,
         lastName: true,
         middleName: true,
         birthDate: true,
-        gender: true, // ✅ Add gender for complete profile
+        gender: true,
         csdIdOrPwdId: true,
         mobileNumber: true,
         residentialAddress: true,
-        isArchived: true, // ✅ Important to know if archived
+        isArchived: true, 
         
         // Audit trail
         createdByName: true,
@@ -59,18 +58,16 @@ export async function getOnePatientService(
         medicalDocumentations: {
           select: {
             id: true,
-            status: true, // ✅ Show if draft/complete/incomplete
+            status: true, 
             createdAt: true,
-            updatedAt: true, // ✅ Show last update time
-            createdByName: true, // ✅ Who created the document
-            admittedByName: true, // Doctor name
-            // Optionally include brief summary fields if they exist
-            // diagnosis: true, // Could show diagnosis in preview
+            updatedAt: true,
+            createdByName: true, 
+            admittedByName: true, 
           },
           orderBy: {
-            createdAt: 'desc' // ✅ Most recent first
+            createdAt: 'desc'
           },
-          take: limit // ✅ Configurable limit
+          take: limit
         }
       }
     });
