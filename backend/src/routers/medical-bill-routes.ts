@@ -7,7 +7,7 @@ import { getUnsettledBillsController } from "../controllers/medical-bill-control
 import {
     createMedicalBillSchema,
     createMedicalBillResponseSchema,
-    getUnsettledBillsResponseSchema
+    
 } from '../type-schemas/medical-bills-schema.js'
 
 export async function medicalBillRoutes(
@@ -27,14 +27,14 @@ export async function medicalBillRoutes(
     });
 
     // Get unsettled bills with patient information
-    fastify.route({
-        method: 'GET',
-        url: '/get-unsettled-bills',
-        schema: {
-            response: {
-                200: getUnsettledBillsResponseSchema
-            }
-        }, preHandler: requireRole([Role.admin, Role.encoder]),
-        handler: getUnsettledBillsController
-    });
+    // fastify.route({
+    //     method: 'GET',
+    //     url: '/get-unsettled-bills',
+    //     schema: {
+    //         response: {
+    //             200: getUnsettledBillsResponseSchema
+    //         }
+    //     }, preHandler: requireRole([Role.admin, Role.encoder]),
+    //     handler: getUnsettledBillsController
+    // });
 }

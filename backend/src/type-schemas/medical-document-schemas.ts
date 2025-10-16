@@ -283,4 +283,5 @@ export const getMedicalDocumentationResponseSchema = Type.Object({
       )
     })
   )
+  
 });

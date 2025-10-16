@@ -237,7 +237,7 @@ model MedicalBill {
   billedServices        BilledService[]
   paymentHistory        PaymentHistory[]
   
-  notes                 String?       // For payment arrangements, discounts, special notes
+  notes                 String?      
   
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt

@@ -25,5 +25,15 @@ export const createDoctorResponseSchema = Type.Object({
 
 export type createDoctorResponseType = Static<typeof createDoctorResponseSchema>;
 
+//------------------------------------------------------------------------------
 
-
+export const getAllDoctorResponseSchema = Type.Object({
+    success: Type.Boolean(),
+    message: Type.String(),
+    data: Type.Array(Type.Object({
+        id: Type.String(),
+        firstName: Type.String(),
+        lastName: Type.String(),
+        middleInitial: Type.Union([Type.String(), Type.Null()])
+    }))
+})

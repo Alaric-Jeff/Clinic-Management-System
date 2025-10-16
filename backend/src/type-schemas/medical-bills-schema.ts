@@ -1,233 +1,198 @@
 import { Type, type Static } from "@sinclair/typebox";
-import { Role, PaymentStatus, ServiceCategory } from "@prisma/client";
 
-// ==================== REQUEST SCHEMAS ====================
+// ============ ENUMS ============
 
-// Schema for service item in bill creation
+const PaymentStatusEnum = {
+  paid: "paid",
+  unpaid: "unpaid",
+  partially_paid: "partially_paid"
+};
+
+const RoleEnum = {
+  admin: "admin",
+  encoder: "encoder"
+};
+
+const ServiceCategoryEnum = {
+  hematology: "hematology",
+  bacteriology: "bacteriology",
+  clinical_microscopy: "clinical_microscopy",
+  twenty_four_hour_urine_test: "twenty_four_hour_urine_test",
+  serology_immunology: "serology_immunology",
+  clinical_chemistry: "clinical_chemistry",
+  electrolytes: "electrolytes",
+  vaccine: "vaccine",
+  histopathology: "histopathology",
+  to_be_read_by_pathologist: "to_be_read_by_pathologist",
+  tumor_markers: "tumor_markers",
+  thyroid_function_test: "thyroid_function_test",
+  hormones: "hormones",
+  hepatitis: "hepatitis",
+  enzymes: "enzymes",
+  others: "others"
+};
+
+// ============ SERVICE ITEM IN BILL ============
+
 export const billedServiceItemSchema = Type.Object({
-    serviceId: Type.String(),
-    quantity: Type.Number({ minimum: 1 })
+  serviceId: Type.String({
+    description: "Service ID to be billed"
+  }),
+  quantity: Type.Integer({
+    description: "Quantity of service",
+    minimum: 1
+  })
 });
 
 export type billedServiceItemType = Static<typeof billedServiceItemSchema>;
 
-// Schema for creating medical bill with services
+// ============ CREATE MEDICAL BILL REQUEST ============
+
+/**
+ * Schema for creating a medical bill
+ * Only accepts essentials - payment fields are calculated from PaymentHistory
+ */
 export const createMedicalBillSchema = Type.Object({
-    medicalDocumentationId: Type.String(),
-    services: Type.Array(billedServiceItemSchema, { minItems: 1 }), // At least one service
-    notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-    paymentStatus: Type.Enum(PaymentStatus),
-    paymentMethod: Type.Optional(Type.String()) // cash, card, insurance, etc.
+  medicalDocumentationId: Type.String({
+    description: "ID of the medical documentation to bill for"
+  }),
+  services: Type.Array(billedServiceItemSchema, {
+    minItems: 1,
+    description: "Array of services to include in the bill"
+  }),
+  notes: Type.Optional(
+    Type.Union([Type.String(), Type.Null()], {
+      description: "Optional notes (payment arrangements, discounts, etc.)"
+    })
+  ),
+  initialPaymentAmount: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      description: "Optional initial payment amount if paying at billing time"
+    })
+  ),
+  paymentMethod: Type.Optional(
+    Type.String({
+      description: "Payment method if initialPaymentAmount is provided (cash, card, insurance, etc.)"
+    })
+  )
 });
 
 export type createMedicalBillType = Static<typeof createMedicalBillSchema>;
 
-// Schema for adding services to existing bill
-export const addServicesToBillSchema = Type.Object({
-    medicalBillId: Type.String(),
-    services: Type.Array(billedServiceItemSchema, { minItems: 1 })
+// ============ PAYMENT HISTORY ITEM ============
+
+const paymentHistoryItemSchema = Type.Object({
+  id: Type.String(),
+  amountPaid: Type.Number(),
+  paymentMethod: Type.Union([Type.String(), Type.Null()]),
+  notes: Type.Union([Type.String(), Type.Null()]),
+  recordedByName: Type.String(),
+  recordedByRole: Type.Enum(RoleEnum),
+  createdAt: Type.String({ format: "date-time" })
 });
 
-export type addServicesToBillType = Static<typeof addServicesToBillSchema>;
+// ============ BILLED SERVICE ITEM (SNAPSHOT) ============
 
-// Params schema for getting bill details
-export const getMedicalBillParamsSchema = Type.Object({
-    id: Type.String()
+const billedServiceResponseSchema = Type.Object({
+  id: Type.String(),
+  serviceName: Type.String({
+    description: "Service name snapshot at time of billing"
+  }),
+  serviceCategory: Type.Enum(ServiceCategoryEnum),
+  servicePriceAtTime: Type.Number({
+    description: "Service price at time of billing (snapshot)"
+  }),
+  quantity: Type.Integer(),
+  subtotal: Type.Number({
+    description: "Quantity × Price"
+  }),
+  createdAt: Type.String({ format: "date-time" })
 });
 
-export type getMedicalBillParamsType = Static<typeof getMedicalBillParamsSchema>;
+// ============ CREATE MEDICAL BILL RESPONSE ============
 
-// ==================== SERVICE LAYER SCHEMAS ====================
-
-export const createMedicalBillServiceInput = Type.Object({
-    medicalDocumentationId: Type.String(),
-    services: Type.Array(billedServiceItemSchema, { minItems: 1 }),
-    notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-    paymentStatus: Type.Enum(PaymentStatus),
-    paymentMethod: Type.Optional(Type.Union([Type.String(), Type.Undefined()])),
-    createdByName: Type.String(),
-    createdByRole: Type.Enum(Role)
-});
-
-export type createMedicalBillServiceInputType = Static<typeof createMedicalBillServiceInput>;
-
-
-export const addServicesToBillServiceInput = Type.Object({
-    medicalBillId: Type.String(),
-    services: Type.Array(billedServiceItemSchema, { minItems: 1 }),
-    
-    // From JWT/auth in controller
-    updatedByName: Type.String(),
-    updatedByRole: Type.Enum(Role)
-});
-
-export type addServicesToBillServiceInputType = Static<typeof addServicesToBillServiceInput>;
-
-// ==================== RESPONSE SCHEMAS ====================
-
-// Billed service detail schema
-export const billedServiceDetailSchema = Type.Object({
-    id: Type.String(),
-    serviceName: Type.String(),
-    serviceCategory: Type.Enum(ServiceCategory),
-    servicePriceAtTime: Type.Number(),
-    quantity: Type.Number(),
-    subtotal: Type.Number(),
-    createdAt: Type.String({ format: 'date-time' })
-});
-
-export type billedServiceDetailType = Static<typeof billedServiceDetailSchema>;
-
-// Payment history detail schema
-export const paymentHistoryDetailSchema = Type.Object({
-    id: Type.String(),
-    amountPaid: Type.Number(),
-    paymentMethod: Type.Union([Type.String(), Type.Null()]),
-    recordedByName: Type.String(),
-    recordedByRole: Type.Enum(Role),
-    notes: Type.Union([Type.String(), Type.Null()]),
-    createdAt: Type.String({ format: 'date-time' })
-});
-
-export type paymentHistoryDetailType = Static<typeof paymentHistoryDetailSchema>;
-
-// Basic medical bill response (for create operation)
-export const medicalBillBasicResponseSchema = Type.Object({
-    id: Type.String(),
-    medicalDocumentationId: Type.String(),
-    totalAmount: Type.Number(),
-    amountPaid: Type.Number(),
-    balance: Type.Number(),
-    paymentStatus: Type.Enum(PaymentStatus),
-    billedServicesCount: Type.Number(),
-    createdByName: Type.String(),
-    createdByRole: Type.Enum(Role),
-    notes: Type.Union([Type.String(), Type.Null()]),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' })
-});
-
-export type medicalBillBasicResponseType = Static<typeof medicalBillBasicResponseSchema>;
-
-// Detailed medical bill response (with relations)
-export const medicalBillDetailedResponseSchema = Type.Object({
-    id: Type.String(),
-    medicalDocumentationId: Type.String(),
-    totalAmount: Type.Number(),
-    amountPaid: Type.Number(),
-    balance: Type.Number(),
-    paymentStatus: Type.Enum(PaymentStatus),
-    createdByName: Type.String(),
-    createdByRole: Type.Enum(Role),
-    lastUpdatedByName: Type.Union([Type.String(), Type.Null()]),
-    lastUpdatedByRole: Type.Union([Type.Enum(Role), Type.Null()]),
-    notes: Type.Union([Type.String(), Type.Null()]),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' }),
-    
-    // Related data
-    medicalDocumentation: Type.Object({
-        id: Type.String(),
-        status: Type.String(),
-        createdAt: Type.String({ format: 'date-time' }),
-        patient: Type.Object({
-            id: Type.String(),
-            firstName: Type.String(),
-            lastName: Type.String(),
-            middleName: Type.Union([Type.String(), Type.Null()])
-        })
-    }),
-    billedServices: Type.Array(billedServiceDetailSchema),
-    paymentHistory: Type.Array(paymentHistoryDetailSchema),
-    paymentResolution: Type.Optional(Type.Union([
-        Type.Object({
-            id: Type.String(),
-            status: Type.String(),
-            dueDate: Type.Union([Type.String({ format: 'date-time' }), Type.Null()]),
-            resolutionNotes: Type.Union([Type.String(), Type.Null()])
-        }),
-        Type.Null()
-    ]))
-});
-
-export type medicalBillDetailedResponseType = Static<typeof medicalBillDetailedResponseSchema>;
-
-// Wrapped response for create operation
 export const createMedicalBillResponseSchema = Type.Object({
-    success: Type.Boolean(),
-    message: Type.String(),
-    data: medicalBillBasicResponseSchema
-});
-
-export type createMedicalBillResponseType = Static<typeof createMedicalBillResponseSchema>;
-
-// Wrapped response for add services operation
-export const addServicesToBillResponseSchema = Type.Object({
-    success: Type.Boolean(),
-    message: Type.String(),
-    data: medicalBillBasicResponseSchema
-});
-
-export type addServicesToBillResponseType = Static<typeof addServicesToBillResponseSchema>;
-
-// Wrapped response for get bill details
-export const getMedicalBillDetailsResponseSchema = Type.Object({
-    success: Type.Boolean(),
-    message: Type.String(),
-    data: medicalBillDetailedResponseSchema
-});
-
-export type getMedicalBillDetailsResponseType = Static<typeof getMedicalBillDetailsResponseSchema>;
-
-// Unsettled bill with patient info schema
-export const unsettledBillWithPatientSchema = Type.Object({
-    id: Type.String(),
+  success: Type.Boolean(),
+  message: Type.String(),
+  data: Type.Object({
+    id: Type.String({
+      description: "Medical bill ID"
+    }),
     medicalDocumentationId: Type.String(),
-    totalAmount: Type.Number(),
-    amountPaid: Type.Number(),
-    balance: Type.Number(),
-    paymentStatus: Type.Enum(PaymentStatus),
+    totalAmount: Type.Number({
+      description: "Total bill amount (sum of all services)"
+    }),
+    amountPaid: Type.Number({
+      description: "Amount paid so far (calculated from PaymentHistory)"
+    }),
+    balance: Type.Number({
+      description: "Remaining balance (totalAmount - amountPaid)"
+    }),
+    paymentStatus: Type.Enum(PaymentStatusEnum, {
+      description: "Derived from balance: paid | unpaid | partially_paid"
+    }),
+    billedServicesCount: Type.Integer({
+      description: "Number of services in this bill"
+    }),
     createdByName: Type.String(),
-    createdByRole: Type.Enum(Role),
-    lastUpdatedByName: Type.Union([Type.String(), Type.Null()]),
-    lastUpdatedByRole: Type.Union([Type.Enum(Role), Type.Null()]),
+    createdByRole: Type.Enum(RoleEnum),
     notes: Type.Union([Type.String(), Type.Null()]),
-    createdAt: Type.String({ format: 'date-time' }),
-    updatedAt: Type.String({ format: 'date-time' }),
-    medicalDocumentation: Type.Object({
-        id: Type.String(),
-        status: Type.String(),
-        createdAt: Type.String({ format: 'date-time' }),
-        patient: Type.Object({
-            id: Type.String(),
-            firstName: Type.String(),
-            lastName: Type.String(),
-            middleName: Type.Union([Type.String(), Type.Null()]),
-            mobileNumber: Type.Union([Type.String(), Type.Null()]),
-            birthDate: Type.String({ format: 'date-time' }),
-            gender: Type.String()
-        })
+    createdAt: Type.String({ format: "date-time" }),
+    updatedAt: Type.String({ format: "date-time" })
+  })
+});
+
+export type createMedicalBillResponseType = Static<
+  typeof createMedicalBillResponseSchema
+>;
+
+// ============ GET MEDICAL BILL RESPONSE ============
+
+export const getMedicalBillResponseSchema = Type.Object({
+  success: Type.Boolean(),
+  message: Type.String(),
+  data: Type.Optional(
+    Type.Object({
+      id: Type.String(),
+      medicalDocumentationId: Type.String(),
+      totalAmount: Type.Number(),
+      amountPaid: Type.Number({
+        description: "Sum of all payments in PaymentHistory"
+      }),
+      balance: Type.Number({
+        description: "Remaining balance to be paid"
+      }),
+      paymentStatus: Type.Enum(PaymentStatusEnum, {
+        description: "Calculated: paid | unpaid | partially_paid"
+      }),
+      notes: Type.Union([Type.String(), Type.Null()]),
+      createdByName: Type.String(),
+      createdByRole: Type.Enum(RoleEnum),
+      lastUpdatedByName: Type.Union([Type.String(), Type.Null()]),
+      lastUpdatedByRole: Type.Union([Type.Enum(RoleEnum), Type.Null()]),
+      billedServices: Type.Array(billedServiceResponseSchema),
+      paymentHistory: Type.Array(paymentHistoryItemSchema),
+      createdAt: Type.String({ format: "date-time" }),
+      updatedAt: Type.String({ format: "date-time" })
     })
+  )
 });
 
-export type unsettledBillWithPatientType = Static<typeof unsettledBillWithPatientSchema>;
+export type getMedicalBillResponseType = Static<typeof getMedicalBillResponseSchema>;
 
-// Wrapped response for unsettled bills
-export const getUnsettledBillsResponseSchema = Type.Object({
-    success: Type.Boolean(),
-    message: Type.String(),
-    data: Type.Array(unsettledBillWithPatientSchema)
+// ============ SERVICE INPUT TYPE FOR SERVICE LAYER ============
+
+export const createMedicalBillServiceInputSchema = Type.Object({
+  medicalDocumentationId: Type.String(),
+  services: Type.Array(billedServiceItemSchema),
+  notes: Type.Union([Type.String(), Type.Null()]),
+  initialPaymentAmount: Type.Optional(Type.Number({ minimum: 0 })),
+  paymentMethod: Type.Optional(Type.String()),
+  createdByName: Type.String(),
+  createdByRole: Type.Enum(RoleEnum)
 });
 
-export type getUnsettledBillsResponseType = Static<typeof getUnsettledBillsResponseSchema>;
-
-// Error response schema
-export const errorResponseSchema = Type.Object({
-    statusCode: Type.Number(),
-    error: Type.String(),
-    message: Type.String()
-});
-
-export type errorResponseType = Static<typeof errorResponseSchema>;
-
-
+export type createMedicalBillServiceInputType = Static<
+  typeof createMedicalBillServiceInputSchema
+>;

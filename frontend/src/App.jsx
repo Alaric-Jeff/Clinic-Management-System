@@ -14,6 +14,7 @@ import PatientDetail from "./components/PatientDetails/PatientDetails";
 import EncoderLayout from "./layouts/encoder-layout/EncoderLayout";
 import PatientRecordView from "./components/PatientRecord";
 import SuccesfulReset from "./modals/view-patient/SuccessfulReset";
+import UserManagement from "./components/UserManagement/UserManagement";
 import "./App.css";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/verified-email" element={<VerifiedEmailPage />} />
           <Route path="/success-reset" element={<SuccesfulReset />} />
+          <Route path="/user-management" element={<UserManagement />} />
 
           {/* Admin Routes */}
           <Route
@@ -43,6 +45,7 @@ function App() {
             <Route path="payments" element={<div>Payment Details Page</div>} />
             <Route path="archive" element={<Archive />} />
             <Route path="add-new-user" element={<AddNewUserPage />} />
+            <Route path="user-management" element={<UserManagement />} />
           </Route>
 
 {/* Encoder Routes */}

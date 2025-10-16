@@ -7,7 +7,8 @@ import {
   createAccountSchema,
   passwordResetRequestSchema,
   passwordResetRequestResponse,
-  passwordResetConfirmResponse
+  passwordResetConfirmResponse,
+  getAccountResponse
 } from "../type-schemas/accounts-schemas.js";
 import { accountLoginController } from "../controllers/account-controllers/account-login-controller.js";
 import { createAccountController } from "../controllers/account-controllers/account-create-controller.js";
@@ -15,7 +16,9 @@ import { accountVerifyController } from "../controllers/account-controllers/acco
 import { accountLogoutController } from "../controllers/account-controllers/account-logout-controller.js";
 import { requestPasswordReset } from "../controllers/account-controllers/verify-reset-password.js";
 import { confirmPasswordReset } from "../controllers/account-controllers/confirm-password-reset.js";
-
+import { getAccountsController } from "../controllers/account-controllers/get-account-controller.js";
+import { requireRole } from "../hooks/authorization.js";
+import { Role } from "@prisma/client";
 export async function accountRoutes(fastify: FastifyInstance){
     // Health check for account routes
     fastify.get('/health', async (request, reply) => {
@@ -63,7 +66,7 @@ export async function accountRoutes(fastify: FastifyInstance){
             response: {
                 201: createAccountSuccessfulResponse
             }
-        }, 
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: createAccountController
     });
 
@@ -96,7 +99,7 @@ export async function accountRoutes(fastify: FastifyInstance){
         handler: requestPasswordReset
     });
 
-    // Password reset confirmation (Step 2: Confirm and reset password)
+
     fastify.route({
         method: 'GET',
         url: '/confirm-password-reset',
@@ -114,4 +117,16 @@ export async function accountRoutes(fastify: FastifyInstance){
         },
         handler: confirmPasswordReset
     });
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-accounts',
+        schema: {
+            response: {
+                200: getAccountResponse
+            }
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getAccountsController
+    });
+
 };

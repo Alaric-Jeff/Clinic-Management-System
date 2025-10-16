@@ -1,0 +1,169 @@
+.user-management-container {
+  background-color: #fef3f3;
+  min-height: 100vh;
+  padding: 40px 60px;
+  font-family: "Poppins", sans-serif;
+  color: #2b2b2b;
+}
+
+/* Header */
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.user-management-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #7a0000;
+  margin: 0;
+}
+
+.add-user-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: none;
+  background-color: #c41e3a;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: "Poppins", sans-serif;
+}
+
+.add-user-btn:hover {
+  background-color: #a01729;
+}
+
+/* Table Wrapper */
+.user-management-table-container {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(128, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.user-management-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-management-table th {
+  background-color: #7a0000;
+  color: white;
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.user-management-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #e6b8b8;
+  font-size: 15px;
+  color: #2b2b2b;
+}
+
+/* Alternating Rows */
+.user-management-table tr:nth-child(even) {
+  background-color: #fbe3e3;
+}
+
+/* Row Hover */
+.user-management-table tbody tr:hover {
+  background-color: #ffe8e8;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-activated {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-deactivated {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Action Buttons */
+.view-btn,
+.delete-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-right: 8px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+}
+
+.view-btn {
+  background-color: transparent;
+  color: #7a0000;
+  border: 1px solid #7a0000;
+}
+
+.view-btn:hover {
+  background-color: #f5e8e8;
+}
+
+.delete-btn {
+  background-color: #800000;
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background-color: #a00000;
+}
+
+.delete-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* No Data State */
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  font-style: italic;
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: #7a0000;
+  font-size: 16px;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #ffe0e0;
+  color: #c00;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c00;
+  font-size: 14px;
+}

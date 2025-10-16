@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../axios/api";
-import "./PatientDetails.css";
-import EditPatientModal from "../../modals/patient-edit/PatientEditModal";
+import './PatientDetails.css'
+import EditPatientModal from '../../modals/patient-edit/PatientEditModal'
+import ViewMedicalDocModal from "../../modals/view-doc/ViewDocModal";
+import AddRecordModal from "../AddRecordModal/AddRecordModal";
 
 const PatientDetail = () => {
   const { id } = useParams();
@@ -11,6 +13,9 @@ const PatientDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showAddRecordModal, setShowAddRecordModal] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchPatient = async () => {
@@ -18,10 +23,7 @@ const PatientDetail = () => {
       setLoading(true);
       setError(null);
       const res = await api.get(`/patient/get-one-patient/${id}`);
-      console.log(res.data);
-      console.log(res.status)
       if (res.data.success) {
-        console.log("Patient data:", res.data.data);
         setPatient(res.data.data);
       } else {
         setError(res.data.message || "Failed to fetch patient");
@@ -53,8 +55,16 @@ const PatientDetail = () => {
       ADMITTED: "status-admitted",
       COMPLETED: "status-completed",
       CANCELLED: "status-cancelled",
+      complete: "status-completed",
+      incomplete: "status-pending",
+      draft: "status-pending",
     };
     return statusMap[status] || "status-pending";
+  };
+
+  const handleViewDoc = (docId) => {
+    setSelectedDocId(docId);
+    setShowViewModal(true);
   };
 
   // Filter medical documentations based on search
@@ -69,7 +79,11 @@ const PatientDetail = () => {
   }) || [];
 
   if (loading) {
-    return <div className="patient-detail-container"><p className="loading-state">Loading patient details...</p></div>;
+    return (
+      <div className="patient-detail-container">
+        <p className="loading-state">Loading patient details...</p>
+      </div>
+    );
   }
 
   if (error || !patient) {
@@ -83,143 +97,155 @@ const PatientDetail = () => {
     );
   }
 
+  const patientFullName = `${patient.firstName} ${patient.middleName || ""} ${patient.lastName}`.trim();
+
   return (
     <div className="patient-detail-container">
-      {/* Header */}
-      <div className="detail-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
-        <h1 className="detail-title">Patient Details</h1>
-        <div></div>
-      </div>
-
-      {/* Patient Info Card */}
-      <div className="patient-info-section">
-        <div className="patient-card">
-          <div className="patient-name">
-            {`${patient.lastName}, ${patient.firstName}${
-              patient.middleName ? ` ${patient.middleName}` : ""
-            }`}
+      {/* Header with Logo */}
+      <div className="detail-header-top">
+        <div className="header-logo">
+          <div className="logo-icon">
+            <div className="caduceus">⚕</div>
           </div>
-
-          <div className="info-grid">
-            <div className="info-item">
-              <label>Gender</label>
-              <span>{patient.gender || "N/A"}</span>
-            </div>
-            <div className="info-item">
-              <label>Age</label>
-              <span>{patient.age}</span>
-            </div>
-            <div className="info-item">
-              <label>Birth Date</label>
-              <span>{formatDate(patient.birthDate)}</span>
-            </div>
-            <div className="info-item">
-              <label>Mobile Number</label>
-              <span>{patient.mobileNumber || "N/A"}</span>
-            </div>
-
-            <div className="info-item">
-              <label>Senior/PWD ID</label>
-              <span>{patient.csdIdOrPwdId || "N/A"}</span>
-            </div>
-            <div className="info-item">
-              <label>Status</label>
-              <span>{patient.isArchived ? "Archived" : "Active"}</span>
-            </div>
-
-            <div className="info-item full-width">
-              <label>Address</label>
-              <span>{patient.residentialAddress || "N/A"}</span>
-            </div>
-
-            <div className="info-item">
-              <label>Created By</label>
-              <span>{patient.createdByName}</span>
-            </div>
-            <div className="info-item">
-              <label>Created At</label>
-              <span>{formatDate(patient.createdAt)}</span>
-            </div>
-
-            {patient.updatedByName && (
-              <>
-                <div className="info-item">
-                  <label>Updated By</label>
-                  <span>{patient.updatedByName}</span>
-                </div>
-                <div className="info-item">
-                  <label>Updated At</label>
-                  <span>{formatDate(patient.updatedAt)}</span>
-                </div>
-              </>
-            )}
+          <div className="logo-text">
+            <h1>LEONARDO MEDICAL SERVICES</h1>
+            <p>B1 L17, F. Novaliches, Bagumbong, Caloocan City</p>
           </div>
         </div>
-
-        <button
-          className="edit-patient-btn"
-          onClick={() => setShowEditModal(true)}
-        >
-          Edit Patient
+        <button className="close-btn" onClick={() => navigate(-1)}>
+          ✕
         </button>
+      </div>
+
+      {/* Patient Details Section */}
+      <div className="section-divider">
+        <h2>PATIENT DETAILS</h2>
+      </div>
+
+      <div className="patient-info-layout">
+        {/* Patient Info Card */}
+        <div className="patient-info-card">
+          <div className="patient-name-header">
+            {patientFullName}
+          </div>
+
+          <div className="info-grid-modern">
+            <div className="info-row">
+              <div className="info-col">
+                <label>Gender</label>
+                <span>{patient.gender || "N/A"}</span>
+              </div>
+              <div className="info-col">
+                <label>Birthday</label>
+                <span>{formatDate(patient.birthDate)}</span>
+              </div>
+              <div className="info-col">
+                <label>Age</label>
+                <span>{patient.age}</span>
+              </div>
+              <div className="info-col">
+                <label>Phone Number</label>
+                <span>{patient.mobileNumber || "N/A"}</span>
+              </div>
+            </div>
+
+            <div className="info-row">
+              <div className="info-col">
+                <label>Senior Citizen ID No./PWD</label>
+                <span>{patient.csdIdOrPwdId || "N/A"}</span>
+              </div>
+              <div className="info-col">
+                <label>Street Address</label>
+                <span>{patient.residentialAddress || "N/A"}</span>
+              </div>
+              <div className="info-col">
+                <label>Register Date</label>
+                <span>{formatDate(patient.createdAt)}</span>
+              </div>
+              <div className="info-col">
+                <label>Member Status</label>
+                <span className="status-active">
+                  {patient.isArchived ? "Archived" : "Active"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="edit-btn-modern"
+            onClick={() => setShowEditModal(true)}
+          >
+            EDIT
+          </button>
+        </div>
       </div>
 
       {/* Medical History Section */}
-      <div className="medical-history-section">
-        <div className="section-header">
-          <h2 className="section-title">Patient Medical History</h2>
-          <input
-            type="text"
-            className="search-medical"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="section-divider-with-actions">
+        <div className="section-left">
+          <button 
+            className="add-record-btn"
+            onClick={() => setShowAddRecordModal(true)}
+          >
+            + Add Record
+          </button>
+          <h2>PATIENT MEDICAL HISTORY</h2>
         </div>
+        <div className="section-right">
+          <div className="search-box">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
 
-        <div className="medical-table-container">
-          <table className="medical-table">
-            <thead>
-              <tr>
-                <th>Date Created</th>
-                <th>Status</th>
-                <th>Created By</th>
-                <th>Admitted By</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocs.length > 0 ? (
-                filteredDocs.map((doc) => (
-                  <tr key={doc.id}>
-                    <td>{formatDate(doc.createdAt)}</td>
-                    <td>
-                      <span className={`status-badge ${getStatusBadgeClass(doc.status)}`}>
-                        {doc.status}
-                      </span>
-                    </td>
-                    <td>{doc.createdByName}</td>
-                    <td>{doc.admittedByName || "N/A"}</td>
-                    <td>
-                      <button className="action-btn">View</button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="no-data">
-                    {searchQuery
-                      ? "No medical records match your search"
-                      : "No medical records found"}
+      <div className="medical-history-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date of Visit</th>
+              <th>Assisted By</th>
+              <th>Status of Record</th>
+              <th>Documents</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredDocs.length > 0 ? (
+              filteredDocs.map((doc) => (
+                <tr key={doc.id}>
+                  <td>{formatDate(doc.createdAt)}</td>
+                  <td>{doc.admittedByName || doc.createdByName}</td>
+                  <td>
+                    <span className={`status-badge-modern ${getStatusBadgeClass(doc.status)}`}>
+                      {doc.status}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="view-btn-modern"
+                      onClick={() => handleViewDoc(doc.id)}
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="no-data-modern">
+                  {searchQuery
+                    ? "No medical records match your search"
+                    : "No medical records found"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Edit Patient Modal */}
@@ -229,6 +255,30 @@ const PatientDetail = () => {
           onClose={() => setShowEditModal(false)}
           onSuccess={() => {
             setShowEditModal(false);
+            fetchPatient();
+          }}
+        />
+      )}
+
+      {/* View Medical Documentation Modal */}
+      {showViewModal && selectedDocId && (
+        <ViewMedicalDocModal
+          docId={selectedDocId}
+          onClose={() => {
+            setShowViewModal(false);
+            setSelectedDocId(null);
+          }}
+        />
+      )}
+
+      {/* Add Record Modal */}
+      {showAddRecordModal && (
+        <AddRecordModal
+          patientId={patient.id}
+          patientName={patientFullName}
+          onClose={() => setShowAddRecordModal(false)}
+          onSuccess={() => {
+            setShowAddRecordModal(false);
             fetchPatient();
           }}
         />

@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 
 import { requireRole } from "../hooks/authorization.js";
 import { createMedicalDocumentationController } from "../controllers/medical-documentation/create-documentation-controller.js";
-import { getMedicalDocumentaion } from "../controllers/medical-documentation/get-medical-documentation-controller.js";
+import { getMedicalDocumentationController } from "../controllers/medical-documentation/get-medical-documentation-controller.js";
 import { updateMedicalDocumentationController } from "../controllers/medical-documentation/update-documentation-controller.js";
 import {
     createMedicalDocumentationSchema,
@@ -45,7 +45,7 @@ export async function medicalDocumentationRoutes(
 
     fastify.route({
         method: 'GET',
-        url: '/get-medical-documentation/:id',
+        url: '/medical-documentation/:id',
         schema: {
             params: getMedicalDocumentationParamsSchema,
             response: {
@@ -53,7 +53,7 @@ export async function medicalDocumentationRoutes(
             }
         },
         preHandler: requireRole([Role.admin, Role.encoder]),
-        handler: getMedicalDocumentaion
+        handler: getMedicalDocumentationController
     });
 
 }

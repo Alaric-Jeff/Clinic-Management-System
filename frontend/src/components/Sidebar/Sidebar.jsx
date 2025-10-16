@@ -10,7 +10,7 @@ const Sidebar = () => {
     { name: "Patient Records", path: "/admin/patient-list", icon: "📋", roles: ["admin", "encoder"] },
     { name: "Services", path: "/admin/services", icon: "🧾", roles: ["admin"] },
     { name: "Payment Details", path: "/admin/payments", icon: "💳", roles: ["admin", "encoder"] },
-    { name: "User Management", path: "/admin/add-new-user", icon: "👥", roles: ["admin"] },
+    { name: "User Management", path: "/admin/user-management", icon: "👥", roles: ["admin"] },
     { name: "Archive", path: "/admin/archive", icon: "🗂️", roles: ["admin", "encoder"] },
   ];
 
