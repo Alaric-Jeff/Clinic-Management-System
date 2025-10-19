@@ -105,6 +105,30 @@ export async function createPatientService(
       "Patient record created successfully with complete audit trail"
     );
 
+  // ✅ Fire-and-forget but with better error handling
+    fastify.prisma.patientAuditLog.create({
+      data: {
+        patientId: patient.id,
+        action: 'created',
+        fieldsChanged: 'firstName,lastName,middleName,birthDate,gender,csdIdOrPwdId,mobileNumber,residentialAddress',
+        previousData: null,
+        newData: JSON.stringify({
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          middleName: patient.middleName,
+          birthDate: birthDate,
+          gender: gender,
+          csdIdOrPwdId,
+          mobileNumber,
+          residentialAddress
+        }),
+        changedByName: createdByName,
+        changedByRole: createdByRole
+      }
+    }).catch((err) => {
+      fastify.log.error({ error: err, patientId: patient.id }, 'Failed to create audit log');
+    });
+    
     return patient;
 
   } catch (err: unknown) {

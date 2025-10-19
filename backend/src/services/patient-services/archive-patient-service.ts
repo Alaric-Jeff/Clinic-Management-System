@@ -64,7 +64,7 @@ export async function archivePatientService(
       }
     });
 
-    fastify.prisma.patientAuditLog.create({
+    await fastify.prisma.patientAuditLog.create({
       data: {
         patientId: id,
         action: 'update',
@@ -74,10 +74,6 @@ export async function archivePatientService(
         changedByName: name,
         changedByRole: role
       }
-    }).then(()=> {
-      fastify.log.info("Successfully audited");
-    }).catch(()=> {
-      fastify.log.error("Failed to audit")
     })
 
     fastify.log.info(

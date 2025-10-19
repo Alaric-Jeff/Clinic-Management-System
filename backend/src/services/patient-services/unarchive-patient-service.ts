@@ -93,7 +93,7 @@ export async function unarchivePatientService(
       }
     });
 
-    fastify.prisma.patientAuditLog.create({
+    await fastify.prisma.patientAuditLog.create({
       data: {
         patientId: id,
         action: 'update',
@@ -103,10 +103,6 @@ export async function unarchivePatientService(
         changedByName: name,
         changedByRole: role
       }
-    }).then(()=>{
-      fastify.log.info("Successfuly unarchived")
-    }).catch(()=>{
-       fastify.log.error("Unsuccessfuly unarchived")
     })
 
     fastify.log.info(
