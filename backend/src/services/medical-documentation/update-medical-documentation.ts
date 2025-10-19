@@ -225,6 +225,10 @@ export async function updateMedicalDocumentation(
                 ...updatedDoc,
                 createdAt: updatedDoc.createdAt.toISOString(),
                 updatedAt: updatedDoc.updatedAt.toISOString()
+            },
+            auditInfo: {
+                fieldsChanged: changedFields,
+                recordedInAuditLog: changedFields.length > 0
             }
         };
 

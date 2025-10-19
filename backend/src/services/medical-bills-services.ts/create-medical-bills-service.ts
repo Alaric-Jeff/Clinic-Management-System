@@ -106,7 +106,6 @@ export async function createMedicalBillWithServices(
         },
       });
 
-      // map payload to Prisma.BilledServiceCreateManyInput[] by adding medicalBillId
       const createManyData: Prisma.BilledServiceCreateManyInput[] = billedServicesData.map((s) => ({
         medicalBillId: medicalBill.id,
         serviceId: s.serviceId ?? null,
@@ -147,7 +146,6 @@ export async function createMedicalBillWithServices(
       const paymentStatusStr = amountPaid === 0 ? "unpaid" : amountPaid >= totalAmount ? "paid" : "partially_paid";
       const paymentStatus = paymentStatusStr as PaymentStatus;
 
-      // persist calculated fields
       const updatedBill = await prisma.medicalBill.update({
         where: { id: medicalBill.id },
         data: {

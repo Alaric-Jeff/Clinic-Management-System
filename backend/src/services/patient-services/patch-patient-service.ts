@@ -29,18 +29,8 @@ function getChangedFields(previousData: any, newData: any): { fields: string[], 
     const previousValues: Record<string, any> = {};
     const newValues: Record<string, any> = {};
 
-    const fieldsToCheck = [
-        'firstName',
-        'lastName',
-        'middleName',
-        'birthDate',
-        'gender',
-        'csdIdOrPwdId',
-        'mobileNumber',
-        'residentialAddress'
-    ];
-
-    fieldsToCheck.forEach(field => {
+    // Only check fields that are present in newData (fields being updated)
+    Object.keys(newData).forEach(field => {
         const prev = previousData[field];
         const newVal = newData[field];
 
@@ -48,7 +38,7 @@ function getChangedFields(previousData: any, newData: any): { fields: string[], 
         const prevNormalized = prev instanceof Date ? prev.toISOString() : prev;
         const newNormalized = newVal instanceof Date ? newVal.toISOString() : newVal;
 
-        if (prevNormalized !== newNormalized && newVal !== null) {
+        if (prevNormalized !== newNormalized) {
             changedFields.push(field);
             previousValues[field] = prev;
             newValues[field] = newVal;
