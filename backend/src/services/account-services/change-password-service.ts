@@ -49,6 +49,10 @@ export async function changePasswordService(
             throw new Error("Current password is incorrect");
         }
 
+        if(account.password == newPassword){
+            throw new Error("Current password shouldn't match New Password")
+        }
+
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await fastify.prisma.account.update({
