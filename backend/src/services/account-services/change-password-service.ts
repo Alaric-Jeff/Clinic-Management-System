@@ -49,8 +49,9 @@ export async function changePasswordService(
             throw new Error("Current password is incorrect");
         }
 
-        if(account.password == newPassword){
-            throw new Error("Current password shouldn't match New Password")
+        const isNewPasswordSameAsCurrent = await bcrypt.compare(newPassword, account.password);
+        if (isNewPasswordSameAsCurrent) {
+            throw new Error("New password cannot be the same as current password");
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);

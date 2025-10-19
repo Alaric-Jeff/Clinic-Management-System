@@ -11,11 +11,18 @@ export async function changePasswordController(
     reply: FastifyReply
 ){
     const {
-        id,
         currentPassword,
         newPassword
     } = request.body;
 
+    const currentUser = request.currentUser;
+
+    let id: string = '';
+
+    if(!currentUser || currentUser.id === '' || !currentUser.id){
+        throw request.server.httpErrors.unauthorized("Unauthorized access");
+    }
+    id = currentUser.id;
     try{
         await changePasswordService(request.server, {id, currentPassword, newPassword});
 
@@ -37,8 +44,8 @@ export async function changePasswordController(
                 return request.server.httpErrors.badRequest("Password is not correct");
             }
 
-            if(err.message === "Current password shouldn't match New Password"){
-                return request.server.httpErrors.badRequest("Current password shouldn't match with New Password");
+            if(err.message === "New password cannot be the same as current password"){
+                return request.server.httpErrors.badRequest("New password cannot be the same as current password");
             }
 
         }

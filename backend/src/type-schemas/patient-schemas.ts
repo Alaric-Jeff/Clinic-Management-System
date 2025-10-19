@@ -29,7 +29,7 @@ export const createPatientServiceSchemaType = Type.Object({
     birthDate: Type.String({ format: 'date' }), 
     gender: Type.Enum(Gender),
     csdIdOrPwdId: Type.Union([Type.String(), Type.Null()]), 
-    mobileNumber: Type.Union([Type.String(), Type.Null()]),   
+    mobileNumber: Type.Union([Type.String({maxLength: 11}), Type.Null()]),   
     residentialAddress: Type.Union([Type.String(), Type.Null()]),
     registerDate: Type.Union([Type.String({format: 'date'}), Type.Null()]),
     createdByName: Type.String(),

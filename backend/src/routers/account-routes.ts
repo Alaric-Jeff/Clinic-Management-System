@@ -12,6 +12,9 @@ import {
   accountIdSchema,
   deleteResponse
 } from "../type-schemas/accounts-schemas.js";
+
+import { changedPasswordBodySchema } from "../type-schemas/accounts/change-password-schema.js";
+
 import { accountLoginController } from "../controllers/account-controllers/account-login-controller.js";
 import { createAccountController } from "../controllers/account-controllers/account-create-controller.js";
 import { accountVerifyController } from "../controllers/account-controllers/account-verify-controller.js";
@@ -20,6 +23,7 @@ import { requestPasswordReset } from "../controllers/account-controllers/verify-
 import { confirmPasswordReset } from "../controllers/account-controllers/confirm-password-reset.js";
 import { getAccountsController } from "../controllers/account-controllers/get-account-controller.js";
 import { deleteAccountController } from "../controllers/account-controllers/delete-account-controller.js";
+import { changePasswordController } from "../controllers/account-controllers/change-password-controller.js";
 import { requireRole } from "../hooks/authorization.js";
 import { Role } from "@prisma/client";
 export async function accountRoutes(fastify: FastifyInstance){
@@ -144,5 +148,17 @@ export async function accountRoutes(fastify: FastifyInstance){
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getAccountsController
     });
+
+    fastify.route({
+        method: 'PUT',
+        url: '/change-password',
+        schema: {
+            body: changedPasswordBodySchema,
+            response: {
+                200: Type.Boolean()
+            }
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: changePasswordController
+    })
 
 };
