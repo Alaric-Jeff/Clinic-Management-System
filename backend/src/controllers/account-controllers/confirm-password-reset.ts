@@ -112,7 +112,7 @@ export async function confirmPasswordReset(
 
         // Redirect to frontend with success message
         const frontendUrl = process.env.APP_URL || 'http://localhost:5173';
-        const redirectUrl = `${frontendUrl}/login?message=${encodeURIComponent('Password reset successful! Check your email for the new password.')}`;
+        const redirectUrl = `${frontendUrl}/success-reset?message=${encodeURIComponent('Password reset successful! Check your email for the new password.')}`;
         
         return reply.redirect(redirectUrl);
 

@@ -8,7 +8,9 @@ import {
   passwordResetRequestSchema,
   passwordResetRequestResponse,
   passwordResetConfirmResponse,
-  getAccountResponse
+  getAccountResponse,
+  accountIdSchema,
+  deleteResponse
 } from "../type-schemas/accounts-schemas.js";
 import { accountLoginController } from "../controllers/account-controllers/account-login-controller.js";
 import { createAccountController } from "../controllers/account-controllers/account-create-controller.js";
@@ -17,6 +19,7 @@ import { accountLogoutController } from "../controllers/account-controllers/acco
 import { requestPasswordReset } from "../controllers/account-controllers/verify-reset-password.js";
 import { confirmPasswordReset } from "../controllers/account-controllers/confirm-password-reset.js";
 import { getAccountsController } from "../controllers/account-controllers/get-account-controller.js";
+import { deleteAccountController } from "../controllers/account-controllers/delete-account-controller.js";
 import { requireRole } from "../hooks/authorization.js";
 import { Role } from "@prisma/client";
 export async function accountRoutes(fastify: FastifyInstance){
@@ -70,6 +73,18 @@ export async function accountRoutes(fastify: FastifyInstance){
         handler: createAccountController
     });
 
+    fastify.route({
+        method: 'DELETE',
+        url: '/delete-account',
+        schema: {
+            body: accountIdSchema, 
+            response: {
+                200: deleteResponse
+            }
+        }, preHandler: requireRole([Role.admin]),
+        handler: deleteAccountController
+    });
+
     //verify-account
     fastify.route({
         method: 'GET',
@@ -117,6 +132,7 @@ export async function accountRoutes(fastify: FastifyInstance){
         },
         handler: confirmPasswordReset
     });
+
 
     fastify.route({
         method: 'GET',

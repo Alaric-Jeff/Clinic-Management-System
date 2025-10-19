@@ -7,6 +7,7 @@ import { archivePatientController } from '../controllers/patient-controllers/arc
 import { patchPatientController } from "../controllers/patient-controllers/patch-patient-controller.js";
 import { getAllArchivedPatientController } from "../controllers/patient-controllers/get-all-archived-patient.js";
 import { getOnePatientController } from "../controllers/patient-controllers/get-one-patient-controller.js";
+import { getTotalPatientController } from "../controllers/patient-controllers/get-total-patient-controller.js";
 import { Role } from "@prisma/client";
 import {
     createPatientSchema,
@@ -19,6 +20,11 @@ import {
     getOnePatientResponseSchema,
 } from '../type-schemas/patient-schemas.js';
 import { unarchivePatientController } from "../controllers/patient-controllers/unarchive-patient-controller.js";
+
+import  {
+    getTotalPatientsParams,
+    totalPatientPaginatedResponseSchema
+} from '../type-schemas/patients/get-total-paginated-schema.js'
 
 export async function patientRoutes(fastify: FastifyInstance) {
     /**
@@ -163,6 +169,21 @@ export async function patientRoutes(fastify: FastifyInstance) {
             }
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getOnePatientController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-total-patients',
+        schema: {
+            description: 'Get paginated list of patients with cursor-based pagination',
+            tags: ['Patients'],
+            querystring: getTotalPatientsParams,
+            response: {
+                200: totalPatientPaginatedResponseSchema
+            }
+        },
+        preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getTotalPatientController
     })
 
 }

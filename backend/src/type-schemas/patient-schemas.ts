@@ -186,3 +186,11 @@ export const getOnePatientResponseSchema = Type.Object({
 export const patientIdParams = Type.Object({
     id: Type.String()
 })
+
+
+
+
+
+
+
+

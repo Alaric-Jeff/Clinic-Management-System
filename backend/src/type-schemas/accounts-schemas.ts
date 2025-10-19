@@ -1,6 +1,16 @@
 import { Type, type Static } from "@fastify/type-provider-typebox";
 import { AccountStatus, Role } from "@prisma/client";
 
+
+
+export const accountIdSchema = Type.Object({
+    id: Type.String()
+})
+
+export const deleteResponse = Type.Object({
+    success: Type.String()
+})
+
 //schemas for account creation
 export const createAccountSchema = Type.Object({
     firstName: Type.String({minLength: 2, maxLength: 50}),
@@ -82,3 +92,33 @@ export const passwordResetConfirmResponse = Type.Object({
             createdAt: Type.String({format: 'date-time'})
         }))
     })
+
+//-----------------------------------------------------
+// get total patients limit params i.e /get-total-patients/limit?=
+export const getTotalPatientsParams = Type.Object({
+    limit: Type.Number({minimum: 1, maximum: 50}),
+    cursor: Type.Union([Type.String(), Type.Null()])
+})
+
+    export type getTotalPatientsParamsType = Static<typeof getTotalPatientsParams>
+
+//response
+export const getTotalPatientsResponse = Type.Object({
+    id: Type.String(),
+    firstName: Type.String(),
+    lastName: Type.String(),
+    middleName: Type.Union([Type.String(), Type.Null()]),
+    createdAt: Type.String({ format: 'date-time' })
+});
+
+export const totalPatientPaginatedResponse = Type.Object({
+    data: Type.Array(getTotalPatientsResponse), 
+    meta: Type.Object({ 
+        hasNextPage: Type.Boolean(),
+        endCursor: Type.Union([Type.String(), Type.Null()]),
+        hasPreviousPage: Type.Boolean(),
+        limit: Type.Number()
+    })
+});
+
+//------------------------------------------------------    

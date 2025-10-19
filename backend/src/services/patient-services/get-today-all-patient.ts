@@ -24,25 +24,39 @@ export async function getTodayAllPatientService(fastify: FastifyInstance) {
             "Fetching patients created today"
         );
 
+        // const patients = await fastify.prisma.patient.findMany({
+        //     where: {
+        //         createdAt: {
+        //             gte: startOfToday, 
+        //             lt: endOfToday     
+        //         }, 
+        //         isArchived: false 
+        //     },
+        //     select: {
+        //         id: true,
+        //         firstName: true,
+        //         lastName: true,
+        //         middleName: true,where
+        //         createdAt: true
+        //     },
+        //     orderBy: {
+        //         createdAt: 'desc' 
+        //     }
+        // });
+
         const patients = await fastify.prisma.patient.findMany({
             where: {
-                createdAt: {
-                    gte: startOfToday, 
-                    lt: endOfToday     
-                }, 
-                isArchived: false 
-            },
-            select: {
+                isArchived: false
+            }, select: {
                 id: true,
                 firstName: true,
                 lastName: true,
                 middleName: true,
                 createdAt: true
-            },
-            orderBy: {
-                createdAt: 'desc' 
+            }, orderBy: {
+                createdAt: 'desc'
             }
-        });
+        })
 
         fastify.log.info(
             { patientCount: patients.length, date: startOfToday.toISOString().split('T')[0] },
