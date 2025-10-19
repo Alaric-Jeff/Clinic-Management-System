@@ -12,7 +12,12 @@ export async function archivePatientController(
     const { id } = request.body;
     
     try {
-        const result = await archivePatientService(request.server, {id})
+
+        const user = request.currentUser;
+
+        if(!user) return request.server.httpErrors.unauthorized("User not found")
+
+        await archivePatientService(request.server, {id, name: user.name, role: user.role})
 
         return reply.code(200).send({
             success: true, 
@@ -21,16 +26,12 @@ export async function archivePatientController(
 
     } catch(err: unknown) {
         if(err instanceof Error){
-            // Handle "Patient not found" as 404, not 500
             if(err.message === "Patient not found") {
                 request.server.log.warn(
                     { patientId: id, error: err },
                     "Patient not found during archival"
                 );
-                return reply.code(404).send({
-                    success: false,
-                    message: "Patient not found"
-                });
+                return request.server.httpErrors.notFound("Account not found.");
             }
             
             // Log other errors

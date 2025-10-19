@@ -1,3 +1,4 @@
+import type { Role } from "@prisma/client";
 import type { FastifyInstance } from "fastify";
 
 /**
@@ -20,9 +21,9 @@ import type { FastifyInstance } from "fastify";
  */
 export async function archivePatientService(
   fastify: FastifyInstance, 
-  body: { id: string }
+  body: { id: string, name: string, role: Role }
 ): Promise<boolean> {
-  const { id } = body;
+  const { id, name, role } = body;
 
   fastify.log.debug(
     { patientId: id, operation: 'archivePatientService' },
@@ -62,6 +63,22 @@ export async function archivePatientService(
         updatedAt: new Date() 
       }
     });
+
+    fastify.prisma.patientAuditLog.create({
+      data: {
+        patientId: id,
+        action: 'update',
+        fieldsChanged: 'isArchived',
+        previousData: 'false',
+        newData: 'true',
+        changedByName: name,
+        changedByRole: role
+      }
+    }).then(()=> {
+      fastify.log.info("Successfully audited");
+    }).catch(()=> {
+      fastify.log.error("Failed to audit")
+    })
 
     fastify.log.info(
       { patientId: id, operation: 'archivePatientService' },

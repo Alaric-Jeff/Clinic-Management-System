@@ -1,3 +1,4 @@
+import type { Role } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 
 /**
@@ -26,9 +27,9 @@ import type { FastifyInstance } from 'fastify';
  */
 export async function unarchivePatientService(
   fastify: FastifyInstance, 
-  body: { id: string }
+  body: { id: string, name: string, role: Role }
 ): Promise<boolean> {
-  const { id } = body;
+  const { id, name, role } = body;
 
   // Log service invocation for audit trail and monitoring
   fastify.log.debug(
@@ -37,13 +38,7 @@ export async function unarchivePatientService(
   );
 
   try {
-    /**
-     * Step 1: Patient Verification
-     * 
-     * Selects only necessary fields to optimize database performance:
-     * - id: For update operation targeting
-     * - isArchived: For idempotency check and business logic
-     */
+  
     const patient = await fastify.prisma.patient.findUnique({
       where: { id },
       select: {
@@ -94,11 +89,26 @@ export async function unarchivePatientService(
       where: { id },
       data: {
         isArchived: false,
-        updatedAt: new Date() // Maintain accurate audit trail
+        updatedAt: new Date()
       }
     });
 
-    // Log successful unarchival for monitoring and compliance
+    fastify.prisma.patientAuditLog.create({
+      data: {
+        patientId: id,
+        action: 'update',
+        fieldsChanged: 'isArchived',
+        previousData: 'true',
+        newData: 'false',
+        changedByName: name,
+        changedByRole: role
+      }
+    }).then(()=>{
+      fastify.log.info("Successfuly unarchived")
+    }).catch(()=>{
+       fastify.log.error("Unsuccessfuly unarchived")
+    })
+
     fastify.log.info(
       { 
         patientId: id, 

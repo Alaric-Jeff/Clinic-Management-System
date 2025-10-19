@@ -1,6 +1,3 @@
-// This is your Prisma schema file
-// Learn more at: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -67,386 +64,438 @@ enum PaymentStatus {
 // ---------------- MODELS ----------------
 
 model Account {
-  id           String        @id @default(cuid())
-  firstName    String
-  lastName     String
-  middleName   String?       @default("N/A")
-  email        String        @unique
-  password     String
-  role         Role          @default(encoder)
-  status       AccountStatus @default(pending)
+  id                    String                 @id @default(cuid())
+  firstName             String
+  lastName              String
+  middleName            String?                @default("N/A")
+  email                 String                 @unique
+  password              String
+  role                  Role                   @default(encoder)
+  status                AccountStatus          @default(pending)
   // Relations
   medicalDocumentations MedicalDocumentation[]
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("accounts")
   @@index([email])
   @@index([role])
   @@index([status])
+  @@map("accounts")
 }
 
 model Doctors {
-  id String @id @default(cuid())
-  firstName String
-  lastName String
-  middleInitial String?
+  id                    String                 @id @default(cuid())
+  firstName             String
+  lastName              String
+  middleInitial         String?
   medicalDocumentations MedicalDocumentation[]
 
   @@map("doctors")
 }
 
 model Patient {
-  id                  String    @id @default(cuid())
-  firstName           String
-  lastName            String
-  middleName          String?   @default("N/A")
-  birthDate           DateTime
-  gender              Gender    
-  csdIdOrPwdId        String?
-  mobileNumber        String?
-  residentialAddress  String?
-  registeredAt DateTime  @default(now())
-  isArchived          Boolean   @default(false)
-  
-  // Denormalized audit fields only (no relations needed!)
-  createdByName       String   
-  updatedByName       String?    
-  createdByRole       Role     
-  updatedByRole       Role?   
-  
-  medicalDocumentations MedicalDocumentation[]
-  
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                 String   @id @default(cuid())
+  firstName          String
+  lastName           String
+  middleName         String?  @default("N/A")
+  birthDate          DateTime
+  gender             Gender
+  csdIdOrPwdId       String?
+  mobileNumber       String?
+  residentialAddress String?
+  registeredAt       DateTime @default(now())
+  isArchived         Boolean  @default(false)
 
-  @@map("patients")
+  // Denormalized audit fields only (no relations needed!)
+  createdByName String
+  updatedByName String?
+  createdByRole Role
+  updatedByRole Role?
+
+  medicalDocumentations MedicalDocumentation[]
+
+  // <-- back-relation for patient audit logs
+  patientAuditLogs PatientAuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isArchived])
   @@index([createdAt])
   @@index([lastName])
-  @@index([gender])   
+  @@index([gender])
+  @@map("patients")
 }
 
 model Service {
-  id              String          @id @default(cuid())
-  name            String          @unique
-  category        ServiceCategory
-  price           Float
-  isActivated     Boolean         @default(true)
-  isAvailable     Boolean         @default(true)
-  
-  createdByName   String?        
-  updatedByName   String?      
-  createdByRole   Role?     
-  updatedByRole   Role?       
-  
-  // Relations
-  billedServices  BilledService[]
-  serviceDailyAnalytics ServiceDailyAnalytics[]
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id          String          @id @default(cuid())
+  name        String          @unique
+  category    ServiceCategory
+  price       Float
+  isActivated Boolean         @default(true)
+  isAvailable Boolean         @default(true)
 
-  @@map("services")
+  createdByName String?
+  updatedByName String?
+  createdByRole Role?
+  updatedByRole Role?
+
+  // Relations
+  billedServices        BilledService[]
+  serviceDailyAnalytics ServiceDailyAnalytics[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([category])
   @@index([isActivated])
   @@index([name])
+  @@map("services")
 }
 
 model MedicalDocumentation {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   patientId    String
   createdById  String
-  admittedById String? 
-  
+  admittedById String?
+
   // Denormalized fields for UI display
-  createdByName    String
-  createdByRole    Role
-  admittedByName   String?
+  createdByName     String
+  createdByRole     Role
+  admittedByName    String?
   lastUpdatedByName String?
   lastUpdatedByRole Role?
-  
+
   assessment   String?
   diagnosis    String?
   treatment    String?
   prescription String?
-  
-  status       DocumentationStatus @default(complete)
-  
-  patient      Patient @relation(fields: [patientId], references: [id])
-  creator      Account @relation(fields: [createdById], references: [id])
-  admittedBy   Doctors? @relation(fields: [admittedById], references: [id])
-  
-  medicalBill  MedicalBill?
-  auditLogs    DocumentAuditLog[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  status DocumentationStatus @default(complete)
 
-  @@map("medical_documentations")
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  creator    Account  @relation(fields: [createdById], references: [id])
+  admittedBy Doctors? @relation(fields: [admittedById], references: [id])
+
+  medicalBill MedicalBill?
+  auditLogs   DocumentAuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([patientId])
   @@index([createdById])
-  @@index([admittedById]) 
+  @@index([admittedById])
   @@index([status])
+  @@map("medical_documentations")
 }
 
 // Bridge table between MedicalBill and Service
 // This keeps services independent - if a service is deleted, 
 // the billing record remains with the snapshot of service details
 model BilledService {
-  id                String   @id @default(cuid())
-  medicalBillId     String
-  serviceId         String?  // Nullable - can be null if service was deleted
-  
+  id            String  @id @default(cuid())
+  medicalBillId String
+  serviceId     String? // Nullable - can be null if service was deleted
+
   // Snapshot of service details at time of billing
   // This preserves the bill even if the service is modified/deleted later
-  serviceName       String
-  serviceCategory   ServiceCategory
-  servicePriceAtTime Float    // Price at the time of billing
-  quantity          Int      @default(1)
-  subtotal          Float    // quantity * servicePriceAtTime
-  
-  medicalBill       MedicalBill @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
-  service           Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  
-  createdAt         DateTime @default(now())
-  
-  @@map("billed_services")
+  serviceName        String
+  serviceCategory    ServiceCategory
+  servicePriceAtTime Float // Price at the time of billing
+  quantity           Int             @default(1)
+  subtotal           Float // quantity * servicePriceAtTime
+
+  medicalBill MedicalBill @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
+  service     Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  // <-- back-relation for billed service audit logs
+  billedServiceAuditLogs BilledServiceAuditLog[]
+
+  createdAt DateTime @default(now())
+
   @@index([medicalBillId])
   @@index([serviceId])
+  @@map("billed_services")
 }
 
 model MedicalBill {
-  id                    String        @id @default(cuid())
-  medicalDocumentationId String       @unique // One-to-one with medical documentation
-  
-  totalAmount           Float         @default(0.00)
-  amountPaid            Float         @default(0.00)
-  balance               Float         @default(0.00)
-  paymentStatus         PaymentStatus @default(unpaid)
-  
+  id                     String @id @default(cuid())
+  medicalDocumentationId String @unique // One-to-one with medical documentation
+
+  totalAmount   Float         @default(0.00)
+  amountPaid    Float         @default(0.00)
+  balance       Float         @default(0.00)
+  paymentStatus PaymentStatus @default(unpaid)
+
   // Audit trail
-  createdByName         String
-  createdByRole         Role
-  lastUpdatedByName     String?
-  lastUpdatedByRole     Role?
-  
+  createdByName     String
+  createdByRole     Role
+  lastUpdatedByName String?
+  lastUpdatedByRole Role?
+
   // Relations
-  medicalDocumentation  MedicalDocumentation @relation(fields: [medicalDocumentationId], references: [id])
-  billedServices        BilledService[]
-  paymentHistory        PaymentHistory[]
-  
-  notes                 String?      
-  
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  
-  @@map("medical_bills")
+  medicalDocumentation MedicalDocumentation @relation(fields: [medicalDocumentationId], references: [id])
+  billedServices       BilledService[]
+  paymentHistory       PaymentHistory[]
+
+  // <-- ADDED back-relation for BillAuditLog
+  billAuditLogs BillAuditLog[]
+
+  notes String?
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  BilledServiceAuditLog BilledServiceAuditLog[]
+
   @@index([medicalDocumentationId])
   @@index([paymentStatus])
   @@index([createdAt])
+  @@map("medical_bills")
 }
 
 // Track payment history for partial payments and audit trail
 model PaymentHistory {
-  id              String      @id @default(cuid())
-  medicalBillId   String
-  
-  amountPaid      Float
-  paymentMethod   String?     // cash, card, insurance, etc.
-  notes           String?     // For special cases, trusted patient arrangements
-  
-  recordedByName  String
-  recordedByRole  Role
-  
-  medicalBill     MedicalBill @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
-  
-  createdAt       DateTime    @default(now())
-  
-  @@map("payment_history")
+  id            String @id @default(cuid())
+  medicalBillId String
+
+  amountPaid    Float
+  paymentMethod String? // cash, card, insurance, etc.
+  notes         String? // For special cases, trusted patient arrangements
+
+  recordedByName String
+  recordedByRole Role
+
+  medicalBill MedicalBill @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@index([medicalBillId])
   @@index([createdAt])
+  @@map("payment_history")
 }
 
 // ---------------- ANALYTICS MODELS ----------------
 
 // Daily aggregated sales data for fast analytics and forecasting
 model DailySalesAnalytics {
-  id                String          @id @default(cuid())
-  date              DateTime        @db.Date // Only date, no time
-  
+  id   String   @id @default(cuid())
+  date DateTime @db.Date // Only date, no time
+
   // Overall metrics
-  totalRevenue      Float           @default(0.00)
-  totalBills        Int             @default(0)
-  totalServices     Int             @default(0)
-  paidBills         Int             @default(0)
-  unpaidBills       Int             @default(0)
-  partiallyPaidBills Int            @default(0)
-  averageBillAmount Float           @default(0.00)
-  
+  totalRevenue       Float @default(0.00)
+  totalBills         Int   @default(0)
+  totalServices      Int   @default(0)
+  paidBills          Int   @default(0)
+  unpaidBills        Int   @default(0)
+  partiallyPaidBills Int   @default(0)
+  averageBillAmount  Float @default(0.00)
+
   // Relations
   serviceAnalytics  ServiceDailyAnalytics[]
   categoryAnalytics CategoryDailyAnalytics[]
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([date])
-  @@map("daily_sales_analytics")
   @@index([date])
+  @@map("daily_sales_analytics")
 }
 
 // Per-service daily performance for identifying top/bottom performers
 model ServiceDailyAnalytics {
-  id                String          @id @default(cuid())
-  dailyAnalyticsId  String
-  serviceId         String?         // Nullable in case service is deleted
-  
+  id               String  @id @default(cuid())
+  dailyAnalyticsId String
+  serviceId        String? // Nullable in case service is deleted
+
   // Snapshot of service info
-  serviceName       String
-  serviceCategory   ServiceCategory
-  
+  serviceName     String
+  serviceCategory ServiceCategory
+
   // Metrics
-  totalRevenue      Float           @default(0.00)
-  quantitySold      Int             @default(0)
-  averagePrice      Float           @default(0.00) // In case price changed during the day
-  
-  dailyAnalytics    DailySalesAnalytics @relation(fields: [dailyAnalyticsId], references: [id], onDelete: Cascade)
-  service           Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  
-  createdAt         DateTime        @default(now())
-  
+  totalRevenue Float @default(0.00)
+  quantitySold Int   @default(0)
+  averagePrice Float @default(0.00) // In case price changed during the day
+
+  dailyAnalytics DailySalesAnalytics @relation(fields: [dailyAnalyticsId], references: [id], onDelete: Cascade)
+  service        Service?            @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
   @@unique([dailyAnalyticsId, serviceName]) // One record per service per day
-  @@map("service_daily_analytics")
   @@index([dailyAnalyticsId])
   @@index([serviceId])
   @@index([serviceName])
+  @@map("service_daily_analytics")
 }
 
 // Per-category daily performance for category-level insights
 model CategoryDailyAnalytics {
-  id                String          @id @default(cuid())
-  dailyAnalyticsId  String
-  category          ServiceCategory
-  
+  id               String          @id @default(cuid())
+  dailyAnalyticsId String
+  category         ServiceCategory
+
   // Metrics
-  totalRevenue      Float           @default(0.00)
-  totalServices     Int             @default(0) // Count of different services in this category
-  quantitySold      Int             @default(0) // Total quantity across all services
-  
-  dailyAnalytics    DailySalesAnalytics @relation(fields: [dailyAnalyticsId], references: [id], onDelete: Cascade)
-  
-  createdAt         DateTime        @default(now())
-  
+  totalRevenue  Float @default(0.00)
+  totalServices Int   @default(0) // Count of different services in this category
+  quantitySold  Int   @default(0) // Total quantity across all services
+
+  dailyAnalytics DailySalesAnalytics @relation(fields: [dailyAnalyticsId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@unique([dailyAnalyticsId, category]) // One record per category per day
-  @@map("category_daily_analytics")
   @@index([dailyAnalyticsId])
   @@index([category])
+  @@map("category_daily_analytics")
 }
 
 // ---------------- AUDIT LOG MODEL ----------------
 
 // Tracks changes to medical documentation - can be reviewed and deleted by admin
 model DocumentAuditLog {
-  id                      String   @id @default(cuid())
-  medicalDocumentationId  String
-  
-  action                  String   // "created", "updated", "status_changed"
-  fieldsChanged           String   // JSON string or comma-separated: "diagnosis,treatment"
-  previousData            String?  // JSON string of old values
-  newData                 String?  // JSON string of new values
-  
-  changedByName           String
-  changedByRole           Role
-  
-  medicalDocumentation    MedicalDocumentation @relation(fields: [medicalDocumentationId], references: [id], onDelete: Cascade)
-  
-  createdAt               DateTime @default(now())
-  
-  @@map("document_audit_logs")
+  id                     String @id @default(cuid())
+  medicalDocumentationId String
+
+  action        String // "created", "updated", "status_changed"
+  fieldsChanged String // JSON string or comma-separated: "diagnosis,treatment"
+  previousData  String? // JSON string of old values
+  newData       String? // JSON string of new values
+
+  changedByName String
+  changedByRole Role
+
+  medicalDocumentation MedicalDocumentation @relation(fields: [medicalDocumentationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@index([medicalDocumentationId])
   @@index([createdAt])
   @@index([changedByName])
+  @@map("document_audit_logs")
+}
+
+// ---------------------- AUDIT LOG----------------------------
+
+// please check my documentation about revisted audit log
+model BillAuditLog {
+  id            String   @id @default(cuid())
+  medicalBillId String
+  action        String // "created", "payment_recorded", "status_updated"
+  fieldsChanged String // "amountPaid,paymentStatus"
+  previousData  String? // JSON
+  newData       String? // JSON
+  changedByName String
+  changedByRole Role
+  createdAt     DateTime @default(now())
+
+  medicalBill MedicalBill @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
+
+  @@index([medicalBillId])
+  @@index([createdAt])
+  @@map("bill_audit_logs")
+}
+
+model BilledServiceAuditLog {
+  id              String @id @default(cuid())
+  billedServiceId String
+  medicalBillId   String // For easier filtering
+
+  action        String // "added", "removed", "quantity_updated"
+  fieldsChanged String // "quantity", "serviceName", etc.
+  previousData  String? // JSON - old service details
+  newData       String? // JSON - new service details
+
+  changedByName String
+  changedByRole Role
+  createdAt     DateTime @default(now())
+
+  // <-- relations to parent records
+  billedService BilledService @relation(fields: [billedServiceId], references: [id], onDelete: Cascade)
+  medicalBill   MedicalBill   @relation(fields: [medicalBillId], references: [id], onDelete: Cascade)
+
+  @@index([billedServiceId])
+  @@index([medicalBillId])
+  @@index([createdAt])
+  @@map("billed_service_audit_logs")
+}
+
+// Add this for patient changes
+model PatientAuditLog {
+  id            String   @id @default(cuid())
+  patientId     String
+  action        String // "created", "updated", "archived"
+  fieldsChanged String
+  previousData  String?
+  newData       String?
+  changedByName String
+  changedByRole Role
+  createdAt     DateTime @default(now())
+
+  // <-- relation to patient
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([createdAt])
+  @@map("patient_audit_logs")
 }
 
 // ---------------- DOCUMENTATION NOTES ----------------
-/*
-SIMPLIFIED PAYMENT SYSTEM:
-- Medical documentation can be edited with full audit trail via DocumentAuditLog.
-
-- At least one field (assessment, diagnosis, treatment, or prescription) must be filled.
-  (ENFORCE in app layer with validation OR via a Postgres CHECK constraint)
-
-- Patient records are never deleted, only archived (isArchived flag).
-
-- Accounts start as pending and must be activated before use.
-
-- Services have unique names, can be activated/deactivated, and tied to categories for analytics.
-
-- Patient audit trail uses denormalized fields for performance (no Account relations needed).
-
-- Services are standalone entities with denormalized audit fields for performance.
-
-- Gender field added for patient demographics and reporting.
-
-- MedicalDocumentation uses denormalized fields (createdByName, createdByRole, etc.) for UI display
-  while keeping ID references for legal compliance and data integrity.
-
-- BilledService acts as a snapshot: When a service is billed, its details (name, category, price) 
-  are copied to preserve billing history even if the service is later modified or deleted.
-
-SIMPLIFIED PAYMENT TRACKING:
-- MedicalBill tracks current payment state (totalAmount, amountPaid, balance, paymentStatus)
-- PaymentHistory records every payment transaction for complete audit trail
-- Use MedicalBill.notes for payment arrangements (e.g., "Will pay Oct 20 after pension")
-- PaymentStatus automatically updates based on amountPaid vs totalAmount
-- No need for separate PaymentResolution table - simpler and more maintainable
-
-PAYMENT WORKFLOW:
-1. Create bill with initial paymentStatus (paid/unpaid/partially_paid)
-2. Record payments in PaymentHistory
-3. Update MedicalBill status and amounts automatically
-4. Use notes field for special arrangements or installment plans
-
-ANALYTICS SYSTEM:
-- DailySalesAnalytics: Aggregated daily metrics (total revenue, bills, payment status distribution)
-  - Updated via background job or trigger when payments are made
-  - Enables fast querying without scanning all transactions
-  
-- ServiceDailyAnalytics: Per-service performance tracking
-  - Shows which services generate the most revenue
-  - Tracks quantity sold and average price
-  - Useful for identifying top/bottom performers
-  
-- CategoryDailyAnalytics: Per-category performance tracking
-  - Aggregate metrics by service category
-  - Shows which lab test categories are most utilized
-  
-ANALYTICS USAGE:
-- Daily data is pre-aggregated for performance
-- Weekly metrics: Query 7 days of DailySalesAnalytics and SUM/AVG
-- Monthly metrics: Query 30 days of DailySalesAnalytics and SUM/AVG
-- Forecasting with simple-statistics: Export daily revenue time series for trend analysis
-- Service optimization: Compare ServiceDailyAnalytics to identify underperforming services
-- Category analysis: Use CategoryDailyAnalytics to understand which test types drive revenue
-
-IMPLEMENTATION NOTES:
-- Run daily aggregation job (cron/scheduled task) to populate analytics tables
-- Alternative: Use database triggers on PaymentHistory to update analytics in real-time
-- Keep raw data in MedicalBill/BilledService for detailed auditing
-- Use analytics tables for dashboards and reports (much faster than aggregating raw data)
-
-AUDIT LOG SYSTEM:
-- DocumentAuditLog: Tracks all changes to medical documentation
-  - Records what changed, old/new values, who made the change
-  - Can be reviewed and deleted by admin to save memory
-  - Provides transparency and accountability without complex versioning
-  - Store data as JSON for flexibility (fieldsChanged, previousData, newData)
-  
-AUDIT LOG USAGE:
-- Automatically create log entry when documentation is updated
-- Admin can review logs and delete old/reviewed entries
-- Useful for dispute resolution and quality control
-- Balances compliance needs with practical memory management
-*/
+/**
+ * SIMPLIFIED PAYMENT SYSTEM:
+ * - Medical documentation can be edited with full audit trail via DocumentAuditLog.
+ * - At least one field (assessment, diagnosis, treatment, or prescription) must be filled.
+ * (ENFORCE in app layer with validation OR via a Postgres CHECK constraint)
+ * - Patient records are never deleted, only archived (isArchived flag).
+ * - Accounts start as pending and must be activated before use.
+ * - Services have unique names, can be activated/deactivated, and tied to categories for analytics.
+ * - Patient audit trail uses denormalized fields for performance (no Account relations needed).
+ * - Services are standalone entities with denormalized audit fields for performance.
+ * - Gender field added for patient demographics and reporting.
+ * - MedicalDocumentation uses denormalized fields (createdByName, createdByRole, etc.) for UI display
+ * while keeping ID references for legal compliance and data integrity.
+ * - BilledService acts as a snapshot: When a service is billed, its details (name, category, price)
+ * are copied to preserve billing history even if the service is later modified or deleted.
+ * SIMPLIFIED PAYMENT TRACKING:
+ * - MedicalBill tracks current payment state (totalAmount, amountPaid, balance, paymentStatus)
+ * - PaymentHistory records every payment transaction for complete audit trail
+ * - Use MedicalBill.notes for payment arrangements (e.g., "Will pay Oct 20 after pension")
+ * - PaymentStatus automatically updates based on amountPaid vs totalAmount
+ * - No need for separate PaymentResolution table - simpler and more maintainable
+ * PAYMENT WORKFLOW:
+ * 1. Create bill with initial paymentStatus (paid/unpaid/partially_paid)
+ * 2. Record payments in PaymentHistory
+ * 3. Update MedicalBill status and amounts automatically
+ * 4. Use notes field for special arrangements or installment plans
+ * ANALYTICS SYSTEM:
+ * - DailySalesAnalytics: Aggregated daily metrics (total revenue, bills, payment status distribution)
+ * - Updated via background job or trigger when payments are made
+ * - Enables fast querying without scanning all transactions
+ * - ServiceDailyAnalytics: Per-service performance tracking
+ * - Shows which services generate the most revenue
+ * - Tracks quantity sold and average price
+ * - Useful for identifying top/bottom performers
+ * - CategoryDailyAnalytics: Per-category performance tracking
+ * - Aggregate metrics by service category
+ * - Shows which test types drive revenue
+ * ANALYTICS USAGE:
+ * - Daily data is pre-aggregated for performance
+ * - Weekly metrics: Query 7 days of DailySalesAnalytics and SUM/AVG
+ * - Monthly metrics: Query 30 days of DailySalesAnalytics and SUM/AVG
+ * - Forecasting with simple-statistics: Export daily revenue time series for trend analysis
+ * - Service optimization: Compare ServiceDailyAnalytics to identify underperforming services
+ * - Category analysis: Use CategoryDailyAnalytics to understand which lab test categories are most utilized
+ * IMPLEMENTATION NOTES:
+ * - Run daily aggregation job (cron/scheduled task) to populate analytics tables
+ * - Alternative: Use database triggers on PaymentHistory to update analytics in real-time
+ * - Keep raw data in MedicalBill/BilledService for detailed auditing
+ * - Use analytics tables for dashboards and reports (much faster than aggregating raw data)
+ * AUDIT LOG SYSTEM:
+ * - DocumentAuditLog: Tracks all changes to medical documentation
+ * - Records what changed, old/new values, who made the change
+ * - Can be reviewed and deleted by admin to save memory
+ * - Provides transparency and accountability without complex versioning
+ * - Store data as JSON for flexibility (fieldsChanged, previousData, sdnewData)
+ */

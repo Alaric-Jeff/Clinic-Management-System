@@ -12,7 +12,12 @@ export async function unarchivePatientController(
         id
     } = request.body;
     try{
-        const result = await unarchivePatientService(request.server, {id})
+
+        const user = request.currentUser;
+
+        if(!user) return request.server.httpErrors.unauthorized("Unauthorized access")
+
+        await unarchivePatientService(request.server, {id, name: user.name, role: user.role})
 
         return reply.code(200).send({
             success: true, 
