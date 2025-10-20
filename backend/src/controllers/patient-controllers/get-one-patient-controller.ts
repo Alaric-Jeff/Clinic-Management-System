@@ -11,7 +11,7 @@ export async function getOnePatientController(
     try {
         const patient = await getOnePatientService(request.server, { 
             id,
-            limit: 20 // Or get from query params
+            limit: 20 
         });
 
         return reply.code(200).send({
@@ -19,7 +19,7 @@ export async function getOnePatientController(
             message: 'Patient retrieved successfully',
             data: patient
         });
-
+        
     } catch (err: unknown) {
         if (err instanceof Error && err.message === 'Patient not found') {
             throw request.server.httpErrors.notFound('Patient not found');

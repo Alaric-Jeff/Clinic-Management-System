@@ -1,7 +1,23 @@
-// services/create-medical-bills-service.ts
 import type { FastifyInstance } from "fastify";
 import type { Prisma, Role, ServiceCategory, PaymentStatus } from "@prisma/client";
 
+/**
+ * Service: Create Medical Bill with Services
+ *
+ * Creates a medical bill with associated services in a single transaction.
+ * Handles discount logic, payment calculations, and audit logging.
+ *
+ * Discount Logic:
+ * - Senior/PWD discount: Fixed 20%, requires valid csdIdOrPwdId
+ * - Manual discount: 0-100%, no ID required
+ * - Formula: ((services total - discount) + consultation fee)
+ * - Consultation fee (₱250) is NEVER discounted
+ *
+ * @param fastify - Fastify instance with Prisma client
+ * @param body - Request payload with bill details
+ * @returns Created bill with payment details and service count
+ * @throws {Error} Validation or business logic errors
+ */
 export async function createMedicalBillWithServices(
   fastify: FastifyInstance,
   body: {
@@ -12,6 +28,8 @@ export async function createMedicalBillWithServices(
     paymentMethod?: string | null;
     createdByName: string;
     createdByRole: Role | string;
+    isSeniorPwdDiscountApplied?: boolean;
+    discountRate?: number;
   }
 ) {
   const {
@@ -22,31 +40,31 @@ export async function createMedicalBillWithServices(
     paymentMethod,
     createdByName,
     createdByRole,
+    isSeniorPwdDiscountApplied = false,
+    discountRate = 0,
   } = body;
 
   try {
-    // Basic validation
     if (!Array.isArray(services) || services.length === 0) {
       throw new Error("At least one service must be provided.");
     }
 
-    // Verify documentation exists
     const documentation = await fastify.prisma.medicalDocumentation.findUnique({
       where: { id: medicalDocumentationId },
-      select: { id: true, status: true, patientId: true },
+      include: { patient: true },
     });
+
     if (!documentation) throw new Error("Medical documentation not found");
     if (documentation.status === "draft") {
       throw new Error("Cannot create bill for draft documentation. Please complete the documentation first.");
     }
 
-    // Check existing bill
-    const existing = await fastify.prisma.medicalBill.findUnique({
-      where: { medicalDocumentationId },
-    });
-    if (existing) throw new Error("Medical bill already exists for this documentation");
+    const patient = documentation.patient;
 
-    // --- build billed services payload (WITHOUT medicalBillId) ---
+    if (isSeniorPwdDiscountApplied && !patient.csdIdOrPwdId) {
+      throw new Error("Cannot apply senior/PWD discount — patient has no valid senior/PWD ID on record");
+    }
+
     type BilledServicePayload = {
       serviceId?: string | null;
       serviceName: string;
@@ -57,10 +75,10 @@ export async function createMedicalBillWithServices(
     };
 
     const billedServicesData: BilledServicePayload[] = [];
-    let totalAmount = 0;
+    let servicesTotal = 0;
 
     for (const item of services) {
-      if (!item || !item.serviceId) throw new Error("Each service must include serviceId");
+      if (!item?.serviceId) throw new Error("Each service must include serviceId");
       const qty = Number(item.quantity ?? 1);
       if (!Number.isFinite(qty) || qty <= 0) throw new Error("Service quantity must be a positive number");
 
@@ -73,60 +91,67 @@ export async function createMedicalBillWithServices(
       if (!service.isActivated) throw new Error(`Service is deactivated: ${service.name}`);
       if (!service.isAvailable) throw new Error(`Service is not available: ${service.name}`);
 
-      const price = Number(service.price ?? 0);
-      const subtotalRaw = price * qty;
-      const subtotal = Math.round(subtotalRaw * 100) / 100;
-      totalAmount += subtotal;
+      const subtotal = Number((service.price * qty).toFixed(2));
+      servicesTotal += subtotal;
 
       billedServicesData.push({
         serviceId: service.id,
         serviceName: service.name,
         serviceCategory: service.category as ServiceCategory,
-        servicePriceAtTime: price,
+        servicePriceAtTime: service.price,
         quantity: qty,
         subtotal,
       });
     }
 
-    totalAmount = Math.round(totalAmount * 100) / 100;
+    const BASE_CONSULTATION_FEE = 250;
+    const validDiscountRate = Math.max(0, Math.min(100, discountRate));
 
-    if (initialPaymentAmount !== undefined && initialPaymentAmount > totalAmount) {
+    let discountAmount = 0;
+    let effectiveDiscountRate = 0;
+
+    if (isSeniorPwdDiscountApplied) {
+      discountAmount = servicesTotal * 0.2;
+      effectiveDiscountRate = 20;
+    } else if (validDiscountRate > 0) {
+      discountAmount = servicesTotal * (validDiscountRate / 100);
+      effectiveDiscountRate = validDiscountRate;
+    }
+
+    const totalAmount = Number(((servicesTotal - discountAmount) + BASE_CONSULTATION_FEE).toFixed(2));
+
+    if (initialPaymentAmount && initialPaymentAmount > totalAmount) {
       throw new Error(`Initial payment (${initialPaymentAmount}) cannot exceed total bill amount (${totalAmount})`);
     }
 
-    // --- transaction: create bill, create billedServices (with medicalBillId), create initial payment, compute and persist amounts ---
     const result = await fastify.prisma.$transaction(async (prisma) => {
       const medicalBill = await prisma.medicalBill.create({
         data: {
           medicalDocumentationId,
+          isSeniorPwdDiscountApplied,
+          discountRate: effectiveDiscountRate,
           totalAmount,
+          amountPaid: 0,
+          balance: totalAmount,
+          paymentStatus: "unpaid",
           createdByName,
           createdByRole: createdByRole as Role,
-          ...(notes !== undefined && { notes }),
+          ...(notes && { notes }),
         },
       });
 
-      const createManyData: Prisma.BilledServiceCreateManyInput[] = billedServicesData.map((s) => ({
-        medicalBillId: medicalBill.id,
-        serviceId: s.serviceId ?? null,
-        serviceName: s.serviceName,
-        serviceCategory: s.serviceCategory,
-        servicePriceAtTime: s.servicePriceAtTime,
-        quantity: s.quantity,
-        subtotal: s.subtotal,
-        createdAt: new Date(), // optional, Prisma will use default; you can omit
-      }));
-
       await prisma.billedService.createMany({
-        data: createManyData,
+        data: billedServicesData.map((s) => ({
+          medicalBillId: medicalBill.id,
+          ...s,
+        })),
       });
 
-      // initial payment
       if (initialPaymentAmount && initialPaymentAmount > 0) {
         await prisma.paymentHistory.create({
           data: {
             medicalBillId: medicalBill.id,
-            amountPaid: Math.round(Number(initialPaymentAmount) * 100) / 100,
+            amountPaid: Number(initialPaymentAmount.toFixed(2)),
             paymentMethod: paymentMethod ?? "cash",
             notes: "Initial payment at billing",
             recordedByName: createdByName,
@@ -135,88 +160,84 @@ export async function createMedicalBillWithServices(
         });
       }
 
-      // compute payments from PaymentHistory
-      const paymentHistory = await prisma.paymentHistory.findMany({
+      const payments = await prisma.paymentHistory.findMany({
         where: { medicalBillId: medicalBill.id },
         select: { amountPaid: true },
       });
-      const amountPaidRaw = paymentHistory.reduce((s, p) => s + Number(p.amountPaid ?? 0), 0);
-      const amountPaid = Math.round(amountPaidRaw * 100) / 100;
-      const balance = Math.round((totalAmount - amountPaid) * 100) / 100;
-      const paymentStatusStr = amountPaid === 0 ? "unpaid" : amountPaid >= totalAmount ? "paid" : "partially_paid";
-      const paymentStatus = paymentStatusStr as PaymentStatus;
+
+      const amountPaid = payments.reduce((sum, p) => sum + p.amountPaid, 0);
+      const balance = Number((totalAmount - amountPaid).toFixed(2));
+
+      const paymentStatus: PaymentStatus =
+        amountPaid === 0 ? "unpaid" :
+        amountPaid >= totalAmount ? "paid" : "partially_paid";
 
       const updatedBill = await prisma.medicalBill.update({
         where: { id: medicalBill.id },
+        data: { amountPaid, balance, paymentStatus },
+        include: { billedServices: true },
+      });
+
+      await prisma.billAuditLog.create({
         data: {
-          amountPaid,
-          balance,
-          paymentStatus,
-        },
-        include: {
-          billedServices: true,
+          medicalBillId: medicalBill.id,
+          action: "created",
+          fieldsChanged: "totalAmount,amountPaid,balance,paymentStatus,discountRate,isSeniorPwdDiscountApplied",
+          newData: JSON.stringify({
+            totalAmount,
+            amountPaid,
+            balance,
+            paymentStatus,
+            discountRate: effectiveDiscountRate,
+            isSeniorPwdDiscountApplied,
+            servicesTotal,
+            discountAmount,
+            consultationFee: BASE_CONSULTATION_FEE,
+          }),
+          changedByName: createdByName,
+          changedByRole: createdByRole as Role,
         },
       });
 
       return {
-        medicalBill: updatedBill,
-        billedServicesCount: billedServicesData.length,
+        updatedBill,
         amountPaid,
         balance,
         paymentStatus,
+        billedServicesCount: billedServicesData.length,
       };
     });
 
-    fastify.log.info(
-      {
-        medicalBillId: result.medicalBill.id,
-        documentationId: medicalDocumentationId,
-        patientId: documentation.patientId,
-        totalAmount,
-        amountPaid: result.amountPaid,
-        balance: result.balance,
-        paymentStatus: result.paymentStatus,
-        servicesCount: result.billedServicesCount,
-        createdBy: createdByName,
-      },
-      "Medical bill created successfully with services"
-    );
+    fastify.log.info({
+      billId: result.updatedBill.id,
+      servicesTotal,
+      discountAmount,
+      consultationFee: BASE_CONSULTATION_FEE,
+      totalAmount,
+      amountPaid: result.amountPaid,
+      balance: result.balance,
+      paymentStatus: result.paymentStatus,
+      isSeniorPwdDiscountApplied,
+      discountRate: result.updatedBill.discountRate,
+      billedServicesCount: result.billedServicesCount,
+    }, "Medical bill created successfully");
 
+    // ✅ Return matches your `createMedicalBillResponseSchema`
     return {
       success: true,
       message: "Medical bill created successfully",
       data: {
-        id: result.medicalBill.id,
-        medicalDocumentationId: result.medicalBill.medicalDocumentationId,
-        totalAmount: result.medicalBill.totalAmount,
-        amountPaid: result.medicalBill.amountPaid,
-        balance: result.medicalBill.balance,
-        paymentStatus: result.medicalBill.paymentStatus,
+        ...result.updatedBill,
         billedServicesCount: result.billedServicesCount,
-        createdByName: result.medicalBill.createdByName,
-        createdByRole: result.medicalBill.createdByRole,
-        notes: result.medicalBill.notes,
-        createdAt: result.medicalBill.createdAt.toISOString(),
-        updatedAt: result.medicalBill.updatedAt.toISOString(),
       },
     };
-  } catch (err: unknown) {
-    if (err && typeof err === "object" && "code" in err) {
-      const e = err as { code: string };
-      if (e.code === "P2025") throw new Error("Referenced record not found");
-      if (e.code === "P2003") throw new Error("Invalid reference: Medical documentation or service not found");
-      if (e.code === "P2002") throw new Error("Medical bill already exists for this documentation");
-    }
 
-    fastify.log.error(
-      {
-        error: err instanceof Error ? err.message : err,
-        medicalDocumentationId,
-        operation: "createMedicalBillWithServices",
-      },
-      "Failed to create medical bill"
-    );
+  } catch (err: any) {
+    if (err.code === "P2025") throw new Error("Referenced record not found");
+    if (err.code === "P2003") throw new Error("Invalid reference: Medical documentation or service not found");
+    if (err.code === "P2002") throw new Error("Medical bill already exists for this documentation");
 
+    fastify.log.error({ error: err.message, stack: err.stack, operation: "createMedicalBillWithServices" }, "Failed to create medical bill");
     throw err;
   }
 }

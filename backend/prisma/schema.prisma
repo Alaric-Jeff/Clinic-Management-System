@@ -38,6 +38,7 @@ enum ServiceCategory {
   hormones
   hepatitis
   enzymes
+  consultation
   others
 }
 
@@ -121,6 +122,7 @@ model Patient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([registeredAt])
   @@index([isArchived])
   @@index([createdAt])
   @@index([lastName])
@@ -221,13 +223,14 @@ model BilledService {
 }
 
 model MedicalBill {
-  id                     String @id @default(cuid())
-  medicalDocumentationId String @unique // One-to-one with medical documentation
-
-  totalAmount   Float         @default(0.00)
-  amountPaid    Float         @default(0.00)
-  balance       Float         @default(0.00)
-  paymentStatus PaymentStatus @default(unpaid)
+  id                         String        @id @default(cuid())
+  medicalDocumentationId     String        @unique // One-to-one with medical documentation
+  isSeniorPwdDiscountApplied Boolean       @default(false) // this is kind of weird; based on my client this is applied manually: this can only be true if the patient has seniororpwd id, but even if the patient is seniororpwd even with recorder number, it doesn't automatically applied to them.
+  discountRate               Float         @default(0.00) //fixed 20% if applied isSeniorPwdDiscountApplied, also it can be manually input like 1% - 100% sometimes for special cases, like relatives going on a checkup, it's like a discount other than pwdorsendior
+  totalAmount                Float         @default(250.00) // every checkup counts as consultation with fixed base rate 250
+  amountPaid                 Float         @default(0.00)
+  balance                    Float         @default(0.00)
+  paymentStatus              PaymentStatus @default(unpaid)
 
   // Audit trail
   createdByName     String

@@ -185,6 +185,7 @@ export async function patientRoutes(fastify: FastifyInstance) {
         preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getTotalPatientController
     })
+    //example:
 
 }
 

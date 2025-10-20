@@ -54,28 +54,48 @@ export type billedServiceItemType = Static<typeof billedServiceItemSchema>;
  */
 export const createMedicalBillSchema = Type.Object({
   medicalDocumentationId: Type.String({
-    description: "ID of the medical documentation to bill for"
+    description: "ID of the medical documentation to bill for",
   }),
+  
   services: Type.Array(billedServiceItemSchema, {
     minItems: 1,
-    description: "Array of services to include in the bill"
+    description: "Array of services to include in the bill",
   }),
+  
   notes: Type.Optional(
     Type.Union([Type.String(), Type.Null()], {
-      description: "Optional notes (payment arrangements, discounts, etc.)"
+      description: "Optional notes (payment arrangements, discounts, etc.)",
     })
   ),
+  
   initialPaymentAmount: Type.Optional(
     Type.Number({
       minimum: 0,
-      description: "Optional initial payment amount if paying at billing time"
+      description: "Optional initial payment amount if paying at billing time",
     })
   ),
+  
   paymentMethod: Type.Optional(
     Type.String({
-      description: "Payment method if initialPaymentAmount is provided (cash, card, insurance, etc.)"
+      description: "Payment method if initialPaymentAmount is provided (cash, card, insurance, gcash etc.)",
     })
-  )
+  ),
+  
+  isSeniorPwdDiscountApplied: Type.Optional(
+    Type.Boolean({
+      default: false,
+      description: "Apply automatic 20% senior/PWD discount. Requires patient to have valid csdIdOrPwdId.",
+    })
+  ),
+  
+  discountRate: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      maximum: 100,
+      default: 0,
+      description: "Manual discount rate (0-100%). Can be used without senior/PWD ID. Applied to services only, not consultation fee.",
+    })
+  ),
 });
 
 export type createMedicalBillType = Static<typeof createMedicalBillSchema>;
@@ -190,9 +210,9 @@ export const createMedicalBillServiceInputSchema = Type.Object({
   initialPaymentAmount: Type.Optional(Type.Number({ minimum: 0 })),
   paymentMethod: Type.Optional(Type.String()),
   createdByName: Type.String(),
-  createdByRole: Type.Enum(RoleEnum)
+  createdByRole: Type.Enum(RoleEnum),
+  isSeniorPwdDiscountApplied: Type.Optional(Type.Boolean()),
+  discountRate: Type.Optional(Type.Number({ minimum: 0, maximum: 100 })),
 });
 
-export type createMedicalBillServiceInputType = Static<
-  typeof createMedicalBillServiceInputSchema
->;
+export type createMedicalBillServiceInputType = Static<typeof createMedicalBillServiceInputSchema>;

@@ -12,11 +12,11 @@ export const createPatientSchema = Type.Object({
         format: 'date-time', 
         description: 'Birth date in ISO 8601 format (e.g., 1990-05-15T00:00:00.000Z)'
     }), 
-    gender: Type.Enum(Gender),
+    gender: Type.Enum(Gender), //small letter ex: male or female
     csdIdOrPwdId: Type.Union([Type.String({ minLength: 1 }), Type.Null()]), 
     mobileNumber: Type.Union([Type.String({ minLength: 1, pattern: '^\\+?[\\d\\s\\-()]+$' }), Type.Null()]),   
     residentialAddress: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
-    registerDate: Type.Union([Type.String({format: 'date'}), Type.Null()])
+    registerDate: Type.Union([Type.String({format: 'date'}), Type.Null()]) //this is for old migrations this is not the same as createdAt 
 });
 
 export const createPatientServiceSchemaType = Type.Object({
@@ -75,8 +75,6 @@ export const getTotalPatientsCountResponse = Type.Object({
         count: Type.Number()
     })
 });
-
-
 
 export const patchPatientSchema = Type.Object({
     id: Type.String(),
@@ -151,12 +149,13 @@ export const patientWithDocPreviewSchema = Type.Object({
   lastName: Type.String(),
   middleName: Type.Union([Type.String(), Type.Null()]),
   birthDate: Type.String({ format: 'date-time' }),
-  age: Type.Number(), // Calculated field
+  age: Type.Number(), 
   gender: Type.Enum(Gender),
   csdIdOrPwdId: Type.Union([Type.String(), Type.Null()]),
   mobileNumber: Type.Union([Type.String(), Type.Null()]),
   residentialAddress: Type.Union([Type.String(), Type.Null()]),
   isArchived: Type.Boolean(),
+  registeredAt: Type.String(),
   
   // Audit fields
   createdByName: Type.String(),

@@ -31,7 +31,9 @@ export async function createMedicalBillController(
     services,
     notes,
     initialPaymentAmount,
-    paymentMethod
+    paymentMethod,
+    isSeniorPwdDiscountApplied,
+    discountRate
   } = request.body;
 
   try {
@@ -55,32 +57,41 @@ export async function createMedicalBillController(
         createdBy: name,
         userRole: role,
         hasInitialPayment: initialPaymentAmount ? true : false,
-        paymentMethod
+        paymentMethod,
+        isSeniorPwdDiscountApplied: isSeniorPwdDiscountApplied ?? false,
+        discountRate: discountRate ?? 0
       },
       "Medical bill creation requested"
     );
 
-    // Build service input, filtering out undefined optional fields
+    // Build service input
     const serviceInput: createMedicalBillServiceInputType = {
       medicalDocumentationId,
       services,
       notes: notes ?? null,
       createdByName: name,
-      createdByRole: role
+      createdByRole: role,
     };
 
-    // Only add optional fields if they have values
+    // Add optional fields if they have values
     if (initialPaymentAmount !== undefined) {
       serviceInput.initialPaymentAmount = initialPaymentAmount;
     }
     if (paymentMethod !== undefined) {
       serviceInput.paymentMethod = paymentMethod;
     }
+    if (isSeniorPwdDiscountApplied !== undefined) {
+      serviceInput.isSeniorPwdDiscountApplied = isSeniorPwdDiscountApplied;
+    }
+    if (discountRate !== undefined) {
+      serviceInput.discountRate = discountRate;
+    }
 
     const result = await createMedicalBillWithServices(request.server, serviceInput);
 
     // Return successful response with 201 Created
     return reply.code(201).send(result);
+    
   } catch (err: unknown) {
     // Handle known errors with appropriate HTTP status codes
     if (err instanceof Error) {
@@ -94,7 +105,12 @@ export async function createMedicalBillController(
         "Error creating medical bill"
       );
 
-      // Payment exceeds total - CHECK FIRST (most specific)
+      // Senior/PWD discount without valid ID - NEW ERROR
+      if (err.message.includes("Cannot apply senior/PWD discount")) {
+        throw request.server.httpErrors.badRequest(err.message);
+      }
+
+      // Payment exceeds total
       if (err.message.includes("cannot exceed total bill amount")) {
         throw request.server.httpErrors.badRequest(err.message);
       }
@@ -139,7 +155,7 @@ export async function createMedicalBillController(
         throw request.server.httpErrors.notFound(err.message);
       }
 
-      // If we get here, it's an unexpected error from the service
+      // Unhandled service error
       request.server.log.error(
         {
           error: err.message,

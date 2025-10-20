@@ -30,7 +30,7 @@ server.register(fjwt, {
     sign: {
         iss: process.env.JWT_ISSUER || 'clinic-app',
         aud: process.env.JWT_AUDIENCE || 'clinic-users',
-        expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+        expiresIn: process.env.JWT_EXPIRES_IN || '50m',
     },
     verify: {
         maxAge: process.env.JWT_MAX_AGE || '15m',
