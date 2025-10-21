@@ -8,6 +8,8 @@ import { patchPatientController } from "../controllers/patient-controllers/patch
 import { getAllArchivedPatientController } from "../controllers/patient-controllers/get-all-archived-patient.js";
 import { getOnePatientController } from "../controllers/patient-controllers/get-one-patient-controller.js";
 import { getTotalPatientController } from "../controllers/patient-controllers/get-total-patient-controller.js";
+import { getMaleCountController } from "../controllers/patient-controllers/get-male-count-controller.js";
+import { getFemaleCountController } from "../controllers/patient-controllers/get-female-count-controller.js";
 import { Role } from "@prisma/client";
 import {
     createPatientSchema,
@@ -25,6 +27,7 @@ import  {
     getTotalPatientsParams,
     totalPatientPaginatedResponseSchema
 } from '../type-schemas/patients/get-total-paginated-schema.js'
+import { Type } from "@sinclair/typebox";
 
 export async function patientRoutes(fastify: FastifyInstance) {
     /**
@@ -169,6 +172,28 @@ export async function patientRoutes(fastify: FastifyInstance) {
             }
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getOnePatientController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: "/get-female-count",
+        schema: {
+            response: {
+                200: Type.Integer()
+            }
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getFemaleCountController,
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: "/get-male-count",
+        schema: {
+            response: {
+                200: Type.Integer()
+            }
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getMaleCountController,
     })
 
     fastify.route({
