@@ -11,13 +11,16 @@ export const deleteResponse = Type.Object({
     success: Type.String()
 })
 
-//schemas for account creation
+
 export const createAccountSchema = Type.Object({
     firstName: Type.String({minLength: 2, maxLength: 50}),
     lastName: Type.String({minLength: 2, maxLength: 50}),
     middleName: Type.Optional(Type.Union([Type.String(), Type.Null()])), 
     email: Type.String({format: 'email'}),
-    password: Type.String({minLength: 8})
+    password: Type.String({ 
+        minLength: 8,
+        pattern: '^(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};\':"\\\\|,.<>\\/?])(?!.*\\s).+$'
+    })
 })
 export type createAccountType = Static<typeof createAccountSchema>;
 

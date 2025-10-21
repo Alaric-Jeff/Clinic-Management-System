@@ -5,7 +5,7 @@ export const changedPasswordBodySchema = Type.Object({
     newPassword: Type.String({ 
         minLength: 8,
         pattern: '^(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};\':"\\\\|,.<>\\/?]).+$',
-        maxLength: 16
+        maxLength: 32
     })
 });
 
