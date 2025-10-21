@@ -11,6 +11,7 @@ async function main() {
   });
 
   if (existingAdmin) {
+    console.log(existingAdmin.email)
     console.log('✅ Admin account already exists');
     return;
   }
