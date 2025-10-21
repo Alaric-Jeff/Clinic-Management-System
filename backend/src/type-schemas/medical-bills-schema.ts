@@ -216,3 +216,104 @@ export const createMedicalBillServiceInputSchema = Type.Object({
 });
 
 export type createMedicalBillServiceInputType = Static<typeof createMedicalBillServiceInputSchema>;
+
+
+
+// Add to your existing schema file
+
+// Update Medical Bill Request Schema
+export const updateMedicalBillSchema = Type.Object({
+  medicalBillId: Type.String({
+    description: "ID of the medical bill to update",
+  }),
+  
+  // Optional: Update services (add/remove/modify quantities)
+  servicesToAdd: Type.Optional(
+    Type.Array(billedServiceItemSchema, {
+      description: "New services to add to the bill",
+    })
+  ),
+  
+  servicesToRemove: Type.Optional(
+    Type.Array(Type.String(), {
+      description: "IDs of billed services to remove",
+    })
+  ),
+  
+  servicesToUpdate: Type.Optional(
+    Type.Array(
+      Type.Object({
+        billedServiceId: Type.String(),
+        quantity: Type.Number({ minimum: 1 }),
+      }),
+      {
+        description: "Update quantities of existing billed services",
+      }
+    )
+  ),
+  
+  // Optional: Update discount settings
+  isSeniorPwdDiscountApplied: Type.Optional(Type.Boolean()),
+  discountRate: Type.Optional(Type.Number({ minimum: 0, maximum: 100 })),
+  
+  // Optional: Update notes
+  notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+});
+
+export type updateMedicalBillType = Static<typeof updateMedicalBillSchema>;
+
+// Service Input Schema
+export const updateMedicalBillServiceInputSchema = Type.Object({
+  medicalBillId: Type.String(),
+  servicesToAdd: Type.Optional(Type.Array(billedServiceItemSchema)),
+  servicesToRemove: Type.Optional(Type.Array(Type.String())),
+  servicesToUpdate: Type.Optional(
+    Type.Array(
+      Type.Object({
+        billedServiceId: Type.String(),
+        quantity: Type.Number({ minimum: 1 }),
+      })
+    )
+  ),
+  isSeniorPwdDiscountApplied: Type.Optional(Type.Boolean()),
+  discountRate: Type.Optional(Type.Number({ minimum: 0, maximum: 100 })),
+  notes: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  updatedByName: Type.String(),
+  updatedByRole: Type.Enum(RoleEnum),
+});
+
+export type updateMedicalBillServiceInputType = Static<typeof updateMedicalBillServiceInputSchema>;
+
+// Update Response Schema
+export const updateMedicalBillResponseSchema = Type.Object({
+  success: Type.Boolean(),
+  message: Type.String(),
+  data: Type.Object({
+    id: Type.String(),
+    medicalDocumentationId: Type.String(),
+    isSeniorPwdDiscountApplied: Type.Boolean(),
+    discountRate: Type.Number(),
+    totalAmount: Type.Number(),
+    amountPaid: Type.Number(),
+    balance: Type.Number(),
+    paymentStatus: Type.Enum(PaymentStatusEnum),
+    notes: Type.Union([Type.String(), Type.Null()]),
+    createdByName: Type.String(),
+    createdByRole: Type.Enum(RoleEnum),
+    lastUpdatedByName: Type.Union([Type.String(), Type.Null()]),
+    lastUpdatedByRole: Type.Union([Type.Enum(RoleEnum), Type.Null()]),
+    billedServices: Type.Array(billedServiceResponseSchema),
+    createdAt: Type.String(),
+    updatedAt: Type.String(),
+  }),
+  billedServicesCount: Type.Number(),
+  changes: Type.Object({
+    servicesAdded: Type.Number(),
+    servicesRemoved: Type.Number(),
+    servicesUpdated: Type.Number(),
+    discountChanged: Type.Boolean(),
+    notesChanged: Type.Boolean(),
+  }),
+});
+
+export type updateMedicalBillResponseType = Static<typeof updateMedicalBillResponseSchema>;
