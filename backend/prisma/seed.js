@@ -22,7 +22,7 @@ async function main() {
       firstName: 'System',
       lastName: 'Administrator',
       middleName: 'N/A',
-      email: process.env.ADMIN_EMAIL || 'admin@clinic.local',
+      email: process.env.ADMIN_EMAIL || 'admin@gmail.com',
       password: hashedPassword,
       role: 'admin',
       status: 'activated',
