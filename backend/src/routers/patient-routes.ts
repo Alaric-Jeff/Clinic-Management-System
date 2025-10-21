@@ -79,7 +79,7 @@ export async function patientRoutes(fastify: FastifyInstance) {
         handler: getTotalPatientCountsController
     });
 
-    /**
+    /**s
      * Archive a patient (soft delete)
      * Access: Admin, Encoder
      */

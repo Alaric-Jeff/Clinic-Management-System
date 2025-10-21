@@ -28,9 +28,9 @@ export const updateMedicalDocumentationBodySchema = Type.Object({
 export type updateMedicalDocumentationBodyType = Static<typeof updateMedicalDocumentationBodySchema>;
 
 // Params schema for update route
-export const updateMedicalDocumentationParamsSchema = Type.Object({
-    id: Type.String()
-});
+  export const updateMedicalDocumentationParamsSchema = Type.Object({
+      id: Type.String()
+  });
 
 export type updateMedicalDocumentationParamsType = Static<typeof updateMedicalDocumentationParamsSchema>;
 

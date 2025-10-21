@@ -1,23 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import type { Prisma, Role, ServiceCategory, PaymentStatus } from "@prisma/client";
+import type { Role, ServiceCategory, PaymentStatus } from "@prisma/client";
+import { updateDailyAnalytics } from "../sales-analytics-services/update-daily-analytics.js";
+import { addPaymentHistory } from "../sales-analytics-services/add-paymenthistory-service.js";
 
-/**
- * Service: Create Medical Bill with Services
- *
- * Creates a medical bill with associated services in a single transaction.
- * Handles discount logic, payment calculations, and audit logging.
- *
- * Discount Logic:
- * - Senior/PWD discount: Fixed 20%, requires valid csdIdOrPwdId
- * - Manual discount: 0-100%, no ID required
- * - Formula: ((services total - discount) + consultation fee)
- * - Consultation fee (₱250) is NEVER discounted
- *
- * @param fastify - Fastify instance with Prisma client
- * @param body - Request payload with bill details
- * @returns Created bill with payment details and service count
- * @throws {Error} Validation or business logic errors
- */
 export async function createMedicalBillWithServices(
   fastify: FastifyInstance,
   body: {
@@ -124,6 +109,10 @@ export async function createMedicalBillWithServices(
       throw new Error(`Initial payment (${initialPaymentAmount}) cannot exceed total bill amount (${totalAmount})`);
     }
 
+    // Define payment method with proper type
+    const effectivePaymentMethod: string = paymentMethod ?? "cash";
+
+    // ✅ Core transaction (atomic)
     const result = await fastify.prisma.$transaction(async (prisma) => {
       const medicalBill = await prisma.medicalBill.create({
         data: {
@@ -147,12 +136,13 @@ export async function createMedicalBillWithServices(
         })),
       });
 
+      // ✅ Record payment (if any)
       if (initialPaymentAmount && initialPaymentAmount > 0) {
         await prisma.paymentHistory.create({
           data: {
             medicalBillId: medicalBill.id,
             amountPaid: Number(initialPaymentAmount.toFixed(2)),
-            paymentMethod: paymentMethod ?? "cash",
+            paymentMethod: effectivePaymentMethod,
             notes: "Initial payment at billing",
             recordedByName: createdByName,
             recordedByRole: createdByRole as Role,
@@ -208,21 +198,16 @@ export async function createMedicalBillWithServices(
       };
     });
 
-    fastify.log.info({
-      billId: result.updatedBill.id,
-      servicesTotal,
-      discountAmount,
-      consultationFee: BASE_CONSULTATION_FEE,
-      totalAmount,
-      amountPaid: result.amountPaid,
-      balance: result.balance,
-      paymentStatus: result.paymentStatus,
-      isSeniorPwdDiscountApplied,
-      discountRate: result.updatedBill.discountRate,
-      billedServicesCount: result.billedServicesCount,
-    }, "Medical bill created successfully");
+    // ✅ Update analytics (safe to run outside since it's summary data)
+    const todayDate: string = new Date().toISOString();
+    await updateDailyAnalytics(fastify, {
+      date: todayDate,
+      totalRevenue: result.amountPaid,
+      totalBills: 1,
+      totalServices: result.billedServicesCount,
+    });
 
-    // ✅ Return matches your `createMedicalBillResponseSchema`
+    // ✅ Final response
     return {
       success: true,
       message: "Medical bill created successfully",
