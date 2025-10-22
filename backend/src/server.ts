@@ -1,4 +1,4 @@
-import Fastify from 'fastify'
+import Fastify, { fastify } from 'fastify'
 import dotenv from 'dotenv'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import prismaPlugin from './plugins/prisma-plug.js'
@@ -9,6 +9,7 @@ import routeInit from './routers/routeInit.js'
 import compressionPlugin from './plugins/compression-route-plug.js'
 import rateLimitPlugin from './plugins/rate-limit-plug.js'
 import mailerPlugin from './plugins/node-mailer-plug.js'
+
 // import corsPlugin from './plugins/cors-plug.js'
 import cors from "@fastify/cors"
 dotenv.config()
@@ -24,6 +25,7 @@ await server.register(cors, {
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 });
+
 server.register(cookiePlugin);
 server.register(fjwt, {
     secret: process.env.JWT_SECRET || 'Secret',

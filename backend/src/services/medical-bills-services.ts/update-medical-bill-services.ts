@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Role, ServiceCategory, PaymentStatus } from "@prisma/client";
-
+import { updateDailyAnalytics } from "../sales-analytics-services/update-daily-analytics.js";
+import { updatePaymentHistory } from "../sales-analytics-services/update-paymenthistory-service.js";
 /**
  * Service: Update Medical Bill with Services
  *
