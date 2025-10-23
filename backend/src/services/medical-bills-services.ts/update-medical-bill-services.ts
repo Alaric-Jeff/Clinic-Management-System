@@ -2,11 +2,13 @@ import type { FastifyInstance } from "fastify";
 import type { Role, ServiceCategory, PaymentStatus } from "@prisma/client";
 import { updateDailyAnalytics } from "../sales-analytics-services/update-daily-analytics.js";
 import { updatePaymentHistory } from "../sales-analytics-services/update-paymenthistory-service.js";
+
 /**
  * Service: Update Medical Bill with Services
  *
  * Updates a medical bill including adding/removing/modifying services and discount settings.
- * Handles recalculation of totals, payment status, and comprehensive audit logging.
+ * Handles recalculation of totals, payment status, comprehensive audit logging,
+ * and updates to daily analytics and payment history.
  *
  * Operations Supported:
  * - Add new services to bill
@@ -14,6 +16,8 @@ import { updatePaymentHistory } from "../sales-analytics-services/update-payment
  * - Update quantities of existing services
  * - Change discount settings (senior/PWD or manual)
  * - Update notes
+ * - Update daily sales analytics
+ * - Update payment history when payment details change
  *
  * @param fastify - Fastify instance with Prisma client
  * @param body - Request payload with update details
@@ -32,6 +36,10 @@ export async function updateMedicalBillWithServices(
     notes?: string | null;
     updatedByName: string;
     updatedByRole: Role | string;
+    // Optional payment update fields
+    amountPaid?: number;
+    paymentMethod?: string;
+    paymentNotes?: string;
   }
 ) {
   const {
@@ -44,6 +52,9 @@ export async function updateMedicalBillWithServices(
     notes,
     updatedByName,
     updatedByRole,
+    amountPaid: newAmountPaid,
+    paymentMethod,
+    paymentNotes,
   } = body;
 
   try {
@@ -65,13 +76,15 @@ export async function updateMedicalBillWithServices(
 
     const patient = existingBill.medicalDocumentation.patient;
 
-    // Store original state for audit
+    // Store original state for audit and analytics
     const originalState = {
       isSeniorPwdDiscountApplied: existingBill.isSeniorPwdDiscountApplied,
       discountRate: existingBill.discountRate,
       totalAmount: existingBill.totalAmount,
       notes: existingBill.notes,
       servicesCount: existingBill.billedServices.length,
+      paymentStatus: existingBill.paymentStatus,
+      amountPaid: existingBill.amountPaid,
     };
 
     // 2. Validate discount changes
@@ -90,6 +103,8 @@ export async function updateMedicalBillWithServices(
         servicesUpdated: 0,
         discountChanged: false,
         notesChanged: false,
+        paymentUpdated: false,
+        statusChanged: false,
       };
 
       // --- REMOVE SERVICES ---
@@ -304,13 +319,17 @@ export async function updateMedicalBillWithServices(
         where: { medicalBillId },
         select: { amountPaid: true },
       });
-      const amountPaid = payments.reduce((sum, p) => sum + p.amountPaid, 0);
-      const balance = Number((newTotalAmount - amountPaid).toFixed(2));
+      const totalAmountPaid = payments.reduce((sum, p) => sum + p.amountPaid, 0);
+      
+      // Use new payment amount if provided, otherwise use existing
+      const finalAmountPaid = newAmountPaid !== undefined ? newAmountPaid : totalAmountPaid;
+      const balance = Number((newTotalAmount - finalAmountPaid).toFixed(2));
 
+      const previousPaymentStatus = originalState.paymentStatus;
       const paymentStatus: PaymentStatus =
-        amountPaid === 0
+        finalAmountPaid === 0
           ? "unpaid"
-          : amountPaid >= newTotalAmount
+          : finalAmountPaid >= newTotalAmount
           ? "paid"
           : "partially_paid";
 
@@ -319,6 +338,8 @@ export async function updateMedicalBillWithServices(
         newIsSeniorPwd !== originalState.isSeniorPwdDiscountApplied ||
         effectiveDiscountRate !== originalState.discountRate;
       changesLog.notesChanged = notes !== undefined && notes !== originalState.notes;
+      changesLog.paymentUpdated = newAmountPaid !== undefined;
+      changesLog.statusChanged = previousPaymentStatus !== paymentStatus;
 
       // --- UPDATE BILL ---
       const updatedBill = await prisma.medicalBill.update({
@@ -327,7 +348,7 @@ export async function updateMedicalBillWithServices(
           isSeniorPwdDiscountApplied: newIsSeniorPwd,
           discountRate: effectiveDiscountRate,
           totalAmount: newTotalAmount,
-          amountPaid,
+          amountPaid: finalAmountPaid,
           balance,
           paymentStatus,
           lastUpdatedByName: updatedByName,
@@ -338,6 +359,44 @@ export async function updateMedicalBillWithServices(
           billedServices: true,
         },
       });
+
+      // --- UPDATE PAYMENT HISTORY (if payment was made) ---
+      if (newAmountPaid !== undefined) {
+        try {
+          await updatePaymentHistory(fastify, {
+            medicalBillId,
+            amountPaid: newAmountPaid,
+            ...(paymentMethod && { paymentMethod }),
+            ...(paymentNotes && { notes: paymentNotes }),
+          });
+        } catch (paymentHistoryError) {
+          // If payment history doesn't exist yet, create it
+          if (paymentHistoryError instanceof Error && 
+              paymentHistoryError.message.includes("not found")) {
+            // Build data object carefully to avoid undefined values
+            const paymentHistoryData: any = {
+              medicalBillId,
+              amountPaid: newAmountPaid,
+              recordedByName: updatedByName,
+              recordedByRole: updatedByRole as Role,
+            };
+            
+            // Only add optional fields if they have actual values
+            if (paymentMethod) {
+              paymentHistoryData.paymentMethod = paymentMethod;
+            }
+            if (paymentNotes) {
+              paymentHistoryData.notes = paymentNotes;
+            }
+            
+            await prisma.paymentHistory.create({
+              data: paymentHistoryData,
+            });
+          } else {
+            throw paymentHistoryError;
+          }
+        }
+      }
 
       // --- CREATE BILL AUDIT LOG ---
       const fieldsChanged: string[] = [];
@@ -364,6 +423,12 @@ export async function updateMedicalBillWithServices(
         newData.totalAmount = newTotalAmount;
       }
 
+      if (changesLog.paymentUpdated) {
+        fieldsChanged.push("amountPaid");
+        previousData.amountPaid = originalState.amountPaid;
+        newData.amountPaid = finalAmountPaid;
+      }
+
       if (changesLog.notesChanged) {
         fieldsChanged.push("notes");
         previousData.notes = originalState.notes;
@@ -373,7 +438,7 @@ export async function updateMedicalBillWithServices(
       await prisma.billAuditLog.create({
         data: {
           medicalBillId,
-          action: "updated",
+          action: changesLog.paymentUpdated ? "payment_recorded" : "updated",
           fieldsChanged: fieldsChanged.join(","),
           previousData: JSON.stringify({
             ...previousData,
@@ -396,8 +461,69 @@ export async function updateMedicalBillWithServices(
         updatedBill,
         changesLog,
         billedServicesCount: currentServices.length,
+        previousPaymentStatus,
+        newPaymentStatus: paymentStatus,
+        revenueChange: newTotalAmount - originalState.totalAmount,
       };
     });
+
+    // --- UPDATE DAILY ANALYTICS (after successful transaction) ---
+    try {
+      const billDate = existingBill.createdAt.toISOString();
+      
+      // Calculate changes in analytics metrics
+      const revenueChange = result.revenueChange;
+      const servicesChange = result.changesLog.servicesAdded - result.changesLog.servicesRemoved;
+      
+      // Calculate payment status changes for analytics
+      let paidBillsChange = 0;
+      let unpaidBillsChange = 0;
+      let partiallyPaidBillsChange = 0;
+
+      if (result.previousPaymentStatus !== result.newPaymentStatus) {
+        // Decrement old status
+        if (result.previousPaymentStatus === "paid") paidBillsChange -= 1;
+        else if (result.previousPaymentStatus === "unpaid") unpaidBillsChange -= 1;
+        else if (result.previousPaymentStatus === "partially_paid") partiallyPaidBillsChange -= 1;
+
+        // Increment new status
+        if (result.newPaymentStatus === "paid") paidBillsChange += 1;
+        else if (result.newPaymentStatus === "unpaid") unpaidBillsChange += 1;
+        else if (result.newPaymentStatus === "partially_paid") partiallyPaidBillsChange += 1;
+      }
+
+      await updateDailyAnalytics(fastify, {
+        date: billDate,
+        totalRevenue: revenueChange,
+        totalServices: servicesChange,
+        paidBills: paidBillsChange,
+        unpaidBills: unpaidBillsChange,
+        partiallyPaidBills: partiallyPaidBillsChange,
+        averageBillAmount: result.updatedBill.totalAmount,
+        totalBills: 0, // No change in total bill count (not creating/deleting)
+      });
+
+      fastify.log.info(
+        {
+          operation: "updateDailyAnalytics",
+          billId: medicalBillId,
+          revenueChange,
+          servicesChange,
+          statusChange: `${result.previousPaymentStatus} -> ${result.newPaymentStatus}`,
+        },
+        "Daily analytics updated successfully"
+      );
+    } catch (analyticsError) {
+      // Log error but don't fail the entire operation
+      fastify.log.error(
+        {
+          operation: "updateDailyAnalytics",
+          error: analyticsError instanceof Error ? analyticsError.message : "Unknown error",
+          billId: medicalBillId,
+        },
+        "Failed to update daily analytics (non-critical)"
+      );
+    }
 
     // Log success
     fastify.log.info(
