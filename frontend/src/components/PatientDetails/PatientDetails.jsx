@@ -17,6 +17,13 @@ const PatientDetail = () => {
   const [showAddRecordModal, setShowAddRecordModal] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleSave = () => {
+  // Optional: send to backend if needed
+  setIsEditing(false);
+};
 
   const fetchPatient = async () => {
     try {
@@ -104,9 +111,7 @@ const PatientDetail = () => {
       {/* Header with Logo */}
       <div className="detail-header-top">
         <div className="header-logo">
-          <div className="logo-icon">
-            <div className="caduceus">⚕</div>
-          </div>
+          
           <div className="logo-text">
             <h1>LEONARDO MEDICAL SERVICES</h1>
             <p>B1 L17, F. Novaliches, Bagumbong, Caloocan City</p>
@@ -122,87 +127,119 @@ const PatientDetail = () => {
         <h2>PATIENT DETAILS</h2>
       </div>
 
-      <div className="patient-info-layout">
-        {/* Patient Info Card */}
-        <div className="patient-info-card">
-          <div className="patient-name-header">
-            {patientFullName}
-          </div>
+     <div className="patient-info-layout-flexwrap">
+  {/* Patient Info Card */}
+  <div className="patient-info-card">
+    <div className="patient-name-header">
+  <span>{patientFullName}</span>
+  <button
+    className="edit-btn-modern"
+    onClick={() => setShowEditModal(true)}
+  >
+    Edit
+  </button>
+</div>
 
-          <div className="info-grid-modern">
-            <div className="info-row">
-              <div className="info-col">
-                <label>Gender</label>
-                <span>{patient.gender || "N/A"}</span>
-              </div>
-              <div className="info-col">
-                <label>Birthday</label>
-                <span>{formatDate(patient.birthDate)}</span>
-              </div>
-              <div className="info-col">
-                <label>Age</label>
-                <span>{patient.age}</span>
-              </div>
-              <div className="info-col">
-                <label>Phone Number</label>
-                <span>{patient.mobileNumber || "N/A"}</span>
-              </div>
-            </div>
-
-            <div className="info-row">
-              <div className="info-col">
-                <label>Senior Citizen ID No./PWD</label>
-                <span>{patient.csdIdOrPwdId || "N/A"}</span>
-              </div>
-              <div className="info-col">
-                <label>Street Address</label>
-                <span>{patient.residentialAddress || "N/A"}</span>
-              </div>
-              <div className="info-col">
-                <label>Register Date</label>
-                <span>{formatDate(patient.createdAt)}</span>
-              </div>
-              <div className="info-col">
-                <label>Member Status</label>
-                <span className="status-active">
-                  {patient.isArchived ? "Archived" : "Active"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            className="edit-btn-modern"
-            onClick={() => setShowEditModal(true)}
-          >
-            EDIT
-          </button>
+    <div className="info-grid-modern">
+      <div className="info-row">
+        <div className="info-col">
+          <label>Gender</label>
+          <span>{patient.gender || "N/A"}</span>
+        </div>
+        <div className="info-col">
+          <label>Birthday</label>
+          <span>{formatDate(patient.birthDate)}</span>
+        </div>
+        <div className="info-col">
+          <label>Age</label>
+          <span>{patient.age}</span>
+        </div>
+        <div className="info-col">
+          <label>Phone Number</label>
+          <span>{patient.mobileNumber || "N/A"}</span>
         </div>
       </div>
+
+      <div className="info-row">
+        <div className="info-col">
+          <label>Senior Citizen ID No./PWD</label>
+          <span>{patient.csdIdOrPwdId || "N/A"}</span>
+        </div>
+        <div className="info-col">
+          <label>Street Address</label>
+          <span>{patient.residentialAddress || "N/A"}</span>
+        </div>
+        <div className="info-col">
+          <label>Register Date</label>
+          <span>{formatDate(patient.createdAt)}</span>
+        </div>
+        <div className="info-col">
+          <label>Member Status</label>
+          <span className="status-active">
+            {patient.isArchived ? "Archived" : "Active"}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    
+  </div>
+
+  {/* Assessment / Remarks Container */}
+  <div className="assess-remark-card-unique">
+    <h3 className="assess-title-unique">Assessment / Remarks</h3>
+    {isEditing ? (
+      <>
+        <textarea
+          className="assess-textarea-unique"
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        />
+        <button className="assess-save-btn-unique" onClick={handleSave}>
+          SAVE
+        </button>
+      </>
+    ) : (
+      <>
+        <div className="assess-display-box-unique">
+          {remarks ? remarks : "No remarks available."}
+        </div>
+        <button className="assess-edit-btn-unique" onClick={() => setIsEditing(true)}>
+          EDIT
+        </button>
+      </>
+    )}
+  </div>
+</div>
+
 
       {/* Medical History Section */}
-      <div className="section-divider-with-actions">
-        <div className="section-left">
-          <button 
-            className="add-record-btn"
-            onClick={() => setShowAddRecordModal(true)}
-          >
-            + Add Record
-          </button>
-          <h2>PATIENT MEDICAL HISTORY</h2>
-        </div>
-        <div className="section-right">
-          <div className="search-box">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+      <div className="pmh-section-divider">
+  <div className="pmh-left">
+    <div className="pmh-search-box">
+      
+      <input
+        type="text"
+        placeholder="Search..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+  </div>
+
+  <div className="pmh-center">
+    <h2>PATIENT MEDICAL HISTORY</h2>
+  </div>
+
+  <div className="pmh-right">
+    <button 
+      className="pmh-add-record-btn"
+      onClick={() => setShowAddRecordModal(true)}
+    >
+      + Add Record
+    </button>
+  </div>
+</div>
 
       <div className="medical-history-table">
         <table>

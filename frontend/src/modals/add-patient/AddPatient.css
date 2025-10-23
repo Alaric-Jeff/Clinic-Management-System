@@ -6,8 +6,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+  z-index: 2000;
+  padding: 50px;
 }
 
 /* ===== MODAL CONTAINER ===== */
@@ -227,4 +227,34 @@
 
 .patient-form::-webkit-scrollbar-thumb:hover {
   background: #b80000;
+}
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon input[type="date"] {
+  width: 100%;
+  padding-right: 35px;
+}
+
+.calendar-icon {
+  position: absolute;
+  right: 10px;
+  color: #666;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.calendar-icon:hover {
+  color: #000;
+}
+
+.error {
+  color: red;
+  font-size: 0.85rem;
+  margin-top: 2px;
+  display: block;
 }

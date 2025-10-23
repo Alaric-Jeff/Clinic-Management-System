@@ -16,29 +16,29 @@ const PatientList = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [dateFilter, setDateFilter] = useState("today");
+  const [customDate, setCustomDate] = useState({
+    day: "",
+    month: "",
+    year: "",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
   const handleArchive = async (patientId) => {
     if (archivingIds.has(patientId)) return;
-
     try {
       setArchivingIds((prev) => new Set(prev).add(patientId));
       setError("");
-
-      const res = await api.post("/patient/archive-patient", {
-        id: patientId,
-      });
-
+      const res = await api.post("/patient/archive-patient", { id: patientId });
       if (res.data.success) {
-        setPatients((prev) =>
-          prev.filter((patient) => patient.id !== patientId)
-        );
-        console.log(`Patient ${patientId} archived successfully`);
+        setPatients((prev) => prev.filter((p) => p.id !== patientId));
       } else {
         setError(res.data.message || "Failed to archive patient");
       }
     } catch (err) {
-      console.error("Error archiving patient:", err);
-      setError("Unable to archive patient. Please try again.");
+      console.error(err);
+      setError("Unable to archive patient.");
     } finally {
       setArchivingIds((prev) => {
         const newSet = new Set(prev);
@@ -48,20 +48,16 @@ const PatientList = () => {
     }
   };
 
-  const handleViewPatient = (patientId) => {
+  const handleViewPatient = (id) => {
     const prefix = user?.role === "admin" ? "/admin" : "/encoder";
-    navigate(`${prefix}/patient-details/${patientId}`);
+    navigate(`${prefix}/patient-details/${id}`);
   };
 
   const fetchPatients = async () => {
     try {
       const res = await api.get("/patient/get-today-patients");
-      if (res.data.success) {
-        console.log(res.data.data);
-        setPatients(res.data.data || []);
-      } else {
-        setPatients([]);
-      }
+      if (res.data.success) setPatients(res.data.data || []);
+      else setPatients([]);
     } catch (err) {
       console.error("Error fetching patients:", err);
       setPatients([]);
@@ -70,80 +66,144 @@ const PatientList = () => {
     }
   };
 
-  // Filter and sort patients
+  const formatName = (patient) => {
+    const firstInitial = patient.firstName ? patient.firstName[0] + "." : "";
+    return `${patient.lastName}, ${firstInitial}`;
+  };
+
+  const formatDateTime = (dateStr) => {
+    const d = new Date(dateStr);
+    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toLowerCase();
+    const day = d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    return `${time} ${day.replace(/\s/g, " ")}`;
+  };
+
+  const isWithinDateRange = (date, filter) => {
+    const now = new Date();
+    const d = new Date(date);
+    switch (filter) {
+      case "today":
+        return d.toDateString() === now.toDateString();
+      
+      case "yesterday":
+        const y = new Date();
+        y.setDate(now.getDate() - 1);
+        return d.toDateString() === y.toDateString();
+      case "lastweek":
+        return (now - d) / (1000 * 60 * 60 * 24) <= 7;
+      case "lastmonth":
+        return now.getMonth() === d.getMonth() + 1 || (now - d) / (1000 * 60 * 60 * 24) <= 30;
+      case "custom":
+        const { day, month, year } = customDate;
+        return (
+          (!day || d.getDate() === Number(day)) &&
+          (!month || d.getMonth() + 1 === Number(month)) &&
+          (!year || d.getFullYear() === Number(year))
+        );
+      default:
+        return true;
+    }
+  };
+
   useEffect(() => {
-    let filtered = patients;
+    let filtered = [...patients];
 
     // Search by name
     if (searchQuery.trim()) {
-      filtered = filtered.filter((patient) => {
-        const fullName = `${patient.lastName}, ${patient.firstName}${
-          patient.middleName ? ` ${patient.middleName}` : ""
-        }`.toLowerCase();
-        return fullName.includes(searchQuery.toLowerCase());
-      });
+      filtered = filtered.filter((p) =>
+        `${p.lastName} ${p.firstName}`.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
-    // Sort by name
+    // Sort
     filtered.sort((a, b) => {
       const nameA = `${a.lastName}, ${a.firstName}`.toLowerCase();
       const nameB = `${b.lastName}, ${b.firstName}`.toLowerCase();
-
-      if (sortOrder === "asc") {
-        return nameA.localeCompare(nameB);
-      } else {
-        return nameB.localeCompare(nameA);
-      }
+      return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     });
 
+    // Date Filter
+    filtered = filtered.filter((p) => isWithinDateRange(p.createdAt, dateFilter));
+
     setFilteredPatients(filtered);
-  }, [patients, searchQuery, sortOrder]);
+    setCurrentPage(1);
+  }, [patients, searchQuery, sortOrder, dateFilter, customDate]);
 
   useEffect(() => {
     fetchPatients();
   }, []);
 
+  const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
+  const displayedPatients = filteredPatients.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
   if (loading) return <p>Loading patients...</p>;
 
   return (
-    <div className="patient-list-container">
-      <div className="patient-header">
-        <h1 className="patient-title">Patient Records</h1>
-        <button
-          className="add-patient-btn"
-          onClick={() => setShowAddPatient(true)}
-        >
-          + Add Patient
-        </button>
+    <div className="patient-container">
+      <div className="header">
+        <div className="title-section">
+          <h1>LEONARDO MEDICAL SERVICES</h1>
+          <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+        </div>
+       
       </div>
 
-      {/* Search and Sort Controls */}
-      <div className="patient-controls">
+      <div className="filter-bar">
         <input
           type="text"
-          className="search-input"
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <button
-          className="sort-btn"
-          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          title={`Sort by name (${sortOrder === "asc" ? "A-Z" : "Z-A"})`}
-        >
-          {sortOrder === "asc" ? "↑ A-Z" : "↓ Z-A"}
-        </button>
+        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+          <option value="asc">Ascending ↑</option>
+          <option value="desc">Descending ↓</option>
+        </select>
+        <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="lastweek">Last Week</option>
+          <option value="lastmonth">Last Month</option>
+          <option value="custom">Custom Range</option>
+        </select>
+
+        {dateFilter === "custom" && (
+          <div className="custom-range">
+            <select value={customDate.day} onChange={(e) => setCustomDate({ ...customDate, day: e.target.value })}>
+              <option value="">Day</option>
+              {[...Array(31)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>{i + 1}</option>
+              ))}
+            </select>
+            <select value={customDate.month} onChange={(e) => setCustomDate({ ...customDate, month: e.target.value })}>
+              <option value="">Month</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(0, i).toLocaleString("en", { month: "short" })}
+                </option>
+              ))}
+            </select>
+            <select value={customDate.year} onChange={(e) => setCustomDate({ ...customDate, year: e.target.value })}>
+              <option value="">Year</option>
+              {Array.from({ length: 10 }, (_, i) => {
+                const year = new Date().getFullYear() - i;
+                return <option key={year} value={year}>{year}</option>;
+              })}
+            </select>
+          </div>
+        )}
+         <button className="adds" onClick={() => setShowAddPatient(true)}>+ Add Patient</button>
       </div>
 
-      {/* Error display */}
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
-
-      <div className="patient-table-container">
-        <table className="patient-table">
+      <div className="table-wrapper">
+        <table>
           <thead>
             <tr>
               <th>Name</th>
@@ -152,52 +212,52 @@ const PatientList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredPatients.length > 0 ? (
-              filteredPatients.map((p) => (
+            {displayedPatients.length > 0 ? (
+              displayedPatients.map((p) => (
                 <tr key={p.id}>
-                  <td>{`${p.lastName}, ${p.firstName}${p.middleName ? ` ${p.middleName}` : ""}`}</td>
+                  <td>{formatName(p)}</td>
+                  <td>{formatDateTime(p.createdAt)}</td>
                   <td>
-                    {new Date(p.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    — {new Date(p.createdAt).toLocaleDateString()}
-                  </td>
-                  <td>
-                    <button 
-                      className="view-btn"
-                      onClick={() => handleViewPatient(p.id)}
-                    >
-                      View
-                    </button>
-                    <button 
-                      className="archive-btn"
+                  
+                    <button onClick={() => handleViewPatient(p.id)} className="view-btn3">View</button>
+                    <button
                       onClick={() => handleArchive(p.id)}
+                      className="archive-btn3"
                       disabled={archivingIds.has(p.id)}
                     >
                       {archivingIds.has(p.id) ? "Archiving..." : "Archive"}
                     </button>
+                   
                   </td>
                 </tr>
               ))
             ) : (
-              <tr>
-                <td colSpan="3" className="no-data">
-                  {searchQuery ? "No patients match your search" : "No records found"}
-                </td>
-              </tr>
+              <tr><td colSpan="3" className="no-data">No records found</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Add Patient Modal */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={currentPage === i + 1 ? "active" : ""}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
       {showAddPatient && (
         <AddPatient
-          onClose={() => setShowAddPatient(false)} 
+          onClose={() => setShowAddPatient(false)}
           onSuccess={() => {
             setShowAddPatient(false);
-            fetchPatients(); 
+            fetchPatients();
           }}
         />
       )}

@@ -1,90 +1,140 @@
-/* --- Sidebar Container --- */
+/* Sidebar Base */
 .sidebar {
   position: fixed;
   left: 0;
   top: 0;
-  width: 250px;
+  width: 240px;
   height: 100vh;
-  background-color: #7b0f0f;
-  color: white;
+  background-color: #1e1e1e;
+  color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  z-index: 100;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  padding: 15px 10px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 3000;
+  transition: transform 0.3s ease-in-out;
 }
 
-/* --- Welcome Section --- */
+/* Always visible */
+.sidebar.open {
+  transform: translateX(0);
+}
+
+/* Sidebar Header */
 .sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
 }
 
 .sidebar-header h2 {
-  margin: 0;
   font-size: 1.1rem;
+  margin-bottom: 5px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #ff4747;
+  transition: color 0.4s ease, transform 0.3s ease;
+}
+
+.sidebar.open .sidebar-header h2 {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.user-info {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.user-info span {
+  color: #fff;
   font-weight: 600;
 }
 
-.sidebar-header span {
-  display: block;
-  font-size: 0.9rem;
-  margin-top: 5px;
-  color: #ffcccc;
-}
-
-/* --- Navigation Section --- */
+/* Navigation Links */
 .sidebar-nav {
   margin-top: 15px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  flex: 1;
+  flex-grow: 1;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px;
-  color: white;
+  padding: 8px 14px;
+  color: #d1d1d1;
   text-decoration: none;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  border-left: 5px solid transparent;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
 }
 
 .sidebar-link:hover {
-  background-color: #ffcccc;
-  cursor: pointer;
+  background: #292929;
+  color: #750000;
 }
 
-/* --- Active Link --- */
 .sidebar-link.active {
-  background-color: white;
-  color: #7b0f0f;
-  font-weight: 600;
-  border-left-color: #7b0f0f;
+  background: #ff4747;
+  color: #fff;
 }
 
-/* --- Logout Button --- */
+.sidebar-link.active .icon svg {
+  color: #690000;
+}
+
+.sidebar-link:hover .icon svg {
+  color: #690000;
+}
+
+.sidebar-link .icon svg {
+  color: #d1d1d1;
+  width: 18px;
+  height: 18px;
+  transition: color 0.25s ease;
+}
+
+/* Footer (Logout) */
 .sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid #333;
+  padding-top: 10px;
 }
 
 .logout-btn {
   width: 100%;
-  padding: 10px 15px;
-  background-color: #a71d1d;
-  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ff4747;
   border: none;
+  color: #fff;
+  padding: 10px;
   border-radius: 6px;
-  font-size: 0.95rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background 0.3s ease;
 }
 
 .logout-btn:hover {
-  background-color: #8c0c0c;
+  background: #d93c3c;
+}
+
+/* Remove hamburger and overlay entirely */
+.hamburger-btn,
+.overlay {
+  display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    transform: translateX(0); /* ✅ always visible */
+  }
+
+  /* Allow content beside sidebar to be visible */
+  main, .main-content {
+    margin-left: 220px; /* ✅ prevent sidebar overlap */
+  }
 }
