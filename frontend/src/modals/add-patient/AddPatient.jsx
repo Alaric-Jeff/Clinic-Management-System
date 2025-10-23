@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Calendar } from "lucide-react";
 import api from "../../axios/api";
 import "./AddPatient.css";
 
@@ -16,10 +17,14 @@ const AddPatient = ({ onClose, onSuccess }) => {
     registerDate: "",
   });
 
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Auto-calculate age
+  // Refs for date pickers
+  const birthDateRef = useRef(null);
+  const registerDateRef = useRef(null);
+
+  // ---------------- AUTO AGE ----------------
   useEffect(() => {
     if (formData.birthDate) {
       const birth = new Date(formData.birthDate);
@@ -33,40 +38,79 @@ const AddPatient = ({ onClose, onSuccess }) => {
     }
   }, [formData.birthDate]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    setError("");
+  // ---------------- VALIDATION ----------------
+  const validateField = (name, value) => {
+    let message = "";
+    const nameRegex = /^[A-Za-z\s'-]+$/;
+    const contactRegex = /^[0-9]{11}$/;
+
+    switch (name) {
+      case "lastName":
+      case "firstName":
+        if (!value.trim()) message = `${name === "lastName" ? "Last" : "First"} name is required.`;
+        else if (value.length < 2) message = "Must be at least 2 characters.";
+        else if (!nameRegex.test(value)) message = "Letters only. No numbers or symbols.";
+        break;
+      case "middleName":
+        if (value && !nameRegex.test(value)) message = "Letters only. No numbers or symbols.";
+        break;
+      case "mobileNumber":
+        if (value && !contactRegex.test(value))
+          message = "Contact number must be 11 digits only.";
+        break;
+      default:
+        break;
+    }
+    return message;
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    // Restrict contact number input
+    if (name === "mobileNumber") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 11);
+      setFormData({ ...formData, [name]: digitsOnly });
+      const message = validateField(name, digitsOnly);
+      setErrors((prev) => ({ ...prev, [name]: message }));
+      return;
+    }
+
+    const message = validateField(name, value);
+    setFormData({ ...formData, [name]: value });
+    setErrors((prev) => ({ ...prev, [name]: message }));
+  };
+
+  // ---------------- SUBMIT ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+
+    // Validate all fields before submitting
+    const newErrors = {};
+    Object.keys(formData).forEach((key) => {
+      const msg = validateField(key, formData[key]);
+      if (msg) newErrors[key] = msg;
+    });
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some((err) => err)) return;
+
+    if (!window.confirm("Add new Patient?")) return;
 
     try {
       const today = new Date().toISOString().split("T")[0];
       if (formData.registerDate > today) {
-        setError("Register date cannot be in the future.");
-        return;
-      }
-
-      if (!formData.lastName.trim() || !formData.firstName.trim()) {
-        setError("Last name and first name are required.");
+        setErrors({ registerDate: "Register date cannot be in the future." });
         return;
       }
 
       setLoading(true);
-
       const payload = {
         ...formData,
         birthDate: formData.birthDate
           ? new Date(formData.birthDate).toISOString()
           : null,
         registerDate: formData.registerDate || null,
-        csdIdOrPwdId: formData.csdIdOrPwdId || null,
-        middleName: formData.middleName || null,
-        mobileNumber: formData.mobileNumber || null,
-        residentialAddress: formData.residentialAddress || null,
       };
 
       const res = await api.post("/patient/create-patient", payload);
@@ -74,16 +118,21 @@ const AddPatient = ({ onClose, onSuccess }) => {
         onSuccess?.();
         onClose();
       } else {
-        setError(res.data.message || "Failed to create patient");
+        setErrors({ general: res.data.message || "Failed to create patient" });
       }
     } catch (err) {
       console.error("Error creating patient:", err);
-      setError(err.response?.data?.message || "Unable to create patient. Please try again.");
+      setErrors({
+        general:
+          err.response?.data?.message ||
+          "Unable to create patient. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  // ---------------- RENDER ----------------
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -92,7 +141,7 @@ const AddPatient = ({ onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="patient-form">
-          {error && <div className="form-error">{error}</div>}
+          {errors.general && <div className="form-error">{errors.general}</div>}
 
           {/* PERSONAL INFO */}
           <div className="form-section">
@@ -103,22 +152,23 @@ const AddPatient = ({ onClose, onSuccess }) => {
                 <input
                   type="text"
                   name="lastName"
-                  placeholder="Enter last name"
                   value={formData.lastName}
                   onChange={handleChange}
-                  required
+                  placeholder="Enter last name"
                 />
+                {errors.lastName && <small className="error">{errors.lastName}</small>}
               </div>
+
               <div className="form-group">
                 <label>First Name *</label>
                 <input
                   type="text"
                   name="firstName"
-                  placeholder="Enter first name"
                   value={formData.firstName}
                   onChange={handleChange}
-                  required
+                  placeholder="Enter first name"
                 />
+                {errors.firstName && <small className="error">{errors.firstName}</small>}
               </div>
             </div>
 
@@ -128,10 +178,11 @@ const AddPatient = ({ onClose, onSuccess }) => {
                 <input
                   type="text"
                   name="middleName"
-                  placeholder="Enter middle name (optional)"
                   value={formData.middleName}
                   onChange={handleChange}
+                  placeholder="Enter middle name (optional)"
                 />
+                {errors.middleName && <small className="error">{errors.middleName}</small>}
               </div>
               <div className="form-group">
                 <label>Sex *</label>
@@ -153,25 +204,27 @@ const AddPatient = ({ onClose, onSuccess }) => {
           <div className="form-section">
             <h3 className="section-title">Demographics</h3>
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group date-field">
                 <label>Birth Date *</label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={formData.birthDate}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="input-with-icon">
+                  <input
+                    ref={birthDateRef}
+                    type="date"
+                    name="birthDate"
+                    value={formData.birthDate}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Calendar
+                    className="calendar-icon"
+                    onClick={() => birthDateRef.current.showPicker()}
+                  />
+                </div>
               </div>
+
               <div className="form-group">
                 <label>Age</label>
-                <input
-                  type="number"
-                  name="age"
-                  value={formData.age}
-                  readOnly
-                  className="readonly-input"
-                />
+                <input type="number" name="age" value={formData.age} readOnly />
               </div>
             </div>
           </div>
@@ -185,18 +238,21 @@ const AddPatient = ({ onClose, onSuccess }) => {
                 <input
                   type="tel"
                   name="mobileNumber"
-                  placeholder="Enter contact number"
                   value={formData.mobileNumber}
                   onChange={handleChange}
+                  placeholder="11-digit number"
                 />
+                {errors.mobileNumber && (
+                  <small className="error">{errors.mobileNumber}</small>
+                )}
               </div>
               <div className="form-group">
                 <label>Address</label>
                 <textarea
                   name="residentialAddress"
-                  placeholder="Enter residential address"
                   value={formData.residentialAddress}
                   onChange={handleChange}
+                  placeholder="Enter residential address"
                 />
               </div>
             </div>
@@ -206,24 +262,34 @@ const AddPatient = ({ onClose, onSuccess }) => {
           <div className="form-section">
             <h3 className="section-title">Additional Information</h3>
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group date-field">
                 <label>Register Date</label>
-                <input
-                  type="date"
-                  name="registerDate"
-                  value={formData.registerDate}
-                  onChange={handleChange}
-                  max={new Date().toISOString().split("T")[0]}
-                />
+                <div className="input-with-icon">
+                  <input
+                    ref={registerDateRef}
+                    type="date"
+                    name="registerDate"
+                    value={formData.registerDate}
+                    onChange={handleChange}
+                    max={new Date().toISOString().split("T")[0]}
+                  />
+                  <Calendar
+                    className="calendar-icon"
+                    onClick={() => registerDateRef.current.showPicker()}
+                  />
+                </div>
+                {errors.registerDate && (
+                  <small className="error">{errors.registerDate}</small>
+                )}
               </div>
               <div className="form-group">
                 <label>Senior/PWD ID No.</label>
                 <input
                   type="text"
                   name="csdIdOrPwdId"
-                  placeholder="Enter ID number (optional)"
                   value={formData.csdIdOrPwdId}
                   onChange={handleChange}
+                  placeholder="Enter ID number (optional)"
                 />
               </div>
             </div>

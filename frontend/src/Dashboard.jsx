@@ -1,771 +1,503 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import Logo from '/src/zLogo.png';
+import { TrendingUp, Users, UserCheck, Activity } from 'lucide-react';
+import './Dashboard.css';
 
-
-// Main App Component
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+
+  // Sample data - replace with backend data
+  const overviewData = {
+    totalPatients: "",
+    totalReports: "",
+    male: "",
+    female: "",
+  };
+
+  // ✅ Dynamic weekly line graph data
+  const weeklyReports = [
+    { day: "Mon", value: 5 },
+    { day: "Tue", value: 10 },
+    { day: "Wed", value: 5 },
+    { day: "Thu", value: 20 },
+    { day: "Fri", value: 30 },
+    { day: "Sat", value: 30 },
+    { day: "Sun", value: 50 },
+  ];
+
+  const analyticsData = {
+    revenue: "",
+    revenueChange: "",
+    users: "",
+    usersChange: "",
+    orders: "",
+    ordersChange: "",
+    pageViews: "",
+    pageViewsChange: "",
+  };
+
+  // ✅ Dynamic Pie Chart Data
+  const patientVisitData = [
+    { label: "Elder", value: 35, color: "#6366f1" },
+    { label: "Adult", value: 50, color: "#ec4899" },
+    { label: "Kid", value: 15, color: "#f59e0b" },
+  ];
+
+  // === PIE CHART HELPERS ===
+  const polarToCartesian = (cx, cy, r, angle) => {
+    const rad = (angle - 90) * Math.PI / 180.0;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
+  const describeArc = (cx, cy, r, startAngle, endAngle) => {
+    const start = polarToCartesian(cx, cy, r, endAngle);
+    const end = polarToCartesian(cx, cy, r, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M", cx, cy,
+      "L", start.x, start.y,
+      "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+      "Z"
+    ].join(" ");
+  };
+
+  const total = patientVisitData.reduce((sum, item) => sum + item.value, 0);
+  let startAngle = 0;
+  const arcs = patientVisitData.map((item) => {
+    const angle = (item.value / total) * 360;
+    const endAngle = startAngle + angle;
+    const path = describeArc(150, 150, 100, startAngle, endAngle);
+    const arc = { ...item, path };
+    startAngle = endAngle;
+    return arc;
+  });
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <header style={styles.header}>
-        <div style={styles.headerContent}>
-          <div style={styles.logoContainer}>
-            <div>
-
-<img 
-        src={Logo} 
-        alt="Preview"
-        style={{
-          position: 'absolute',
-          width: '250px',        
-          height: '180px',      
-          objectFit: 'cover',    
-          borderRadius: '10px',  
-          left: '525px',
-          top: '-30px'
-        }}
-      />
-
-              <h1 style={styles.title}>LEONARDO MEDICAL SERVICES</h1>
-             <center><p style={styles.subtitle}>B1 L17-E Navoisita, Bagumbong, Caloocan City</p></center>
-            </div>
-          </div>
-          
-          {/* Navigation */}
-          <nav style={styles.nav}>
-            <button
-              onClick={() => setActiveTab('overview')}
-              style={activeTab === 'overview' ? styles.navButtonActive : styles.navButtonInactive}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              style={activeTab === 'analytics' ? styles.navButtonActive : styles.navButtonInactive}
-            >
-              Analytics
-            </button>
-            <button
-              onClick={() => setActiveTab('forecasting')}
-              style={activeTab === 'forecasting' ? styles.navButtonActive : styles.navButtonInactive}
-            >
-              Forecasting
-            </button>
-          </nav>
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <div className="view-toggle">
+          <button
+            className={`toggle-btn ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button
+            className={`toggle-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
+          </button>
         </div>
       </header>
-
-      {/* Content */}
-      <main style={styles.main}>
-        {activeTab === 'overview' && <Overview />}
-        {activeTab === 'analytics' && <Analytics />}
-        {activeTab === 'forecasting' && <Forecasting />}
-      </main>
-    </div>
-  );
-};
-
-// Overview Component - receives data from backend as props
-const Overview = ({ totalPatients = 0, addedPatients = 0, totalReports = 0, addedReports = 0, maleCount = 0, femaleCount = 0 }) => {
-  return (
-    <div style={styles.spaceY6}>
-      {/* Top Cards */}
-      
-        <div style={styles.middle}>
-        <div style={styles.redCard}>
-          <h1 style={styles.cardTitle}>Total Patients</h1>
-          <div style={styles.cardValue}>
-            {totalPatients}
-          </div>
-          <div style={styles.cardSubtext}>
-            <TrendingUp size={16} />
-            <span style={styles.trendNumber}>{addedPatients}</span>
-            <span>added new patients today</span>
-          </div>
-        </div>
-
-        <div style={styles.redCard}>
-          <h3 style={styles.cardTitle}>Total Reports</h3>
-          <div style={styles.cardValue}>
-            {totalReports}
-          </div>
-          <div style={styles.cardSubtext}>
-            <TrendingUp size={16} />
-            <span style={styles.trendNumber}>{addedReports}</span>
-            <span>added new record today</span>
-          </div>
-        </div>
-        </div>
       
 
-      <div style={styles.cardGrid2}>
-        {/* Patient Visits Pie Chart */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastHeader}>Patient Visits</h3>
-          <div style={styles.chartContainerFlex}>
-            <svg width="250" height="250" viewBox="0 0 250 250">
-              <circle cx="125" cy="125" r="100" fill="#1e3a8a" />
-              <path d="M 125 125 L 125 25 A 100 100 0 0 1 225 125 Z" fill="#fbbf24" />
-              <path d="M 125 125 L 225 125 A 100 100 0 0 1 175 205 Z" fill="#0891b2" />
-            </svg>
-          </div>
-          <div style={styles.legend}>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#1e3a8a'}}></div>
-              <span style={styles.legendText}>Adult</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#fbbf24'}}></div>
-              <span style={styles.legendText}>Child</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#0891b2'}}></div>
-              <span style={styles.legendText}>Elderly</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Patient Overview Line Chart */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastHeader}>Patient Overview</h3>
-          <div style={styles.chartContainer}>
-            <svg width="100%" height="100%" viewBox="0 0 400 200">
-              <path d="M 0 150 Q 50 120 100 130 T 200 140 T 300 120 T 400 130" 
-                    stroke="#3b82f6" strokeWidth="2" fill="none" />
-              <path d="M 0 170 Q 50 150 100 155 T 200 160 T 300 150 T 400 155" 
-                    stroke="#fbbf24" strokeWidth="2" fill="none" />
-              <line x1="0" y1="200" x2="400" y2="200" stroke="#e5e7eb" strokeWidth="1" />
-            </svg>
-          </div>
-          <div style={styles.chartLabels}>
-            <span>Sat</span>
-            <span>Sun</span>
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Gender Distribution */}
-      <div style={styles.genderContainer}>
-        <div style={styles.genderGrid}>
-          <div style={styles.maleBox}>
-            <h4 style={styles.genderTitle}>Male</h4>
-            <div style={styles.genderValue}>{maleCount}</div>
-          </div>
-          <div style={styles.femaleBox}>
-            <h4 style={styles.genderTitle}>Female</h4>
-            <div style={styles.genderValue}>{femaleCount}</div>
-          </div>
-        </div>
-      </div>
+      {activeTab === 'overview' && (
+        <div className="dashboard-content">
+          <div className="analytics-header">
+      <h1 className="dashboard-title">Overview</h1>
     </div>
-  );
-};
-
-// Analytics Component
-const Analytics = () => {
-  const [totalRevenue, setTotalRevenue] = useState('');
-  const [revenueChange, setRevenueChange] = useState('');
-  const [topService, setTopService] = useState('');
-  const [serviceCount, setServiceCount] = useState('');
-  const [topCategory, setTopCategory] = useState('');
-  const [categoryRevenue, setCategoryRevenue] = useState('');
-  const [categoryByRevenue, setCategoryByRevenue] = useState('');
-  const [categoryChange, setCategoryChange] = useState('');
-
-  return (
-    <div style={styles.spaceY6}>
-      {/* Top Cards */}
-      <div style={styles.cardGrid3}>
-        <div style={styles.whiteCard}>
-          <h3 style={styles.cardTitleGray}>Total Revenue</h3>
-          <div style={styles.cardValueMedium}>
-            {totalRevenue ? `₱${totalRevenue}` : '₱0.00'}
-          </div>
-          <div style={styles.cardSubtextGreen}>
-            <TrendingUp size={14} />
-            <span>{revenueChange || '0'}% last month</span>
-          </div>
-        </div>
-
-        <div style={styles.whiteCard}>
-          <h3 style={styles.cardTitleGray}>Top Service Availed</h3>
-          <div style={styles.cardValueMedium}>
-            {topService || 'N/A'}
-          </div>
-          <div style={styles.cardSubtextGreen}>
-            <TrendingUp size={14} />
-            <span>{serviceCount || '0'} times this month</span>
-          </div>
-        </div>
-
-        <div style={styles.whiteCard}>
-          <h3 style={styles.cardTitleGray}>Top Earning Category</h3>
-          <div style={styles.cardValueMedium}>
-            {topCategory || 'N/A'}
-          </div>
-          <div style={styles.cardSubtextGreen}>
-            <TrendingUp size={14} />
-            <span>{categoryRevenue ? `₱${categoryRevenue}` : '₱0.00'}</span>
-          </div>
-        </div>
-      </div>
-
-      <div style={styles.cardGrid2}>
-        {/* Revenue Trend */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastHeader}>Revenue Trend</h3>
-          <div style={styles.chartContainerSmall}>
-            <svg width="100%" height="100%" viewBox="0 0 400 150">
-              <path d="M 0 100 L 50 70 L 100 110 L 150 50 L 200 80 L 250 60 L 300 90 L 350 70 L 400 100" 
-                    stroke="#3b82f6" strokeWidth="2" fill="none" />
-              <line x1="0" y1="150" x2="400" y2="150" stroke="#e5e7eb" strokeWidth="1" />
-            </svg>
-          </div>
-          <div style={styles.chartLabels}>
-            <span>Jan</span>
-            <span>Mar</span>
-            <span>May</span>
-            <span>Jul</span>
-            <span>Sep</span>
-            <span>Nov</span>
-          </div>
-        </div>
-
-        {/* Top 5 Services */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastHeader}>Top 5 Services</h3>
-          <div style={styles.serviceList}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} style={styles.serviceItem}>
-                <div style={styles.serviceBar}>
-                  <div style={{...styles.serviceBarFill, width: `${100 - i * 15}%`}}></div>
-                </div>
+          {/* Top Stats Cards */}
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon green">
+                <Activity size={24} />
               </div>
-            ))}
+              <div className="stat-content">
+                <h3 className="stat-label">Total Patients</h3>
+                <p className="stat-value">{overviewData.totalPatients.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon purple">
+                <TrendingUp size={24} />
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Total Reports</h3>
+                <p className="stat-value">{overviewData.totalReports.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon blue">
+                <Users size={24} />
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Male</h3>
+                <p className="stat-value">{overviewData.male}</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon pink">
+                <UserCheck size={24} />
+              </div>
+              <div className="stat-content">
+                <h3 className="stat-label">Female</h3>
+                <p className="stat-value">{overviewData.female}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Row */}
+          <div className="charts-grid">
+            {/* ✅ Dynamic Weekly Reports Line Graph */}
+            <div className="chart-card">
+              <h3 className="chart-title">Weekly Patient Reports</h3>
+              <div className="line-chart-container">
+                <svg width="100%" height="100%" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet">
+                  {/* Grid lines & Y-axis labels */}
+                  {[10, 20, 30, 40, 50].map((v, i) => {
+                    const y = 300 - 40 - (v * (220 / 50));
+                    return (
+                      <g key={i}>
+                        <line x1="40" y1={y} x2="460" y2={y} stroke="#e5e7eb" strokeWidth="1" />
+                        <text x="15" y={y + 4} fill="#94a3b8" fontSize="10">{v}</text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Line path */}
+                  {(() => {
+                    const padding = 40;
+                    const width = 500;
+                    const height = 300;
+                    const xStep = (width - padding * 2) / (weeklyReports.length - 1);
+                    const yScale = (height - padding * 2) / 50;
+
+                    const generateWeeklyPath = () => {
+                      return weeklyReports.map((d, i) => {
+                        const x = padding + i * xStep;
+                        const y = height - padding - d.value * yScale;
+                        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                      }).join(' ');
+                    };
+
+                    const getWeeklyPoint = (index) => {
+                      const x = padding + index * xStep;
+                      const y = height - padding - weeklyReports[index].value * yScale;
+                      return { x, y };
+                    };
+
+                    return (
+                      <>
+                        <path
+                          d={generateWeeklyPath()}
+                          stroke="#ef4444"
+                          strokeWidth="3"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        {weeklyReports.map((point, i) => {
+                          const { x, y } = getWeeklyPoint(i);
+                          return <circle key={i} cx={x} cy={y} r="5" fill="#ef4444" />;
+                        })}
+                        {weeklyReports.map((point, i) => {
+                          const x = padding + i * xStep;
+                          return (
+                            <text key={i} x={x} y={height - padding + 20} textAnchor="middle" fill="#94a3b8" fontSize="12">
+                              {point.day}
+                            </text>
+                          );
+                        })}
+                      </>
+                    );
+                  })()}
+                </svg>
+              </div>
+            </div>
+
+            {/* ✅ Dynamic Patient Visits Pie Chart */}
+            <div className="chart-card">
+              <h3 className="chart-title">Patient Visits</h3>
+              <div className="pie-chart-container">
+                <svg width="100%" height="100%" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet">
+                  {arcs.map((arc, i) => (
+                    <path key={i} d={arc.path} fill={arc.color} />
+                  ))}
+                </svg>
+              </div>
+              <div className="legend">
+                {patientVisitData.map((item, i) => (
+                  <div className="legend-item" key={i}>
+                    <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                    <span className="legend-label">{item.label}</span>
+                    <span className="legend-percentage">{((item.value / total) * 100).toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
+  <div className="dashboard-content">
+    <div className="analytics-header">
+      <h1 className="dashboard-title">Analytics and Forecasting</h1>
+    </div>
+
+    {/* Analytics Stats Cards */}
+    <div className="stats-grid">
+      <div className="stat-card analytics">
+        <div className="stat-icon-small green">
+          <span>$</span>
+        </div>
+        <div className="stat-content">
+          <h3 className="stat-label-small">Total Revenue</h3>
+          <p className="stat-value-large">{analyticsData.revenue.toLocaleString()}</p>
+          <div className="stat-trend positive">
+            <TrendingUp size={14} />
+            <span>{analyticsData.revenueChange}% vs last period</span>
           </div>
         </div>
       </div>
 
-      <div style={styles.cardGrid2}>
-        {/* Revenue by Category */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastHeader}>Revenue by Category</h3>
-          <div style={styles.cardValueMedium}>
-            {categoryByRevenue ? `₱${categoryByRevenue}` : '₱0.00'}
-          </div>
-          <div style={styles.cardSubtextGreen}>
+      <div className="stat-card analytics">
+        <div className="stat-icon-small purple">
+          <Users size={20} />
+        </div>
+        <div className="stat-content">
+          <h3 className="stat-label-small">Top Services</h3>
+          <p className="stat-value-large">{analyticsData.users.toLocaleString()}</p>
+          <div className="stat-trend positive">
             <TrendingUp size={14} />
-            <span>{categoryChange || '0'}% vs last month</span>
-          </div>
-          <div style={styles.spaceY2}>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#3b82f6'}}></div>
-              <span style={styles.legendText}>Hematology</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#22d3ee'}}></div>
-              <span style={styles.legendText}>Histopathology</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#1e3a8a'}}></div>
-              <span style={styles.legendText}>Bacteriology</span>
-            </div>
+            <span>{analyticsData.usersChange}% vs last period</span>
           </div>
         </div>
+      </div>
 
-        {/* Pie Chart */}
-        <div style={styles.whiteCard}>
-          <div style={styles.chartContainerFlex}>
-            <svg width="250" height="250" viewBox="0 0 250 250">
-              <circle cx="125" cy="125" r="100" fill="#1e3a8a" />
-              <path d="M 125 125 L 125 25 A 100 100 0 0 1 195 70 Z" fill="#3b82f6" />
-              <path d="M 125 125 L 195 70 A 100 100 0 0 1 225 125 Z" fill="#0891b2" />
-              <circle cx="125" cy="125" r="50" fill="white" />
-            </svg>
-          </div>
-          <div style={styles.legend}>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#3b82f6'}}></div>
-              <span style={styles.legendText}>Hematology</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#1e3a8a'}}></div>
-              <span style={styles.legendText}>Bacteriology</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#22d3ee'}}></div>
-              <span style={styles.legendText}>Histopathology</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#1e40af'}}></div>
-              <span style={styles.legendText}>Microscopy</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{...styles.legendDot, backgroundColor: '#14b8a6'}}></div>
-              <span style={styles.legendText}>Enzymes</span>
-            </div>
+      <div className="stat-card analytics">
+        <div className="stat-icon-small pink">
+          <UserCheck size={20} />
+        </div>
+        <div className="stat-content">
+          <h3 className="stat-label-small">Top Category</h3>
+          <p className="stat-value-large">{analyticsData.orders.toLocaleString()}</p>
+          <div className="stat-trend negative">
+            <TrendingUp size={14} />
+            <span>{analyticsData.ordersChange}% vs last period</span>
           </div>
         </div>
       </div>
     </div>
-  );
-};
 
-// Forecasting Component
-const Forecasting = () => {
-  const [forecastRevenue, setForecastRevenue] = useState('');
-  const [forecastChange, setForecastChange] = useState('');
-  const [pastRevenue, setPastRevenue] = useState('');
-  const [forecastedRevenue, setForecastedRevenue] = useState('');
+    {/* === Bottom Charts: Top 5 Category + Top 5 Services === */}
+    <div className="charts-grid">
+      {/* ✅ Top 5 Category (Dynamic Pie Chart) */}
+      <div className="chart-card">
+        <h3 className="chart-title">Top 5 Category</h3>
+        <div className="pie-chart-container">
+          <svg width="100%" height="100%" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet">
+            {(() => {
+              const categoryData = [
+                { label: "Hematology", value: 10, color: "#6366f1" },
+                { label: "Bacteriology", value: 20, color: "#14b8a6" },
+                { label: "Neurology", value: 30, color: "#f59e0b" },
+                { label: "Cardiology", value: 20, color: "#ec4899" },
+                { label: "Dermatology", value: 20, color: "#8b5cf6" },
+              ];
+              const total = categoryData.reduce((sum, c) => sum + c.value, 0);
+              let startAngle = 0;
+              const polarToCartesian = (cx, cy, r, angle) => {
+                const rad = (angle - 90) * Math.PI / 180;
+                return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+              };
+              const describeArc = (cx, cy, r, startAngle, endAngle) => {
+                const start = polarToCartesian(cx, cy, r, endAngle);
+                const end = polarToCartesian(cx, cy, r, startAngle);
+                const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+                return [
+                  "M", cx, cy,
+                  "L", start.x, start.y,
+                  "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+                  "Z"
+                ].join(" ");
+              };
 
-  return (
-    <div style={styles.spaceY6}>
-      {/* General Revenue Forecasting */}
-      <div style={styles.whiteCard}>
-        <h3 style={styles.forecastHeader}>General Revenue Forecasting</h3>
-        <div style={styles.mb4}>
-          <div style={styles.cardValueMedium}>
-            {forecastRevenue ? `₱${forecastRevenue}` : '₱0.00'}
-          </div>
-          <div style={styles.cardSubtextGreen}>
-            <TrendingUp size={14} />
-            <span>{forecastChange || '0'}%</span>
-          </div>
-        </div>
-
-        <div style={styles.buttonGroup}>
-          <button style={styles.button}>Daily</button>
-          <button style={styles.button}>Weekly</button>
-          <button style={styles.button}>Monthly</button>
-        </div>
-
-        <div style={styles.chartContainerSmall}>
-          <svg width="100%" height="100%" viewBox="0 0 500 150">
-            <path d="M 0 140 Q 50 130 100 120 T 200 100 T 300 80 T 400 70 T 500 60" 
-                  stroke="#3b82f6" strokeWidth="2" fill="none" />
-            <line x1="0" y1="150" x2="500" y2="150" stroke="#e5e7eb" strokeWidth="1" />
+              return categoryData.map((item, i) => {
+                const angle = (item.value / total) * 360;
+                const endAngle = startAngle + angle;
+                const path = describeArc(150, 150, 100, startAngle, endAngle);
+                startAngle = endAngle;
+                return <path key={i} d={path} fill={item.color} />;
+              });
+            })()}
           </svg>
         </div>
 
-        <div style={styles.chartLabels}>
-          <span>Jan</span>
-          <span>Feb</span>
-          <span>Mar</span>
-          <span>Apr</span>
-          <span>May</span>
-          <span>Jun</span>
-          <span>Jul</span>
-          <span>Aug</span>
-          <span>Sep</span>
+        {/* Legend */}
+        <div className="legend">
+          {[
+            { label: "Hematology", value: 10, color: "#6366f1" },
+            { label: "Bacteriology", value: 20, color: "#14b8a6" },
+            { label: "Neurology", value: 30, color: "#f59e0b" },
+            { label: "Cardiology", value: 20, color: "#ec4899" },
+            { label: "Dermatology", value: 20, color: "#8b5cf6" },
+          ].map((item, i) => (
+            <div className="legend-item" key={i}>
+              <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+              <span className="legend-label">{item.label}</span>
+              <span className="legend-percentage">{item.value}%</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div style={styles.cardGrid3}>
-        {/* Past Revenue */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.cardTitleGray}>Past Revenue net with</h3>
-          <div style={styles.cardValueSmall}>
-            {pastRevenue ? `₱${pastRevenue}` : '₱0.00'}
-          </div>
-        </div>
-
-        {/* Forecasted Revenue */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.cardTitleGray}>Forecasted Revenue</h3>
-          <div style={styles.cardValueSmall}>
-            {forecastedRevenue ? `₱${forecastedRevenue}` : '₱0.00'}
-          </div>
-        </div>
-
-        {/* Per-Service Revenue Forecasting */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastSubheader}>Per-Service Revenue Forecasting</h3>
-          <div style={styles.spaceY4}>
-            <div>
-              <div style={styles.forecastItemMb}>
-                <span style={styles.legendTextSmall}>CBC</span>
-                <span style={styles.legendTextSmall}>₱45,000</span>
-              </div>
-              <div style={styles.progressContainer}>
-                <div style={{...styles.progressBar, width: '90%'}}></div>
-              </div>
-            </div>
-            <div>
-              <div style={styles.forecastItemMb}>
-                <span style={styles.legendTextSmall}>Urinalysis</span>
-                <span style={styles.legendTextSmall}>₱30,000</span>
-              </div>
-              <div style={styles.progressContainer}>
-                <div style={{...styles.progressBar, width: '60%'}}></div>
-              </div>
-            </div>
-            <div>
-              <div style={styles.forecastItemMb}>
-                <span style={styles.legendTextSmall}>X-Ray</span>
-                <span style={styles.legendTextSmall}>₱25,000</span>
-              </div>
-              <div style={styles.progressContainer}>
-                <div style={{...styles.progressBar, width: '50%'}}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={styles.cardGrid2}>
-        {/* Top 3 Growing Services */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastSubheader}>Top 3 Growing Services</h3>
-          <div style={styles.spaceY3}>
-            <div style={styles.forecastItem}>
-              <span style={styles.legendText}>CBC</span>
-              <span style={styles.textGreen}>+30%</span>
-            </div>
-            <div style={styles.forecastItem}>
-              <span style={styles.legendText}>Urinalysis</span>
-              <span style={styles.textGreen}>+18%</span>
-            </div>
-            <div style={styles.forecastItem}>
-              <span style={styles.legendText}>X-Ray</span>
-              <span style={styles.textGray}>0%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Per-Category Revenue Forecasting */}
-        <div style={styles.whiteCard}>
-          <h3 style={styles.forecastSubheader}>Per-Category Revenue Forecasting</h3>
-          <div style={styles.chartContainerFlex}>
-            <svg width="200" height="200" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r="80" fill="#0891b2" />
-              <path d="M 100 100 L 100 20 A 80 80 0 0 1 148 32 Z" fill="#fbbf24" />
-              <path d="M 100 100 L 148 32 A 80 80 0 0 1 180 100 Z" fill="#1e3a8a" />
-              <circle cx="100" cy="100" r="40" fill="white" />
-            </svg>
-          </div>
-          <div style={styles.mt4}>
-            <div style={styles.forecastSubheaderSmall}>Top Growing Category</div>
-            <div style={styles.spaceY1}>
-              <div style={styles.legendItem}>
-                <div style={{...styles.legendDotSmall, backgroundColor: '#14b8a6'}}></div>
-                <span style={styles.legendTextSmall}>Hematology</span>
-              </div>
-              <div style={styles.legendItem}>
-                <div style={{...styles.legendDotSmall, backgroundColor: '#1e3a8a'}}></div>
-                <span style={styles.legendTextSmall}>Bacteriology</span>
-              </div>
-              <div style={styles.legendItem}>
-                <div style={{...styles.legendDotSmall, backgroundColor: '#fbbf24'}}></div>
-                <span style={styles.legendTextSmall}>Histopathology</span>
-              </div>
-            </div>
-          </div>
+      {/* ✅ Top 5 Services (Dynamic Bar Graph) */}
+      <div className="chart-card">
+        <h3 className="chart-title">Top 5 Services</h3>
+        <div className="bar-chart-container">
+          <svg width="100%" height="100%" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid meet">
+            {(() => {
+              const services = [
+                { name: "X-ray", value: 10 },
+                { name: "Urinalysis", value: 20 },
+                { name: "CT Scan", value: 30 },
+                { name: "Blood Test", value: 20 },
+                { name: "Ultrasound", value: 20 },
+              ];
+              const max = 50;
+              const barWidth = 40;
+              const barGap = 60;
+              const baseY = 200;
+              return services.map((s, i) => {
+                const height = (s.value / max) * 150;
+                return (
+                  <g key={i}>
+                    <rect
+                      x={50 + i * barGap}
+                      y={baseY - height}
+                      width={barWidth}
+                      height={height}
+                      fill="#ef4444"
+                      rx="6"
+                    />
+                    <text
+                      x={70 + i * barGap}
+                      y={baseY + 20}
+                      textAnchor="middle"
+                      fill="#94a3b8"
+                      fontSize="12"
+                    >
+                      {s.name}
+                    </text>
+                    <text
+                      x={70 + i * barGap}
+                      y={baseY - height - 5}
+                      textAnchor="middle"
+                      fill="#475569"
+                      fontSize="10"
+                    >
+                      {s.value}%
+                    </text>
+                  </g>
+                );
+              });
+            })()}
+          </svg>
         </div>
       </div>
     </div>
+
+    {/* ✅ Revenue vs Target (Dynamic Line Graph moved below) */}
+    <div className="chart-card full-width">
+      <div className="chart-header">
+        <h3 className="chart-title">Revenue vs Target</h3>
+        <select className="time-select">
+          <option>This Month</option>
+          <option>Last Month</option>
+          <option>This Year</option>
+        </select>
+      </div>
+      <div className="area-chart-container">
+        <svg width="100%" height="100%" viewBox="0 0 600 300" preserveAspectRatio="xMidYMid meet">
+          {(() => {
+            const data = [
+              { month: "Jan", revenue: 100, target: 120 },
+              { month: "Feb", revenue: 140, target: 150 },
+              { month: "Mar", revenue: 160, target: 170 },
+              { month: "Apr", revenue: 180, target: 190 },
+              { month: "May", revenue: 210, target: 220 },
+              { month: "Jun", revenue: 230, target: 240 },
+              { month: "Jul", revenue: 250, target: 260 },
+            ];
+
+            const width = 600;
+            const height = 300;
+            const padding = 40;
+            const xStep = (width - 2 * padding) / (data.length - 1);
+            const yScale = (height - 2 * padding) / 300;
+
+            const getPoint = (val, i) => ({
+              x: padding + i * xStep,
+              y: height - padding - val * yScale,
+            });
+
+            const makePath = (key) =>
+              data
+                .map((d, i) => {
+                  const { x, y } = getPoint(d[key], i);
+                  return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+                })
+                .join(" ");
+
+            return (
+              <>
+                <path
+                  d={makePath("target")}
+                  stroke="#14b8a6"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                <path
+                  d={makePath("revenue")}
+                  stroke="#6366f1"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                {data.map((d, i) => {
+                  const { x, y } = getPoint(d.revenue, i);
+                  return <circle key={i} cx={x} cy={y} r="4" fill="#6366f1" />;
+                })}
+                {data.map((d, i) => {
+                  const x = padding + i * xStep;
+                  return (
+                    <text
+                      key={i}
+                      x={x}
+                      y={height - 10}
+                      textAnchor="middle"
+                      fill="#94a3b8"
+                      fontSize="12"
+                    >
+                      {d.month}
+                    </text>
+                  );
+                })}
+              </>
+            );
+          })()}
+        </svg>
+      </div>
+      <div className="chart-legend-horizontal">
+        <div className="legend-item-horizontal">
+          <span className="legend-line" style={{ backgroundColor: '#6366f1' }}></span>
+          <span>Revenue</span>
+        </div>
+        <div className="legend-item-horizontal">
+          <span className="legend-line" style={{ backgroundColor: '#14b8a6' }}></span>
+          <span>Target</span>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+    </div>
   );
 };
-
-// Styles Object
-const styles = {
-  container: {
-    fontFamily: 'Arial, sans-serif',
-    margin: '0 auto',
-    padding: '20px',
-    backgroundColor: '#fff3f3',
-    minHeight: '100vh'
-  },
-  header: {
-    borderBottom: '10px solid #7f1d1d',
-  },
-  headerContent: {
-    padding: '1px 1px',
-  },
-  logoContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    marginBottom: '10px'
-  },
-  title: {
-    fontFamily: 'Arial, sans-serif',
-    fontSize: '30px',
-    fontWeight: '800',
-    color: '#c50202',
-    marginBottom: '5px',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: '#666',
-  },
-  nav: {
-    display: 'inline',
-    marginTop: '1px',
-  },
-  navButtonActive: {
-    padding: '13px 40px',
-    fontWeight: 'bold',
-    borderRadius: '10px',
-    border: 'none',
-    backgroundColor: '#7f1d1d',
-    color: '#ffffff',
-    cursor: 'pointer',
-  },
-  navButtonInactive: {
-    fontSize: '15px',
-    borderRadius: '10px',
-    padding: '13px 40px',
-    fontWeight: 'bold',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#8b0000',
-    backgroundColor: 'transparent',
-  },
-  main: {
-    padding: '50px',
-  },
-  cardGrid2: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '1.5rem',
-  },
-  cardGrid3: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '1.5rem',
-  },
-  redCard: {
-    width: '700px',
-    backgroundColor: '#8d1a1c',
-    color: '#ffffff',
-    padding: '1.5rem',
-    borderRadius: '0.5rem',
-    border: '5px solid #8d1a1c',
-  },
-  whiteCard: {
-    backgroundColor: '#ffffff',
-    padding: '1.5rem',
-    borderRadius: '0.5rem',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  cardTitle: {
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    marginBottom: '0.5rem',
-  },
-  cardTitleGray: {
-    fontSize: '0.875rem',
-    color: '#4c525aff',
-    marginBottom: '0.5rem',
-  },
-  cardValue: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    marginBottom: '0.5rem',
-  },
-  cardValueMedium: {
-    fontSize: '1.875rem',
-    fontWeight: 'bold',
-    marginBottom: '0.5rem',
-  },
-  cardValueSmall: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-  },
-  cardSubtext: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    fontSize: '0.875rem',
-    color: '#08dd19ff',
-  },
-  trendNumber: {
-    fontWeight: '600',
-  },
-  cardSubtextGreen: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    color: '#16a34a',
-    fontSize: '0.875rem',
-  },
-  chartContainer: {
-    height: '16rem',
-  },
-  chartContainerSmall: {
-    height: '12rem',
-  },
-  chartContainerFlex: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '16rem',
-  },
-  chartLabels: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '0.75rem',
-    color: '#6b7280',
-    marginTop: '0.5rem',
-  },
-  genderContainer: {
-    backgroundColor: '#7f1d1d',
-    padding: '1.5rem',
-    borderRadius: '0.5rem',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-  },
-  genderGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '1rem',
-  },
-  maleBox: {
-    backgroundColor: 'rgba(30, 58, 138, 0.8)',
-    padding: '2rem',
-    borderRadius: '0.5rem',
-    textAlign: 'center',
-  },
-  femaleBox: {
-    backgroundColor: 'rgba(202, 138, 4, 0.8)',
-    padding: '2rem',
-    borderRadius: '0.5rem',
-    textAlign: 'center',
-  },
-  genderTitle: {
-    color: '#ffffff',
-    fontSize: '1.125rem',
-    marginBottom: '0.5rem',
-  },
-  genderValue: {
-    textAlign: 'center',
-    fontSize: '2.25rem',
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  legend: {
-    marginTop: '1rem',
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.25rem',
-  },
-  legendDot: {
-    width: '1rem',
-    height: '1rem',
-    borderRadius: '9999px',
-  },
-  legendDotSmall: {
-    width: '0.75rem',
-    height: '0.75rem',
-    borderRadius: '9999px',
-  },
-  legendText: {
-    fontSize: '0.875rem',
-  },
-  legendTextSmall: {
-    fontSize: '0.75rem',
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '0.5rem',
-    marginBottom: '1rem',
-  },
-  button: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#e5e7eb',
-    borderRadius: '0.375rem',
-    fontSize: '0.875rem',
-    border: 'none',
-    cursor: 'pointer',
-  },
-  serviceList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  serviceItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  serviceBar: {
-    flex: 1,
-    backgroundColor: '#e5e7eb',
-    borderRadius: '9999px',
-    height: '2rem',
-  },
-  serviceBarFill: {
-    backgroundColor: '#2dd4bf',
-    height: '100%',
-    borderRadius: '9999px',
-  },
-  progressContainer: {
-    width: '100%',
-    backgroundColor: '#e5e7eb',
-    borderRadius: '9999px',
-    height: '1.5rem',
-  },
-  progressBar: {
-    backgroundColor: '#1e3a8a',
-    height: '100%',
-    borderRadius: '9999px',
-  },
-  forecastHeader: {
-    fontSize: '1.125rem',
-    fontWeight: 600,
-    marginBottom: '1rem',
-  },
-  forecastSubheader: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    marginBottom: '1rem',
-  },
-  forecastSubheaderSmall: {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    marginBottom: '0.5rem',
-  },
-  forecastItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  forecastItemMb: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '0.25rem',
-  },
-  textGreen: {
-    color: '#16a34a',
-    fontSize: '0.875rem',
-  },
-  textGray: {
-    color: '#4b5563',
-    fontSize: '0.875rem',
-  },
-  spaceY6: { display: 'flex', flexDirection: 'column', gap: '2.5rem' },
-  spaceY4: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  spaceY3: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
-  spaceY2: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-  spaceY1: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
-  mb2: { marginBottom: '0.5rem' },
-  mb4: { marginBottom: '1rem' },
-  mb6: { marginBottom: '1.5rem' },
-  mt4: { marginTop: '1rem' },
-  middle: {
-    display: 'flex',
-    justifyContent: 'space-evenly',
-  },
-};
-
 export default Dashboard;

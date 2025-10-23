@@ -8,11 +8,15 @@
 
 /* ===== HEADER WITH LOGO ===== */
 .detail-header-top {
+  position: relative;
+  width: 100%;
+  text-align: center;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0 25px 0;
+  
+ 
 }
 
 .header-logo {
@@ -38,48 +42,52 @@
 }
 
 .logo-text h1 {
-  font-size: 20px;
+  font-size: 30px;
   font-weight: 700;
   color: #7a0000;
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .logo-text p {
-  font-size: 11px;
+  font-size: 13px;
   color: #666;
   margin: 2px 0 0 0;
 }
 
+/* Make the close button stay on the far right */
 .close-btn {
+  position: absolute;
+  top: 15px;
+  right: 25px;
   background: none;
-  border: 2px solid #333;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  border: 2px solid #7a0000;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
   font-size: 20px;
-  color: #333;
+  font-weight: bold;
+  color: #7a0000;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background-color: #333;
+  background-color: #7a0000;
   color: #fff;
 }
-
 /* ===== SECTION DIVIDERS ===== */
 .section-divider {
-  border-top: 3px solid #7a0000;
+  border-bottom: 5px solid #7a0000;
   padding-top: 8px;
   margin-bottom: 20px;
 }
 
 .section-divider h2 {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 700;
   color: #7a0000;
   margin: 0;
@@ -87,27 +95,44 @@
 }
 
 /* ===== PATIENT INFO LAYOUT ===== */
+/* ===== FLEX WRAPPER ===== */
+.patient-info-layout-flexwrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+
 .patient-info-layout {
   margin-bottom: 30px;
 }
 
 .patient-info-card {
+  flex: 0 0 80%;
   background: #fff;
   border: 2px solid #7a0000;
   border-radius: 12px;
   padding: 0;
   box-shadow: 0 2px 8px rgba(122, 0, 0, 0.15);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
-
 .patient-name-header {
   background-color: #7a0000;
   color: #fff;
-  text-align: center;
+  display: flex;
+  justify-content: center; /* centers name + button as one group */
+  align-items: center;
+  gap: 10px; /* space between name and button */
   font-size: 22px;
   font-weight: 700;
   padding: 16px;
   border-radius: 10px 10px 0 0;
+  text-align: center;
+  position: relative;
 }
 
 .info-grid-modern {
@@ -118,7 +143,9 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 40px;
+  margin-top: 10px;
+  margin-left: 30px;
 }
 
 .info-row:last-child {
@@ -132,7 +159,7 @@
 }
 
 .info-col label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #666;
   text-transform: capitalize;
@@ -150,47 +177,188 @@
 }
 
 .edit-btn-modern {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background-color: #7a0000;
-  color: #fff;
-  border: none;
-  padding: 10px 28px;
+  background-color: #fff;
+  color: #7a0000;
+  border: 2px solid #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
   border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  letter-spacing: 0.5px;
 }
 
 .edit-btn-modern:hover {
-  background-color: #a30000;
-  box-shadow: 0 4px 10px rgba(122, 0, 0, 0.3);
+  background-color: #7a0000;
+  color: #fff;
+  border-color: #fff;
 }
 
-/* ===== MEDICAL HISTORY SECTION ===== */
-.section-divider-with-actions {
-  border-top: 3px solid #7a0000;
-  padding-top: 12px;
-  margin-bottom: 20px;
+.patient-info-layout-flexwrap {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 20px;
+  align-items: stretch;
+  margin-bottom: 30px;
 }
 
-.section-left {
+/* ===== ASSESSMENT / REMARKS CARD ===== */
+.assess-remark-card-unique {
+  flex: 0 0 20%;
+  background: #fff;
+  border: 2px solid #7a0000;
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
-  gap: 15px;
+  box-shadow: 0 2px 8px rgba(122, 0, 0, 0.15);
 }
 
-.add-record-btn {
+.assess-title-unique {
+  color: #7a0000;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.assess-display-box-unique {
+  width: 100%;
+  min-height: 150px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #fff;
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.assess-textarea-unique {
+  width: 100%;
+  height: 150px;
+  border: 1px solid #7a0000;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+  resize: none;
+  outline: none;
+  color: #333;
+  font-family: "Poppins", sans-serif;
+  margin-bottom: 12px;
+  background-color: #fff; /* ensures white background */
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* subtle depth */
+}
+
+.assess-edit-btn-unique,
+.assess-save-btn-unique {
   background-color: #7a0000;
   color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 40px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.assess-edit-btn-unique:hover,
+.assess-save-btn-unique:hover {
+  background-color: #a30000;
+}
+
+/* ===== MOBILE ADAPTATION ===== */
+@media (max-width: 900px) {
+  .patient-info-layout-flexwrap {
+    flex-direction: column;
+  }
+
+  .patient-info-card,
+  .assess-remark-card-unique {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+/* ===== MEDICAL HISTORY SECTION ===== */
+.pmh-section-divider {
+  padding-top: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pmh-left, .pmh-center, .pmh-right {
+  display: flex;
+  align-items: center;
+}
+
+.pmh-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.pmh-center h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #7a0000;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+.pmh-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #fff; /* white background */
+  border: 2px solid #7a0000; /* red border */
+  border-radius: 8px;
+  padding: 6px 10px;
+  width: 220px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pmh-search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 16px;
+  color: #7a0000; /* red icon */
+}
+
+.pmh-search-box input {
+  padding: 5px 5px 5px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 100%;
+  font-family: "Poppins", sans-serif;
+  background-color: transparent;
+  color: #000; /* text color */
+  outline: none;
+}
+
+.pmh-search-box input::placeholder {
+  color: #999;
+}
+
+.pmh-search-box input:focus {
+  outline: none;
+  border: none;
+}
+
+.pmh-search-box:focus-within {
+  border-color: #a30000; /* brighter red when active */
+  box-shadow: 0 0 6px rgba(122, 0, 0, 0.4);
+}
+.pmh-add-record-btn {
+  background-color: #7a0000;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -198,50 +366,8 @@
   transition: all 0.2s ease;
 }
 
-.add-record-btn:hover {
+.pmh-add-record-btn:hover {
   background-color: #a30000;
-}
-
-.section-left h2 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #7a0000;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
-
-.section-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  font-size: 14px;
-  color: #666;
-}
-
-.search-box input {
-  padding: 8px 12px 8px 35px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 13px;
-  width: 200px;
-  font-family: "Poppins", sans-serif;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-box input:focus {
-  border-color: #7a0000;
 }
 
 /* ===== MEDICAL HISTORY TABLE ===== */
@@ -375,4 +501,203 @@
 
 .back-btn:hover {
   color: #a30000;
+}
+
+/* =========================================
+   🌐 RESPONSIVE DESIGN UPGRADE
+   ========================================= */
+
+/* Tablet adjustments (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .patient-detail-container {
+    padding: 15px 25px;
+  }
+
+  .info-row {
+    grid-template-columns: repeat(2, 1fr);
+    margin-left: 0;
+    gap: 15px;
+  }
+
+  .pmh-section-divider {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pmh-search-box {
+    width: 180px;
+  }
+
+  .pmh-center h2 {
+    font-size: 18px;
+  }
+
+  .pmh-add-record-btn {
+    padding: 8px 14px;
+    font-size: 11px;
+  }
+}
+
+/* Mobile adjustments (max-width: 768px) */
+@media (max-width: 768px) {
+  .detail-header-top {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .logo-text h1 {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .logo-text p {
+    font-size: 10px;
+  }
+
+  .close-btn {
+    position: static;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  .section-divider h2,
+  .pmh-center h2 {
+    font-size: 16px;
+  }
+
+  .patient-info-layout-flexwrap {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .patient-info-card,
+  .assess-remark-card-unique {
+    width: 100%;
+  }
+
+  .info-grid-modern {
+    padding: 16px;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr;
+    margin: 0;
+    gap: 10px;
+  }
+
+  .info-col label {
+    font-size: 11px;
+  }
+
+  .info-col span {
+    font-size: 12px;
+  }
+
+  .patient-name-header {
+    font-size: 18px;
+    flex-direction: column;
+    gap: 5px;
+    padding: 12px;
+  }
+
+  .edit-btn-modern {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .assess-remark-card-unique {
+    padding: 15px;
+  }
+
+  .assess-textarea-unique,
+  .assess-display-box-unique {
+    min-height: 120px;
+    font-size: 12px;
+  }
+
+  .assess-edit-btn-unique,
+  .assess-save-btn-unique {
+    width: 100%;
+    padding: 8px 0;
+  }
+
+  .pmh-section-divider {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .pmh-search-box {
+    width: 100%;
+  }
+
+  .pmh-add-record-btn {
+    width: 100%;
+  }
+
+  .medical-history-table {
+    overflow-x: auto;
+  }
+
+  .medical-history-table table {
+    font-size: 12px;
+    min-width: 600px;
+  }
+
+  .medical-history-table th,
+  .medical-history-table td {
+    padding: 10px 12px;
+  }
+
+  .status-badge-modern {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .view-btn-modern {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}
+
+/* Ultra-small devices (max-width: 480px) */
+@media (max-width: 480px) {
+  .patient-detail-container {
+    padding: 10px 15px;
+  }
+
+  .logo-text h1 {
+    font-size: 14px;
+  }
+
+  .logo-text p {
+    font-size: 9px;
+  }
+
+  .patient-name-header {
+    font-size: 16px;
+  }
+
+  .info-col label {
+    font-size: 10px;
+  }
+
+  .info-col span {
+    font-size: 11px;
+  }
+
+  .assess-title-unique {
+    font-size: 14px;
+  }
+
+  .pmh-center h2 {
+    font-size: 15px;
+  }
+
+  .no-data-modern {
+    font-size: 12px;
+    padding: 20px;
+  }
 }
