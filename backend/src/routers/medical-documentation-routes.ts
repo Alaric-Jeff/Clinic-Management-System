@@ -4,6 +4,7 @@ import { requireRole } from "../hooks/authorization.js";
 import { createMedicalDocumentationController } from "../controllers/medical-documentation/create-documentation-controller.js";
 import { getMedicalDocumentationController } from "../controllers/medical-documentation/get-medical-documentation-controller.js";
 import { updateMedicalDocumentationController } from "../controllers/medical-documentation/update-documentation-controller.js";
+
 import {
     createMedicalDocumentationSchema,
     createMedicalDocumentationResponseSchema,
@@ -14,6 +15,8 @@ import {
     getMedicalDocumentationResponseSchema
 } from '../type-schemas/medical-document-schemas.js'
 import { Role } from "@prisma/client";
+import { Type } from "@sinclair/typebox";
+import { getDocumentTotalCountController } from "../controllers/medical-documentation/get-document-count-controller.js";
 
 export async function medicalDocumentationRoutes(
     fastify: FastifyInstance
@@ -28,6 +31,19 @@ export async function medicalDocumentationRoutes(
             }
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: createMedicalDocumentationController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-document-count',
+        schema: {
+            response: {
+                200: Type.Object({
+                    count: Type.Number({minimum: 0})
+                })
+            }
+        }, preHandler:  requireRole([Role.admin, Role.encoder]),
+        handler: getDocumentTotalCountController
     })
 
     fastify.route({
