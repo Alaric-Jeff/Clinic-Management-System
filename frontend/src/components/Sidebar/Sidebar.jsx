@@ -27,7 +27,7 @@ const Sidebar = () => {
     { name: "Patient Records", path: "/admin/patient-list", icon: <FileText size={18} />, roles: ["admin", "encoder"] },
     { name: "Services", path: "/admin/services", icon: <Stethoscope size={18} />, roles: ["admin"] },
     { name: "Payment Details", path: "/admin/payments", icon: <CreditCard size={18} />, roles: ["admin", "encoder"] },
-    { name: "User Management", path: "/admin/add-new-user", icon: <Users size={18} />, roles: ["admin"] },
+    { name: "User Management", path: "/admin/user-management", icon: <Users size={18} />, roles: ["admin"] },
     { name: "History Log", path: "/admin/history-log", icon: <History size={18} />, roles: ["admin"] },
     { name: "Archive", path: "/admin/archive", icon: <Archive size={18} />, roles: ["admin", "encoder"] },
   ];
@@ -47,7 +47,7 @@ const Sidebar = () => {
         {navItems.map((item) => (
           <NavLink
             key={item.path}
-            to={item.path}
+            to={item.path}x
             className={({ isActive }) =>
               isActive ? "sidebar-link active" : "sidebar-link"
             }
