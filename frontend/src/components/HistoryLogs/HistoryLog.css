@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.history-log-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff3f3;
+  min-height: 100vh;
+}
+
+.history-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 4px solid #7f1d1d;
+}
+
+.history-log-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #7f1d1d;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.history-log-close-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #7f1d1d;
+  background-color: white;
+  color: #7f1d1d;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.history-log-close-btn:hover {
+  background-color: #7f1d1d;
+  color: white;
+  transform: scale(1.05);
+}
+
+.history-log-table-wrapper {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 3px solid #7f1d1d;
+}
+
+/* Table Header Styles */
+.history-log-th {
+  background-color: #7f1d1d !important;
+  color: white !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  padding: 16px 12px !important;
+  font-size: 15px !important;
+  border-right: 1px solid #993333 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.history-log-th:last-child {
+  border-right: none !important;
+}
+
+/* Table Row Styles */
+.history-log-row {
+  background-color: #ffcccc !important;
+  transition: background-color 0.2s ease;
+}
+
+.history-log-row:nth-child(even) {
+  background-color: #ffb3b3 !important;
+}
+
+.history-log-row:hover {
+  background-color: #ff9999 !important;
+}
+
+/* Table Cell Styles */
+.history-log-cell {
+  text-align: center !important;
+  padding: 14px 12px !important;
+  font-size: 14px !important;
+  color: #333 !important;
+  border-right: 1px solid #ffdddd !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 500 !important;
+}
+
+.history-log-cell:last-child {
+  border-right: none !important;
+}
+
+.history-log-cell-center {
+  text-align: center !important;
+  padding: 30px !important;
+  color: #666 !important;
+  font-size: 16px !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .history-log-container {
+    padding: 15px;
+  }
+
+  .history-log-title {
+    font-size: 28px;
+  }
+
+  .history-log-th,
+  .history-log-cell {
+    padding: 12px 10px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-log-title {
+    font-size: 24px;
+  }
+
+  .history-log-close-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+  }
+
+  .history-log-th,
+  .history-log-cell {
+    padding: 10px 8px !important;
+    font-size: 12px !important;
+  }
+
+  .history-log-table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-log-title {
+    font-size: 20px;
+  }
+
+  .history-log-th,
+  .history-log-cell {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+  }
+}
