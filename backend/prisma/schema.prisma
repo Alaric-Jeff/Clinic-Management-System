@@ -108,6 +108,7 @@ model Patient {
   registeredAt       DateTime @default(now())
   isArchived         Boolean  @default(false)
 
+  notes String? 
   // Denormalized audit fields only (no relations needed!)
   createdByName String
   updatedByName String?
