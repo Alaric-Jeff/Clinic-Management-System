@@ -46,6 +46,7 @@ export async function getOnePatientService(
         residentialAddress: true,
         isArchived: true, 
         registeredAt: true,
+        notes: true,
         
         // Audit trail
         createdByName: true,

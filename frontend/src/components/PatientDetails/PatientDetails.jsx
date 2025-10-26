@@ -7,7 +7,7 @@ import ViewMedicalDocModal from "../../modals/view-doc/ViewDocModal";
 import AddRecordModal from "../AddRecordModal/AddRecordModal";
 
 const PatientDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // This should match your route parameter
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,21 +17,57 @@ const PatientDetail = () => {
   const [showAddRecordModal, setShowAddRecordModal] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [remarks, setRemarks] = useState("");
+  const [notes, setNotes] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleSave = () => {
-  // Optional: send to backend if needed
-  setIsEditing(false);
-};
+  // Debug: log the ID to see what we're getting
+  useEffect(() => {
+    console.log("Patient ID from URL:", id);
+  }, [id]);
+
+  const handleSave = async () => {
+    if (!id) {
+      alert("Error: Patient ID is missing!");
+      return;
+    }
+
+    try {
+      const response = await api.post('/patient/add-note', {
+        id: id,
+        note: notes
+      });
+      
+      console.log("API Response:", response.data);
+      
+      if (response.data.message === "Successfully added note") {
+        alert("Notes saved successfully!");
+        setIsEditing(false);
+      } else {
+        alert("Failed to save notes. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      alert("Error saving notes. Please try again.");
+    }
+  };
 
   const fetchPatient = async () => {
+    if (!id) {
+      setError("Patient ID is missing from URL");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       const res = await api.get(`/patient/get-one-patient/${id}`);
       if (res.data.success) {
         setPatient(res.data.data);
+        // Set notes from the patient data if available
+        if (res.data.data.notes) {
+          setNotes(res.data.data.notes);
+        }
       } else {
         setError(res.data.message || "Failed to fetch patient");
       }
@@ -44,7 +80,9 @@ const PatientDetail = () => {
   };
 
   useEffect(() => {
-    fetchPatient();
+    if (id) {
+      fetchPatient();
+    }
   }, [id]);
 
   const formatDate = (dateString) => {
@@ -192,8 +230,8 @@ const PatientDetail = () => {
       <>
         <textarea
           className="assess-textarea-unique"
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
         <button className="assess-save-btn-unique" onClick={handleSave}>
           SAVE
@@ -202,7 +240,7 @@ const PatientDetail = () => {
     ) : (
       <>
         <div className="assess-display-box-unique">
-          {remarks ? remarks : "No remarks available."}
+          {notes ? notes : "No remarks available."}
         </div>
         <button className="assess-edit-btn-unique" onClick={() => setIsEditing(true)}>
           EDIT
@@ -210,6 +248,8 @@ const PatientDetail = () => {
       </>
     )}
   </div>
+
+  
 </div>
 
 
@@ -258,7 +298,7 @@ const PatientDetail = () => {
                   <td>{formatDate(doc.createdAt)}</td>
                   <td>{doc.admittedByName || doc.createdByName}</td>
                   <td>
-                    <span className={`status-badge-modern ${getStatusBadgeClass(doc.status)}`}>
+                    <span className={`status-badge-modique ${getStatusBadgeClass(doc.status)}`}>
                       {doc.status}
                     </span>
                   </td>

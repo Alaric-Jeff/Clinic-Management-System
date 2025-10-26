@@ -10,6 +10,7 @@ import { getOnePatientController } from "../controllers/patient-controllers/get-
 import { getTotalPatientController } from "../controllers/patient-controllers/get-total-patient-controller.js";
 import { getMaleCountController } from "../controllers/patient-controllers/get-male-count-controller.js";
 import { getFemaleCountController } from "../controllers/patient-controllers/get-female-count-controller.js";
+import { addNoteController } from "../controllers/patient-controllers/add-note-controller.js";
 import { Role } from "@prisma/client";
 import {
     createPatientSchema,
@@ -27,6 +28,9 @@ import  {
     getTotalPatientsParams,
     totalPatientPaginatedResponseSchema
 } from '../type-schemas/patients/get-total-paginated-schema.js'
+
+import { addNoteSchema, AddNoteResponseSchema } from "../type-schemas/patients/add-note-schema.js";
+
 import { Type } from "@sinclair/typebox";
 
 export async function patientRoutes(fastify: FastifyInstance) {
@@ -101,6 +105,16 @@ export async function patientRoutes(fastify: FastifyInstance) {
         preHandler: requireRole([Role.admin, Role.encoder]),
         handler: archivePatientController
     });
+
+
+    fastify.route({
+        method: 'POST',
+        url: '/add-note',
+        schema: {
+            body: addNoteSchema
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: addNoteController
+    })
 
     /**
      * Unarchive a patient
