@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { requireRole } from "../hooks/authorization.js";
 import { getLastNSalesController } from "../controllers/statistic-controllers/get-lastN-sales-controller.js";
+import { getMonthlySalesController } from "../controllers/statistic-controllers/get-monthly-sales-controller.js";
 import { Role } from "@prisma/client";
 
 import {
@@ -20,4 +21,12 @@ export async function statisticRoutes(
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getLastNSalesController
     })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-monthly-sales',
+        preHandler: requireRole([Role.admin]),
+        handler: getMonthlySalesController
+    })
+
 }

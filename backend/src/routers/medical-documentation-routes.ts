@@ -4,7 +4,7 @@ import { requireRole } from "../hooks/authorization.js";
 import { createMedicalDocumentationController } from "../controllers/medical-documentation/create-documentation-controller.js";
 import { getMedicalDocumentationController } from "../controllers/medical-documentation/get-medical-documentation-controller.js";
 import { updateMedicalDocumentationController } from "../controllers/medical-documentation/update-documentation-controller.js";
-
+import { getWeeklyDocumentationsCount } from "../controllers/medical-documentation/get-weekly-documentation-controller.js";
 import {
     createMedicalDocumentationSchema,
     createMedicalDocumentationResponseSchema,
@@ -31,6 +31,13 @@ export async function medicalDocumentationRoutes(
             }
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: createMedicalDocumentationController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-weekly-document-count',
+        preHandler:  requireRole([Role.admin, Role.encoder]),
+        handler: getWeeklyDocumentationsCount
     })
 
     fastify.route({
