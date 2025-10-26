@@ -4,7 +4,7 @@ import api from "../../axios/api";
 import './PatientDetails.css'
 import EditPatientModal from '../../modals/patient-edit/PatientEditModal'
 import ViewMedicalDocModal from "../../modals/view-doc/ViewDocModal";
-import AddRecordModal from "../AddRecordModal/AddRecordModal";
+import AddRecordModal from "../../modals/AddRecordModal/AddRecordModal";
 
 const PatientDetail = () => {
   const { id } = useParams();
@@ -246,7 +246,7 @@ const PatientDetail = () => {
           <thead>
             <tr>
               <th>Date of Visit</th>
-              <th>Assisted By</th>
+              <th>Admitted By</th>
               <th>Status of Record</th>
               <th>Documents</th>
             </tr>

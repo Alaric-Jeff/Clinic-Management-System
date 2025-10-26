@@ -15,6 +15,7 @@ import EncoderLayout from "./layouts/encoder-layout/EncoderLayout";
 import PatientRecordView from "./components/PatientRecord";
 import SuccesfulReset from "./modals/view-patient/SuccessfulReset";
 import UserManagement from "./components/UserManagement/UserManagement";
+import HistoryLog from "./components/HistoryLogs/HistoryLog";
 import "./App.css";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
             <Route path="archive" element={<Archive />} />
             <Route path="add-new-user" element={<AddNewUserPage />} />
             <Route path="user-management" element={<UserManagement />} />
+            <Route path="history-log" element={<HistoryLog />} /> 
           </Route>
 
 {/* Encoder Routes */}
@@ -62,6 +64,7 @@ function App() {
   <Route path="patient-details/:id" element={<PatientDetail />} />
   <Route path="payments" element={<div>Payment Details</div>} />
   <Route path="archive" element={<Archive />} />
+  <Route path="history-log/:id" element={<HistoryLog />} />
 </Route>
 
           {/* Fallback */}
