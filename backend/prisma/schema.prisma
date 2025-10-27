@@ -326,7 +326,7 @@ model ServiceDailyAnalytics {
 
   // Metrics
   totalRevenue Float @default(0.00)
-  quantitySold Int   @default(0)
+  quantitySold Int   @default(0)  
   averagePrice Float @default(0.00) // In case price changed during the day
 
   dailyAnalytics DailySalesAnalytics @relation(fields: [dailyAnalyticsId], references: [id], onDelete: Cascade)
