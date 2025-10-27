@@ -1,0 +1,897 @@
+/* Modal Overlay */
+.lms-modal-overlay-addrecord {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.lms-modal-wrapper-addrecord {
+  background: #ffffff;
+  border-radius: 10px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* Header */
+.lms-header-addrecord {
+  background: linear-gradient(135deg, #8b0000 0%, #960000 100%);
+  padding: 18px 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  
+}
+
+.lms-title-addrecord {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.lms-close-btn-addrecord {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ffffff;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-weight: 700;
+  background: none;
+}
+
+.lms-close-btn-addrecord:hover {
+  background: none;
+  transform: translateY(-50%) rotate(90deg);
+}
+
+/* Body */
+.lms-body-addrecord {
+  padding: 25px 30px 30px 30px;
+}
+
+/* Patient Info */
+.lms-patient-info-addrecord {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: none;
+  border-radius: 7px;
+  margin-bottom: 22px;
+}
+
+.lms-patient-left-addrecord,
+.lms-patient-right-addrecord {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lms-patient-left-addrecord label,
+.lms-patient-right-addrecord label {
+  font-weight: 600;
+  color: #585858;
+  font-size: 12px;
+}
+
+.lms-patient-left-addrecord span,
+.lms-patient-right-addrecord span {
+  font-weight: 700;
+  color: #610000;
+  font-size: 16px;
+}
+
+/* Error Banner */
+.lms-error-banner-addrecord {
+  background: #ffe6e6;
+  color: #c70000;
+  padding: 11px 18px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+  border: 1px solid #ffcccc;
+  font-size: 13px;
+}
+
+/* Form Section */
+.lms-form-section-addrecord {
+  margin-bottom: 25px;
+}
+
+.lms-form-full-addrecord,
+.lms-form-group-addrecord {
+  margin-bottom: 18px;
+}
+
+.lms-label-centered-addrecord {
+  text-align: center;
+  font-weight: 700;
+  color: #720000;
+  margin-bottom: 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.lms-textarea-medical-addrecord {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #720000;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+  color: #000000;
+  box-sizing: border-box;
+}
+
+.lms-textarea-medical-addrecord:focus {
+  outline: none;
+  border-color: #8b0000;
+  box-shadow: 0 0 0 3px rgba(199, 0, 0, 0.15);
+}
+
+.lms-textarea-medical-addrecord::placeholder {
+  color: #999999;
+}
+
+.lms-form-row-addrecord {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* Services Section */
+.lms-services-section-addrecord {
+  margin-bottom: 25px;
+}
+
+.lms-services-header-addrecord {
+  background: #8b0000;
+  padding: 12px 20px;
+  border-radius: 7px 7px 0 0;
+  margin-bottom: 0;
+}
+
+.lms-services-header-addrecord h3 {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.lms-category-row-addrecord {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  padding: 18px;
+  background: #f5f5f5;
+  border: 1px solid #d0d0d0;
+  border-top: none;
+}
+
+.lms-category-col-addrecord,
+.lms-service-col-addrecord {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.lms-category-col-addrecord label,
+.lms-service-col-addrecord label {
+  font-weight: 600;
+  color: #3a3a3a;
+  font-size: 13px;
+}
+
+.lms-select-addrecord {
+  padding: 10px 12px;
+  border: 1px solid #c0c0c0;
+  border-radius: 5px;
+  font-size: 13px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #1a1a1a;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.lms-select-addrecord:focus {
+  outline: none;
+  border-color: #8b0000;
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
+}
+
+.lms-select-addrecord:disabled {
+  background: #e8e8e8;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.lms-service-input-group-addrecord {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.lms-service-input-group-addrecord .lms-select-addrecord {
+  flex: 1;
+}
+
+.lms-add-service-btn-addrecord {
+  padding: 10px 20px;
+  background: #8b0000;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.lms-add-service-btn-addrecord:hover:not(:disabled) {
+  background: #6a0000;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(139, 0, 0, 0.3);
+}
+
+.lms-add-service-btn-addrecord:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Selected Services Table */
+.lms-services-table-wrapper-addrecord {
+  margin-top: 18px;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.lms-services-table-addrecord {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lms-services-table-addrecord thead {
+  background: #8b0000;
+  color: #ffffff;
+}
+
+.lms-services-table-addrecord th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.lms-services-table-addrecord th:nth-child(2) {
+  text-align: center;
+}
+
+.lms-services-table-addrecord th:nth-child(3) {
+  text-align: center;
+}
+
+.lms-services-table-addrecord tbody tr {
+  border-bottom: 1px solid #e8e8e8;
+  transition: background 0.2s ease;
+}
+
+.lms-services-table-addrecord tbody tr:last-child {
+  border-bottom: none;
+}
+
+.lms-services-table-addrecord tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.lms-services-table-addrecord td {
+  padding: 12px 15px;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+.lms-table-service-name-addrecord {
+  font-weight: 500;
+}
+
+.lms-table-price-addrecord {
+  text-align: center;
+  font-weight: 600;
+  color: #8b0000;
+}
+
+.lms-table-action-addrecord {
+  text-align: center;
+}
+
+.lms-action-controls-addrecord {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lms-quantity-controls-table-addrecord {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #d0d0d0;
+}
+
+.lms-quantity-controls-table-addrecord button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #c0c0c0;
+  background: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3a3a;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lms-quantity-controls-table-addrecord button:hover {
+  background: #8b0000;
+  color: #ffffff;
+  border-color: #8b0000;
+}
+
+.lms-quantity-controls-table-addrecord input {
+  width: 40px;
+  padding: 4px;
+  border: 1px solid #c0c0c0;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.lms-quantity-controls-table-addrecord input:focus {
+  outline: none;
+  border-color: #8b0000;
+}
+
+.lms-remove-table-btn-addrecord {
+  background: #910101;
+  color: #ffffff;
+  border: none;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-weight: 700;
+}
+
+.Uno {
+  background: #ffffff;
+ 
+}
+
+.lms-remove-table-btn-addrecord:hover {
+  background: #c82333;
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+/* Billing Container */
+.lms-billing-wrapper-addrecord {
+  margin-top: 25px;
+  padding: 22px;
+  background: #f8f8f8;
+  border: 2px solid #700000;
+  border-radius: 8px;
+}
+
+.lms-billing-title-addrecord {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: #8b0000;
+  margin-bottom: 10px;
+  letter-spacing: 1.2px;
+}
+
+.lms-billing-divider-addrecord {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #8b0000, transparent);
+  margin-bottom: 20px;
+}
+
+.lms-billing-grid-addrecord {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.lms-billing-col-addrecord {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lms-billing-label-addrecord {
+  font-weight: 600;
+  color: #3a3a3a;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+.lms-radio-stack-addrecord {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.lms-radio-item-addrecord {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #3a3a3a;
+  cursor: pointer;
+}
+
+.lms-radio-item-addrecord input[type="radio"] {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+.lms-radio-item-addrecord span {
+  user-select: none;
+}
+
+.lms-discount-stack-addrecord,
+.lms-status-stack-addrecord {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lms-select-small-addrecord,
+.lms-input-small-addrecord {
+  padding: 9px 11px;
+  border: 1px solid #c0c0c0;
+  border-radius: 5px;
+  font-size: 13px;
+  background: #ffffff;
+  transition: all 0.3s ease;
+  color: #1a1a1a;
+}
+
+.lms-select-small-addrecord {
+  cursor: pointer;
+}
+
+.lms-select-small-addrecord:focus,
+.lms-input-small-addrecord:focus {
+  outline: none;
+  border-color: #8b0000;
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
+}
+
+/* Receipt Summary */
+.lms-receipt-box-addrecord {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 7px;
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.lms-receipt-title-addrecord {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #8b0000;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.lms-receipt-empty-addrecord {
+  text-align: center;
+  padding: 30px 20px;
+  color: #999999;
+  font-style: italic;
+}
+
+.lms-receipt-empty-addrecord p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.lms-receipt-row-addrecord {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 13px;
+  color: #3a3a3a;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.lms-receipt-row-addrecord:last-child {
+  border-bottom: none;
+}
+
+.lms-receipt-row-addrecord span:first-child {
+  font-weight: 500;
+}
+
+.lms-receipt-row-addrecord span:last-child {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.lms-receipt-separator-addrecord {
+  height: 1px;
+  background: #d0d0d0;
+  margin: 10px 0;
+}
+
+.lms-discount-row-addrecord {
+  color: #28a745;
+}
+
+.lms-discount-row-addrecord span {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.lms-total-row-addrecord {
+  background: #8b0000;
+  color: #ffffff;
+  padding: 12px 15px;
+  margin: 12px -18px 0 -18px;
+  border-radius: 0;
+  font-size: 15px;
+  font-weight: 700;
+  border-top: 2px solid #6a0000;
+}
+
+.lms-total-row-addrecord span {
+  color: #ffffff;
+}
+
+.lms-paid-amount-row-addrecord {
+  background: #e8f5e9;
+  padding: 10px 12px;
+  margin: 8px -18px 0 -18px;
+  font-weight: 600;
+  color: #2e7d32;
+  border-top: 1px dashed #4caf50;
+}
+
+.lms-paid-amount-row-addrecord span {
+  color: #2e7d32;
+}
+
+.lms-balance-row-addrecord {
+  background: #fff3cd;
+  padding: 10px 12px;
+  margin: 8px -18px 0 -18px;
+  font-weight: 700;
+  color: #856404;
+  border-top: 2px dashed #ffc107;
+}
+
+.lms-balance-row-addrecord span {
+  color: #856404;
+}
+
+.lms-paid-status-row-addrecord {
+  background: #d4edda;
+  padding: 10px 12px;
+  margin: 8px -18px 0 -18px;
+  font-weight: 700;
+  color: #155724;
+  border-top: 2px solid #28a745;
+}
+
+.lms-paid-status-row-addrecord span {
+  color: #155724;
+}
+
+.lms-unpaid-status-row-addrecord {
+  background: #f8d7da;
+  padding: 10px 12px;
+  margin: 8px -18px 0 -18px;
+  font-weight: 700;
+  color: #721c24;
+  border-top: 2px solid #dc3545;
+}
+
+.lms-unpaid-status-row-addrecord span {
+  color: #721c24;
+}
+
+/* Total Amount Display */
+.lms-total-amount-display-addrecord {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 25px;
+  background: linear-gradient(135deg, #8b0000 0%, #6a0000 100%);
+  border-radius: 8px;
+  margin: 25px 0;
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+}
+
+.lms-total-label-addrecord {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.lms-total-value-addrecord {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+/* Admitted By Section */
+.lms-admitted-section-addrecord {
+  margin-bottom: 25px;
+  padding: 18px;
+  background: #f5f5f5;
+  border-radius: 7px;
+  border: 1px solid #d0d0d0;
+}
+
+.lms-admitted-section-addrecord label {
+  display: block;
+  font-weight: 600;
+  color: #3a3a3a;
+  margin-bottom: 10px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* Action Buttons */
+.lms-actions-addrecord {
+  display: flex;
+  gap: 13px;
+  justify-content: flex-end;
+  margin-top: 25px;
+  padding-top: 18px;
+  border-top: 2px solid #d0d0d0;
+}
+
+.lms-clear-btn-addrecord,
+.lms-submit-btn-addrecord {
+  padding: 11px 28px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.lms-clear-btn-addrecord {
+  background: #6c757d;
+  color: #ffffff;
+}
+
+.lms-clear-btn-addrecord:hover:not(:disabled) {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.35);
+}
+
+.lms-submit-btn-addrecord {
+  background: #8b0000;
+  color: #ffffff;
+}
+
+.lms-submit-btn-addrecord:hover:not(:disabled) {
+  background: #6a0000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.35);
+}
+
+.lms-clear-btn-addrecord:disabled,
+.lms-submit-btn-addrecord:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Confirmation Popup */
+.lms-confirm-overlay-addrecord {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.lms-confirm-box-addrecord {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 10px;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.lms-confirm-box-addrecord h3 {
+  color: #8b0000;
+  font-size: 19px;
+  margin: 0 0 14px 0;
+  font-weight: 700;
+}
+
+.lms-confirm-box-addrecord p {
+  color: #3a3a3a;
+  font-size: 14px;
+  margin: 0 0 22px 0;
+  line-height: 1.5;
+}
+
+.lms-confirm-btns-addrecord {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.lms-confirm-btns-addrecord button {
+  padding: 9px 24px;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 75px;
+}
+
+.lms-confirm-btns-addrecord button:first-child {
+  background: #6c757d;
+  color: #ffffff;
+}
+
+.lms-confirm-btns-addrecord button:first-child:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.lms-confirm-btns-addrecord button:last-child {
+  background: #8b0000;
+  color: #ffffff;
+}
+
+.lms-confirm-btns-addrecord button:last-child:hover:not(:disabled) {
+  background: #6a0000;
+}
+
+.lms-confirm-btns-addrecord button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .lms-modal-wrapper-addrecord {
+    max-width: 100%;
+    margin: 10px;
+  }
+
+  .lms-patient-info-addrecord {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .lms-form-row-addrecord {
+    grid-template-columns: 1fr;
+  }
+
+  .lms-category-row-addrecord {
+    grid-template-columns: 1fr;
+  }
+
+  .lms-billing-grid-addrecord {
+    grid-template-columns: 1fr;
+  }
+
+  .lms-actions-addrecord {
+    flex-direction: column;
+  }
+
+  .lms-clear-btn-addrecord,
+  .lms-submit-btn-addrecord {
+    width: 100%;
+  }
+
+  .lms-service-input-group-addrecord {
+    flex-direction: column;
+  }
+
+  .lms-add-service-btn-addrecord {
+    width: 100%;
+  }
+}
+
+/* Scrollbar Styling */
+.lms-modal-wrapper-addrecord::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lms-modal-wrapper-addrecord::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.lms-modal-wrapper-addrecord::-webkit-scrollbar-thumb {
+  background: #8b0000;
+  border-radius: 4px;
+}
+
+.lms-modal-wrapper-addrecord::-webkit-scrollbar-thumb:hover {
+  background: #6a0000;
+}
+
+/* Print Styles */
+@media print {
+  .lms-modal-overlay-addrecord,
+  .lms-close-btn-addrecord,
+  .lms-actions-addrecord,
+  .lms-confirm-overlay-addrecord {
+    display: none !important;
+  }
+}
