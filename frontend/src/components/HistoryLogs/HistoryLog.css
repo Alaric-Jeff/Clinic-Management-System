@@ -10,6 +10,28 @@
   min-height: 100vh;
 }
 
+/* ✅ Universal Header — Matches Archive Page */
+.universal-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.universal-header h1 {
+  font-size: 1.9rem;
+  color: #7f1d1d;
+  font-weight: 900;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.universal-header p {
+  color: #7f1d1d;
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Section Header */
 .history-log-header {
   display: flex;
   justify-content: space-between;
@@ -49,12 +71,12 @@
   transform: scale(1.05);
 }
 
+/* Table Wrapper */
 .history-log-table-wrapper {
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 3px solid #7f1d1d;
 }
 
 /* Table Header Styles */
@@ -128,6 +150,10 @@
 }
 
 @media (max-width: 768px) {
+  .history-log-container {
+    padding: 20px;
+  }
+
   .history-log-title {
     font-size: 24px;
   }

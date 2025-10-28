@@ -13,7 +13,30 @@
   min-height: 100vh;
 }
 
-/* Header Styles */
+/* ================================
+   HEADER (matched with MedicalServices)
+   ================================ */
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 1.9rem;
+  color: #7f1d1d;
+  font-weight: 900;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.header p {
+  color: #7f1d1d;
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Existing User Management header/title */
 .um-header {
   display: flex;
   justify-content: center;
@@ -521,7 +544,6 @@
 .um-toast-info {
   border-left-color: #3b82f6;
 }
-
 
 /* Responsive */
 @media (max-width: 768px) {

@@ -43,6 +43,13 @@ export default function LoginPage() {
         <div className="login-form">
           <h2 className="form-title">Login</h2>
           
+          {/* Error Message */}
+          {error && (
+            <div className="error-message">
+              Incorrect email or password
+            </div>
+          )}
+          
           <div className="form-fields">
            {/* Email Input */}
            <div className="input-group">
@@ -95,11 +102,8 @@ export default function LoginPage() {
                <Link to="/forgot-password" className="forgot-link">
   Forgot Password?
 </Link>
-
-
               </div>
             </div>
-
           </div>
         </div>
       </div>

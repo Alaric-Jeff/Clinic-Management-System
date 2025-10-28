@@ -1260,7 +1260,7 @@ const styles = {
     fontFamily: 'Arial, sans-serif',
     fontSize: '28px',
     fontWeight: '800',
-    color: '#c50202',
+    color: '#7f1d1d',
     marginBottom: '5px',
   },
   address: {

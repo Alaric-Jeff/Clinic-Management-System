@@ -15,10 +15,10 @@ import "./Sidebar.css";
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(true); // Always open, including mobile
+  const [isOpen, setIsOpen] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
-    // Always force sidebar open, regardless of window size
     setIsOpen(true);
   }, []);
 
@@ -34,37 +34,76 @@ const Sidebar = () => {
 
   const navItems = allNavItems.filter((item) => item.roles.includes(user?.role));
 
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
+
   return (
-    <aside className={`sidebar ${isOpen ? "open" : ""}`}>
-      <div className="sidebar-header">
-        <h2>ADMIN PANEL</h2>
-        <p className="user-info">
-          Welcome, <span>{user ? user.name : "Loading..."}</span>
-        </p>
-      </div>
+    <>
+      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+        <div className="sidebar-header">
+          <h2>ADMIN PANEL</h2>
+          <p className="user-info">
+            Welcome, <span>{user ? user.name : "Loading..."}</span>
+          </p>
+        </div>
 
-      <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}x
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active" : "sidebar-link"
-            }
-          >
-            <span className="icon">{item.icon}</span>
-            <span className="link-text">{item.name}</span>
-          </NavLink>
-        ))}
-      </nav>
+        <nav className="sidebar-nav">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                isActive ? "sidebar-link active" : "sidebar-link"
+              }
+            >
+              <span className="icon">{item.icon}</span>
+              <span className="link-text">{item.name}</span>
+            </NavLink>
+          ))}
+        </nav>
 
-      <div className="sidebar-footer">
-        <button className="logout-btn" onClick={logout}>
-          <LogOut size={18} />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={handleLogout}>
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ✅ Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="um-confirm-overlay">
+          <div className="um-confirm-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to log out?</p>
+            <div className="um-confirm-buttons">
+              <button
+                className="um-btn-confirm-yes"
+                onClick={confirmLogout}
+              >
+                Yes, Logout
+              </button>
+              <button
+                className="um-btn-confirm-no"
+                onClick={cancelLogout}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -1,5 +1,5 @@
 .patient-container {
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: 'Poppins', sans-serif;
   background-color: #fff5f5; /* softer pink for background */
   color: #400000;
   min-height: 100vh;
@@ -15,14 +15,14 @@
 
 .header h1 {
   font-size: 1.9rem;
-  color: #b30000;
+  color: #7f1d1d;
   font-weight: 900;
   margin-bottom: 4px;
   letter-spacing: 1px;
 }
 
 .header p {
-  color: #751111;
+  color: #7f1d1d;
   font-size: 0.95rem;
   margin: 0;
   font-weight: 500;

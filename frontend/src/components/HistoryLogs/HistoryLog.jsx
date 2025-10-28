@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from "flowbite-react";
 import { useNavigate } from 'react-router-dom';
 import './HistoryLog.css';
@@ -9,17 +9,11 @@ const HistoryLog = ({ patient, onBack }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch history logs from API
     fetchHistoryLogs();
   }, [patient]);
 
   const fetchHistoryLogs = async () => {
     try {
-      // Replace with your actual API endpoint
-      // const response = await api.get(`/history-logs/${patient.id}`);
-      // setHistoryLogs(response.data);
-      
-      // Dummy data for now
       setHistoryLogs([
         {
           id: 1,
@@ -48,20 +42,21 @@ const HistoryLog = ({ patient, onBack }) => {
   };
 
   const handleClose = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      navigate(-1);
-    }
+    if (onBack) onBack();
+    else navigate(-1);
   };
 
   return (
     <div className="history-log-container">
+      {/* ✅ Universal Header — matches Archive Page */}
+      <header className="universal-header">
+        <h1>LEONARDO MEDICAL SERVICES</h1>
+        <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+      </header>
+
       <div className="history-log-header">
         <h1 className="history-log-title">History Log</h1>
-        <button className="history-log-close-btn" onClick={handleClose}>
-          ✕
-        </button>
+        <button className="history-log-close-btn" onClick={handleClose}>✕</button>
       </div>
 
       <div className="history-log-table-wrapper">
