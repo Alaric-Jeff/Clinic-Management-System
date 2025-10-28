@@ -2,6 +2,22 @@ import { useEffect, useState } from "react";
 import api from "../../axios/api";
 import "./AddRecordModal.css";
 
+/**
+ * CALCULATION LOGIC (matches backend):
+ * ─────────────────────────────────────────
+ * Services Subtotal = Σ(service.price × quantity)
+ * 
+ * Discount (applied to services ONLY):
+ *   - Senior/PWD (20%): servicesSubtotal × 0.20
+ *   - Custom Rate: servicesSubtotal × (customDiscount / 100)
+ *   - Only one applies; Senior/PWD takes precedence
+ * 
+ * Services Total = Services Subtotal - Discount Amount
+ * Consultation Fee = 250 or 350 (NOT discounted)
+ * ─────────────────────────────────────────
+ * TOTAL BILL = Services Total + Consultation Fee
+ */
+
 const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   
   // Medical Documentation State
@@ -13,11 +29,10 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
   // Billing State
   const [selectedServices, setSelectedServices] = useState([]);
-  const [paymentOption, setPaymentOption] = useState("cash");
-  const [discountType, setDiscountType] = useState("none");
-  const [customDiscount, setCustomDiscount] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("unpaid");
-  const [partialPayment, setPartialPayment] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [isSeniorPwdDiscount, setIsSeniorPwdDiscount] = useState(false);
+  const [customDiscountRate, setCustomDiscountRate] = useState(0);
+  const [initialPaymentAmount, setInitialPaymentAmount] = useState("");
 
   // Category & Service Selection
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -26,7 +41,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   // Data Lists
   const [doctors, setDoctors] = useState([]);
   const [allServices, setAllServices] = useState([]);
-  const [hasExistingRecords, setHasExistingRecords] = useState(false);
 
   // UI State
   const [loading, setLoading] = useState(false);
@@ -34,7 +48,7 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   const [showAddConfirm, setShowAddConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  //ConsultaionState
+  // Consultation Type
   const [consultationType, setConsultationType] = useState("first");
   const consultationFee = consultationType === "first" ? 250 : 350;
 
@@ -61,19 +75,7 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   useEffect(() => {
     fetchDoctors();
     fetchServices();
-    checkExistingRecords();
   }, [patientId]);
-
-  const checkExistingRecords = async () => {
-    try {
-      const res = await api.get(`/document/patient/${patientId}`);
-      if (res.data?.success && res.data.data?.length > 0) {
-        setHasExistingRecords(true);
-      }
-    } catch (err) {
-      console.error("Error checking existing records:", err);
-    }
-  };
 
   const fetchDoctors = async () => {
     try {
@@ -96,27 +98,28 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   };
 
   const getServicesByCategory = (category) => {
-  return allServices.filter(
-    (service) => service.category.toLowerCase() === category.toLowerCase()
-  );
-};
+    return allServices.filter(
+      (service) => service.category.toLowerCase() === category.toLowerCase()
+    );
+  };
+
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
     setSelectedServiceId("");
   };
 
   const handleAddServiceClick = () => {
-  if (!selectedServiceId) return;
+    if (!selectedServiceId) return;
 
-  const service = allServices.find(
-    (s) => String(s.id) === String(selectedServiceId)
-  );
+    const service = allServices.find(
+      (s) => String(s.id) === String(selectedServiceId)
+    );
 
-  if (service) {
-    handleAddService(service);
-    setSelectedServiceId("");
-  }
-};
+    if (service) {
+      handleAddService(service);
+      setSelectedServiceId("");
+    }
+  };
 
   const handleAddService = (service) => {
     const existing = selectedServices.find((s) => s.serviceId === service.id);
@@ -154,44 +157,37 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     );
   };
 
-  const calculateServicesTotal = () =>
-  selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
+  // CALCULATION FUNCTIONS
+  const calculateServicesSubtotal = () =>
+    selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
 
-  const getDiscountPercentage = () => {
-    if (discountType === "senior_pwd") return 20;
-    if (discountType === "other" && customDiscount) {
-      const val = parseFloat(customDiscount);
-      return val >= 1 && val <= 100 ? val : 0;
+  const calculateDiscountAmount = (subtotal) => {
+    if (isSeniorPwdDiscount) {
+      return subtotal * 0.2; // 20% Senior/PWD discount
+    } else if (customDiscountRate > 0) {
+      return subtotal * (customDiscountRate / 100);
     }
     return 0;
   };
 
+  const calculateServicesTotal = () => {
+    const subtotal = calculateServicesSubtotal();
+    const discount = calculateDiscountAmount(subtotal);
+    return subtotal - discount;
+  };
+
+  const calculateTotalBill = () => {
+    return calculateServicesTotal() + consultationFee;
+  };
+
+  // Calculations
+  const servicesSubtotal = calculateServicesSubtotal();
+  const effectiveDiscountRate = isSeniorPwdDiscount ? 20 : customDiscountRate;
+  const discountAmount = calculateDiscountAmount(servicesSubtotal);
   const servicesTotal = calculateServicesTotal();
-  const discountPercent = getDiscountPercentage();
-  const discountAmount = ((servicesTotal + consultationFee) * discountPercent) / 100;
-  const totalBeforeDiscount = servicesTotal + consultationFee;
-  const totalAmount = totalBeforeDiscount - discountAmount;
-
-  const partialPaymentAmount = parseFloat(partialPayment) || 0;
-  const amountPaid =
-  paymentStatus === "paid"
-    ? totalAmount
-    : paymentStatus === "partially_paid"
-    ? partialPaymentAmount
-    : 0;
-  const balance = Math.max(totalAmount - amountPaid, 0);
-
-  // Auto-update payment status
-  useEffect(() => {
-  if (
-    paymentStatus === "partially_paid" &&
-    partialPaymentAmount >= totalAmount &&
-    partialPaymentAmount > 0
-  ) {
-    setPaymentStatus("paid");
-    setPartialPayment("");
-  }
-}, [partialPaymentAmount, totalAmount, paymentStatus]);
+  const totalAmount = calculateTotalBill();
+  const initialPayment = parseFloat(initialPaymentAmount) || 0;
+  const balance = Math.max(totalAmount - initialPayment, 0);
 
   const hasAtLeastOneMedicalField = assessment || diagnosis || treatment || prescription;
 
@@ -202,11 +198,10 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     setPrescription("");
     setSelectedServices([]);
     setAdmittedById("");
-    setPaymentOption("cash");
-    setDiscountType("none");
-    setCustomDiscount("");
-    setPaymentStatus("unpaid");
-    setPartialPayment("");
+    setPaymentMethod("cash");
+    setIsSeniorPwdDiscount(false);
+    setCustomDiscountRate(0);
+    setInitialPaymentAmount("");
     setSelectedCategory("");
     setSelectedServiceId("");
     setError(null);
@@ -220,6 +215,12 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
       if (!hasAtLeastOneMedicalField) {
         setError("Please fill at least one medical field (Assessment, Diagnosis, Treatment, or Prescription).");
+        setLoading(false);
+        return;
+      }
+
+      if (selectedServices.length === 0) {
+        setError("Please add at least one service.");
         setLoading(false);
         return;
       }
@@ -239,27 +240,20 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
       const medicalDocumentationId = docRes.data.data.id;
 
-      // 2) Create bill with all services including consultation fee
-      const allBilledServices = [
-        ...selectedServices.map((s) => ({
-          serviceId: s.serviceId,
-          serviceName: s.serviceName,
-          quantity: s.quantity,
-          price: s.price,
-        })),
-      ];
-
+      // 2) Create bill matching backend expectations
       const billPayload = {
         medicalDocumentationId,
-        services: allBilledServices,
-        paymentOption,
-        discountType: discountType === "none" ? null : discountType,
-        discountPercent: discountPercent > 0 ? discountPercent : null,
-        discountAmount: discountAmount > 0 ? discountAmount : null,
-        paymentStatus,
-        totalAmount,
-        amountPaid,
-        balance: balance > 0 ? balance : 0,
+        services: selectedServices.map((s) => ({
+          serviceId: s.serviceId,
+          quantity: s.quantity,
+        })),
+        consultationFee: consultationType === "first" ? null : 350,
+        isSeniorPwdDiscountApplied: isSeniorPwdDiscount,
+        discountRate: effectiveDiscountRate,
+        ...(initialPaymentAmount && {
+          initialPaymentAmount: initialPayment,
+          paymentMethod,
+        }),
       };
 
       const billRes = await api.post("/bills/create-medical-bill", billPayload);
@@ -440,203 +434,187 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
               <div className="lms-billing-divider-addrecord"></div>
 
               <div className="lms-billing-grid-addrecord">
-                {/* Payment Option */}
+                {/* Payment Method */}
                 <div className="lms-billing-col-addrecord">
-                  <label className="lms-billing-label-addrecord">Payment Option</label>
+                  <label className="lms-billing-label-addrecord">Payment Method</label>
                   <div className="lms-radio-stack-addrecord">
                     <label className="lms-radio-item-addrecord">
                       <input
                         type="radio"
                         value="cash"
-                        checked={paymentOption === "cash"}
-                        onChange={(e) => setPaymentOption(e.target.value)}
+                        checked={paymentMethod === "cash"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
                       />
                       <span>Cash</span>
                     </label>
                     <label className="lms-radio-item-addrecord">
                       <input
                         type="radio"
+                        value="card"
+                        checked={paymentMethod === "card"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
+                      <span>Card</span>
+                    </label>
+                    <label className="lms-radio-item-addrecord">
+                      <input
+                        type="radio"
                         value="gcash"
-                        checked={paymentOption === "gcash"}
-                        onChange={(e) => setPaymentOption(e.target.value)}
+                        checked={paymentMethod === "gcash"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
                       />
                       <span>GCash</span>
                     </label>
                   </div>
                 </div>
 
-                {/* Discount */}
+                {/* Consultation Type */}
                 <div className="lms-billing-col-addrecord">
-                  <label className="lms-billing-label-addrecord">Discount</label>
-                  <div className="lms-discount-stack-addrecord">
-                    <select 
-                      className="lms-select-small-addrecord" 
-                      value={discountType} 
-                      onChange={(e) => {
-                        setDiscountType(e.target.value);
-                        if (e.target.value !== "other") setCustomDiscount("");
-                      }}
-                    >
-                      <option value="none">No Discount</option>
-                      <option value="senior_pwd">Senior/PWD (20%)</option>
-                      <option value="other">Other</option>
-                    </select>
-                    {discountType === "other" && (
+                  <label className="lms-billing-label-addrecord">Consultation Type</label>
+                  <div className="lms-radio-stack-addrecord">
+                    <label className="lms-radio-item-addrecord">
                       <input
-                        className="lms-input-small-addrecord"
-                        type="number"
-                        placeholder="1-100%"
-                        value={customDiscount}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || (parseFloat(val) >= 1 && parseFloat(val) <= 100)) {
-                            setCustomDiscount(val);
-                          }
-                        }}
-                        min="1"
-                        max="100"
+                        type="radio"
+                        value="first"
+                        checked={consultationType === "first"}
+                        onChange={(e) => setConsultationType(e.target.value)}
                       />
+                      <span>1st Consultation (₱250)</span>
+                    </label>
+                    <label className="lms-radio-item-addrecord">
+                      <input
+                        type="radio"
+                        value="follow_up"
+                        checked={consultationType === "follow_up"}
+                        onChange={(e) => setConsultationType(e.target.value)}
+                      />
+                      <span>Follow Up (₱350)</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Discount (applies to services only) */}
+                <div className="lms-billing-col-addrecord">
+                  <label className="lms-billing-label-addrecord">Discount (Services Only)</label>
+                  <div className="lms-discount-stack-addrecord">
+                    <label className="lms-checkbox-item-addrecord">
+                      <input
+                        type="checkbox"
+                        checked={isSeniorPwdDiscount}
+                        onChange={(e) => {
+                          setIsSeniorPwdDiscount(e.target.checked);
+                          if (e.target.checked) setCustomDiscountRate(0);
+                        }}
+                      />
+                      <span>Senior/PWD (20%)</span>
+                    </label>
+
+                    {!isSeniorPwdDiscount && (
+                      <div>
+                        <label>Custom Discount %</label>
+                        <input
+                          className="lms-input-small-addrecord"
+                          type="number"
+                          placeholder="0-100"
+                          value={customDiscountRate}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setCustomDiscountRate(Math.max(0, Math.min(100, val)));
+                          }}
+                          min="0"
+                          max="100"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Consultation Type */}
-<div className="lms-billing-col-addrecord">
-  <label className="lms-billing-label-addrecord">Consultation Type</label>
-  <div className="lms-radio-stack-addrecord">
-    <label className="lms-radio-item-addrecord">
-      <input
-        type="radio"
-        value="first"
-        checked={consultationType === "first"}
-        onChange={(e) => setConsultationType(e.target.value)}
-      />
-      <span>1st Consultation (₱250)</span>
-    </label>
-    <label className="lms-radio-item-addrecord">
-      <input
-        type="radio"
-        value="follow_up"
-        checked={consultationType === "follow_up"}
-        onChange={(e) => setConsultationType(e.target.value)}
-      />
-      <span>Follow Up (₱350)</span>
-    </label>
-  </div>
-</div>
-
-                {/* Payment Status */}
+                {/* Initial Payment */}
                 <div className="lms-billing-col-addrecord">
-                  <label className="lms-billing-label-addrecord">Payment Status</label>
-                  <div className="lms-status-stack-addrecord">
-                    <select 
-                      className="lms-select-small-addrecord" 
-                      value={paymentStatus} 
-                      onChange={(e) => {
-                        setPaymentStatus(e.target.value);
-                        if (e.target.value !== "partially_paid") setPartialPayment("");
-                      }}
-                    >
-                      <option value="unpaid">Unpaid</option>
-                      <option value="paid">Paid</option>
-                      <option value="partially_paid">Partially Paid</option>
-                    </select>
-                    {paymentStatus === "partially_paid" && (
-                      <input
-                        className="lms-input-small-addrecord"
-                        type="number"
-                        placeholder="Enter amount"
-                        value={partialPayment}
-                        onChange={(e) => setPartialPayment(e.target.value)}
-                        min="0"
-                        step="0.01"
-                      />
-                    )}
-                  </div>
+                  <label className="lms-billing-label-addrecord">Initial Payment (Optional)</label>
+                  <input
+                    className="lms-input-small-addrecord"
+                    type="number"
+                    placeholder="0.00"
+                    value={initialPaymentAmount}
+                    onChange={(e) => setInitialPaymentAmount(e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
                 </div>
               </div>
 
               {/* Receipt Summary */}
               <div className="lms-receipt-box-addrecord">
-  <div className="lms-receipt-title-addrecord">RECEIPT</div>
+                <div className="lms-receipt-title-addrecord">RECEIPT</div>
 
-  {selectedServices.length === 0 && consultationFee === 0 ? (
-    <div className="lms-receipt-empty-addrecord">
-      <p>No services added yet</p>
-    </div>
-  ) : (
-    <>
-      {/* Consultation Fee */}
-      <div className="lms-receipt-row-addrecord">
-        <span>
-          {consultationType === "first" ? "1st Consultation" : "Follow Up"} Fee:
-        </span>
-        <span>₱{consultationFee.toFixed(2)}</span>
-      </div>
+                {selectedServices.length === 0 ? (
+                  <div className="lms-receipt-empty-addrecord">
+                    <p>No services added yet</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Services */}
+                    {selectedServices.map((service) => (
+                      <div key={service.serviceId} className="lms-receipt-row-addrecord">
+                        <span>{service.serviceName} (x{service.quantity})</span>
+                        <span>₱{(service.price * service.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
 
-      {/* Services */}
-      {selectedServices.map((service) => (
-        <div key={service.serviceId} className="lms-receipt-row-addrecord">
-          <span>
-            {service.serviceName} (x{service.quantity})
-          </span>
-          <span>₱{(service.price * service.quantity).toFixed(2)}</span>
-        </div>
-      ))}
+                    <div className="lms-receipt-separator-addrecord"></div>
 
-      <div className="lms-receipt-separator-addrecord"></div>
+                    {/* Services Subtotal */}
+                    <div className="lms-receipt-row-addrecord">
+                      <span>Services Subtotal:</span>
+                      <span>₱{servicesSubtotal.toFixed(2)}</span>
+                    </div>
 
-      {/* Subtotal */}
-      <div className="lms-receipt-row-addrecord">
-        <span>Subtotal:</span>
-        <span>₱{totalBeforeDiscount.toFixed(2)}</span>
-      </div>
+                    {/* Discount (only on services) */}
+                    {effectiveDiscountRate > 0 && (
+                      <div className="lms-receipt-row-addrecord lms-discount-row-addrecord">
+                        <span>Discount ({isSeniorPwdDiscount ? "Senior/PWD 20%" : `${customDiscountRate}%`}):</span>
+                        <span>- ₱{discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
 
-      {/* Discount */}
-      {discountAmount > 0 && (
-        <div className="lms-receipt-row-addrecord lms-discount-row-addrecord">
-          <span>Discount ({discountPercent}%):</span>
-          <span>- ₱{discountAmount.toFixed(2)}</span>
-        </div>
-      )}
+                    {/* Services Total */}
+                    <div className="lms-receipt-row-addrecord">
+                      <span>Services Total:</span>
+                      <span>₱{servicesTotal.toFixed(2)}</span>
+                    </div>
 
-      {/* Partial / Paid / Unpaid */}
-      {paymentStatus === "partially_paid" && partialPaymentAmount > 0 && (
-        <>
-          <div className="lms-receipt-row-addrecord lms-paid-amount-row-addrecord">
-            <span>Amount Paid:</span>
-            <span>₱{amountPaid.toFixed(2)}</span>
-          </div>
-          <div className="lms-receipt-row-addrecord lms-balance-row-addrecord">
-            <span>Balance Due:</span>
-            <span>₱{balance.toFixed(2)}</span>
-          </div>
-        </>
-      )}
+                    {/* Consultation Fee (NOT discounted) */}
+                    <div className="lms-receipt-row-addrecord">
+                      <span>{consultationType === "first" ? "1st" : "Follow Up"} Consultation:</span>
+                      <span>₱{consultationFee.toFixed(2)}</span>
+                    </div>
 
-      {paymentStatus === "paid" && (
-        <div className="lms-receipt-row-addrecord lms-paid-status-row-addrecord">
-          <span>Status:</span>
-          <span>✓ FULLY PAID</span>
-        </div>
-      )}
+                    <div className="lms-receipt-separator-addrecord"></div>
 
-      {paymentStatus === "unpaid" && (
-        <div className="lms-receipt-row-addrecord lms-unpaid-status-row-addrecord">
-          <span>Status:</span>
-          <span>UNPAID</span>
-        </div>
-      )}
-    </>
-  )}
-</div>
+                    {/* Total Amount */}
+                    <div className="lms-receipt-row-addrecord lms-total-row-addrecord">
+                      <span><strong>TOTAL BILL:</strong></span>
+                      <span><strong>₱{totalAmount.toFixed(2)}</strong></span>
+                    </div>
+
+                    {/* Initial Payment */}
+                    {initialPayment > 0 && (
+                      <>
+                        <div className="lms-receipt-row-addrecord">
+                          <span>Initial Payment:</span>
+                          <span>- ₱{initialPayment.toFixed(2)}</span>
+                        </div>
+                        <div className="lms-receipt-row-addrecord lms-balance-row-addrecord">
+                          <span><strong>Balance Due:</strong></span>
+                          <span><strong>₱{balance.toFixed(2)}</strong></span>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Total Amount Display */}
-          <div className="lms-total-amount-display-addrecord">
-            <span className="lms-total-label-addrecord">TOTAL AMOUNT:</span>
-            <span className="lms-total-value-addrecord">₱{totalAmount.toFixed(2)}</span>
           </div>
 
           {/* Admitted By */}
@@ -664,7 +642,7 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
             <button
               className="lms-submit-btn-addrecord"
               onClick={() => setShowAddConfirm(true)}
-              disabled={loading}
+              disabled={loading || selectedServices.length === 0}
             >
               Add Record
             </button>

@@ -67,6 +67,10 @@ export const createMedicalBillSchema = Type.Object({
       description: "Optional notes (payment arrangements, discounts, etc.)",
     })
   ),
+
+  consultationFee: Type.Optional(
+    Type.Union([Type.Number(), Type.Null()]) // only accepts either 250 or 350.
+  ),
   
   initialPaymentAmount: Type.Optional(
     Type.Number({
@@ -206,6 +210,7 @@ export type getMedicalBillResponseType = Static<typeof getMedicalBillResponseSch
 export const createMedicalBillServiceInputSchema = Type.Object({
   medicalDocumentationId: Type.String(),
   services: Type.Array(billedServiceItemSchema),
+  consultationFee: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
   notes: Type.Union([Type.String(), Type.Null()]),
   initialPaymentAmount: Type.Optional(Type.Number({ minimum: 0 })),
   paymentMethod: Type.Optional(Type.String()),
