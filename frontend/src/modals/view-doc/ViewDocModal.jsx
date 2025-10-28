@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../axios/api";
-
 import "./ViewDocModal.css";
+import { jsPDF } from "jspdf";
 
 const ViewMedicalDocModal = ({ docId, onClose }) => {
   const [docData, setDocData] = useState(null);
@@ -37,21 +37,6 @@ const ViewMedicalDocModal = ({ docId, onClose }) => {
     };
   }, [docId]);
 
-  const formatDateTime = (iso) => {
-    if (!iso) return "N/A";
-    try {
-      return new Date(iso).toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return iso;
-    }
-  };
-
   const formatDate = (iso) => {
     if (!iso) return "N/A";
     try {
@@ -67,18 +52,142 @@ const ViewMedicalDocModal = ({ docId, onClose }) => {
 
   const formatCurrency = (amt) => {
     const n = Number(amt || 0);
-    return "₱ " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return "₱" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+const handleDownloadPDF = () => {
+  if (!docData) return;
+
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: [279.4, 215.9], // Letter size in mm
+  });
+
+  const maxWidth = 135; // Half of page width
+  const marginLeft = 15;
+  let y = 20;
+
+  // --- HEADER ---
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(18);
+  pdf.text("Leonardo Medical Services", marginLeft + maxWidth / 2, y, { align: "center" });
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  y += 6;
+  pdf.text("B1 L17, F. Novaliches, Bagumbong, Caloocan City", marginLeft + maxWidth / 2, y, {
+    align: "center",
+  });
+
+  // Divider line
+  y += 4;
+  pdf.setLineWidth(0.4);
+  pdf.line(marginLeft, y, marginLeft + maxWidth - 5, y);
+
+  // --- PATIENT INFO ---
+  y += 8;
+  pdf.setFontSize(8);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Name:", marginLeft, y);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.text(`${patientFullName}`, marginLeft + 20, y); // closer to label
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8);
+  pdf.text("Date:", marginLeft + maxWidth - 70, y);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.text(`${formatDate(docData.createdAt)}`, marginLeft + maxWidth - 50, y); // closer spacing
+
+  // Divider line
+  y += 6;
+  pdf.setLineWidth(0.4);
+  pdf.line(marginLeft, y, marginLeft + maxWidth - 5, y);
+
+  // --- BILLING TITLE ---
+  y += 8;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(14);
+  pdf.text("Billing Summary", marginLeft + maxWidth / 2, y, { align: "center" });
+  y += 6;
+
+  // --- BILLING DETAILS ---
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(11);
+
+  if (bill && services.length > 0) {
+    services.forEach((service) => {
+      pdf.text(
+        `${service.serviceName} ${service.quantity > 1 ? `(x${service.quantity})` : ""}`,
+        marginLeft + 5,
+        y
+      );
+      pdf.text(`${formatCurrency(service.subtotal)}`, marginLeft + maxWidth - 15, y, {
+        align: "right",
+      });
+      y += 6;
+    });
+
+    pdf.setLineWidth(0.4);
+    pdf.line(marginLeft, y, marginLeft + maxWidth - 10, y);
+    y += 6;
+
+    pdf.text(`Subtotal: ${formatCurrency(subtotal)}`, marginLeft + 5, y);
+    y += 6;
+
+    if (discountAmount > 0) {
+      pdf.text(`Discount (${discountPercent}%): -${formatCurrency(discountAmount)}`, marginLeft + 5, y);
+      y += 6;
+    }
+
+    pdf.text(`TOTAL AMOUNT: ${formatCurrency(totalAmount)}`, marginLeft + 5, y);
+    y += 6;
+
+    if (paymentStatus === "partially_paid" && amountPaid > 0) {
+      pdf.text(`Amount Paid: ${formatCurrency(amountPaid)}`, marginLeft + 5, y);
+      y += 6;
+      pdf.text(`Balance Due: ${formatCurrency(balance)}`, marginLeft + 5, y);
+      y += 6;
+    }
+
+    pdf.text(`Payment Method: ${paymentOption === "gcash" ? "GCash" : "Cash"}`, marginLeft + 5, y);
+    y += 6;
+
+    pdf.text(`Status: ${paymentStatus.toUpperCase()}`, marginLeft + 5, y);
+  } else {
+    pdf.text("No billing information available.", marginLeft + 5, y);
+  }
+
+  // --- FOOTER / SIGNATURE ---
+  y += 10;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(10);
+  pdf.text(`Admitted by: ${docData.admittedByName || "N/A"}`, marginLeft, y);
+
+  y += 25;
+  const sigLineWidth = 60;
+  const sigX = marginLeft;
+  pdf.setLineWidth(0.4);
+  pdf.line(sigX, y, sigX + sigLineWidth, y);
+
+  y += 6;
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Authorized Signature", sigX + sigLineWidth / 2, y, { align: "center" });
+  pdf.setFont("helvetica", "normal");
+
+  pdf.save(`${patientFullName || "Medical_Document"}.pdf`);
+};
+
 
   if (loading) {
     return (
-      <div className="modal-overlay">
-        <div className="modal-content-medical">
-          <p className="loading-text">Loading medical documentation...</p>
+      <div className="vmd-modal-overlay-wrapper">
+        <div className="vmd-modal-content-box">
+          <p className="vmd-loading-text-display">Loading medical documentation...</p>
         </div>
       </div>
     );
@@ -86,10 +195,10 @@ const ViewMedicalDocModal = ({ docId, onClose }) => {
 
   if (error || !docData) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content-medical" onClick={(e) => e.stopPropagation()}>
-          <button className="close-modal-btn" onClick={onClose} aria-label="Close">✕</button>
-          <div className="error-state">{error || "Medical documentation not found"}</div>
+      <div className="vmd-modal-overlay-wrapper" onClick={onClose}>
+        <div className="vmd-modal-content-box" onClick={(e) => e.stopPropagation()}>
+          <button className="vmd-close-button-top" onClick={onClose} aria-label="Close">✕</button>
+          <div className="vmd-error-state-message">{error || "Medical documentation not found"}</div>
         </div>
       </div>
     );
@@ -99,152 +208,201 @@ const ViewMedicalDocModal = ({ docId, onClose }) => {
   const bill = docData.medicalBill || null;
   const services = bill?.billedServices || [];
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content-medical" onClick={(e) => e.stopPropagation()}>
-        {/* Header (logo removed) */}
-        <div className="medical-doc-header">
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <h1 style={{ margin: 0, color: "#7a0000", fontSize: 18, fontWeight: 700 }}>
-              LEONARDO MEDICAL SERVICES
-            </h1>
-            <p style={{ margin: "4px 0 0 0", fontSize: 11, color: "#666" }}>
-              B1 L17, F. Novaliches, Bagumbong, Caloocan City
-            </p>
-          </div>
+  const patientFullName = `${patient.firstName || ""} ${patient.middleName ? patient.middleName + " " : ""}${patient.lastName || ""}`.trim();
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="print-btn" onClick={handlePrint}>PRINT</button>
-            <button className="close-modal-btn" onClick={onClose} aria-label="Close">✕</button>
+  // Calculate billing amounts from bill data
+  const totalAmount = Number(bill?.totalAmount || 0);
+  const amountPaid = Number(bill?.amountPaid || 0);
+  const balance = Number(bill?.balance || 0);
+  const discountAmount = Number(bill?.discountAmount || 0);
+  const discountPercent = Number(bill?.discountPercent || 0);
+  const paymentStatus = bill?.paymentStatus || "unpaid";
+  const paymentOption = bill?.paymentOption || "cash";
+
+  // Calculate services total and subtotal
+  const servicesTotal = services.reduce((sum, s) => sum + Number(s.subtotal || 0), 0);
+  const subtotal = totalAmount + discountAmount; // Subtotal before discount
+
+  return (
+    <div className="vmd-modal-overlay-wrapper" onClick={onClose}>
+      <div className="vmd-modal-content-box" onClick={(e) => e.stopPropagation()}>
+        {/* Top Header with Logo and Close Button */}
+        <div className="vmd-top-header-container">
+          <div className="vmd-logo-center-box">
+            
+            <div className="vmd-logo-text-block">
+              <h1 className="vmd-clinic-name-title">Leonardo Medical Services</h1>
+              <center><p className="vmd-clinic-address-text">B1 L17, F. Novaliches, Bagumbong, Caloocan City</p></center>
+            </div>
+          </div>
+          <button className="vmd-close-button-top" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        {/* Patient Name and Date Container */}
+        <div className="vmd-patient-date-container">
+          <div className="vmd-patient-name-left">
+            <label className="vmd-label-text-bold">Patient's Name:</label>
+            <span className="vmd-patient-name-value">{patientFullName}</span>
+          </div>
+          <div className="vmd-date-right">
+            <label className="vmd-label-text-bold">Date:</label>
+            <span className="vmd-date-value">{formatDate(docData.createdAt)}</span>
           </div>
         </div>
 
-        <div className="medical-doc-body">
-          {/* Patient Info */}
-          <div className="patient-info-header">
-            <h3>Patient's Name:</h3>
-            <p className="patient-full-name">
-              {`${patient.firstName || ""} ${patient.middleName ? patient.middleName + " " : ""}${patient.lastName || ""}`.trim()}
-            </p>
-            <div className="patient-mini-info">
-              <span>Date: {formatDate(docData.createdAt)}</span>
-            </div>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="doc-two-column">
-            {/* Left Column - Medical Notes */}
-            <div className="medical-notes-section">
-              <div className="notes-card">
-                {/* Removed logo block here */}
-
-                <div className="notes-content">
-                  {/* Patient name duplicate removed */}
-
-                  <div className="note-section">
-                    <label>Assessment:</label>
-                    <div className="note-text">{docData.assessment || "No assessment provided"}</div>
-                  </div>
-
-                  <div className="note-section">
-                    <label>Diagnosis:</label>
-                    <div className="note-text">{docData.diagnosis || "No diagnosis provided"}</div>
-                  </div>
-
-                  <div className="note-section">
-                    <label>Treatment:</label>
-                    <div className="note-text">{docData.treatment || "No treatment provided"}</div>
-                  </div>
-
-                  <div className="note-section">
-                    <label>Prescription:</label>
-                    <div className="note-text">{docData.prescription || "No prescription provided"}</div>
-                  </div>
-                </div>
+        {/* Main Content: Assessment Left, Billing Right */}
+        <div className="vmd-main-content-grid">
+          {/* Left Side - Assessment Container */}
+          <div className="vmd-assessment-container-left">
+            <div className="vmd-medical-field-box">
+              <label className="vmd-field-label-text">Assessment</label>
+              <div className="vmd-field-content-readonly">
+                {docData.assessment || "No assessment provided"}
               </div>
             </div>
 
-            {/* Right Column - Billing */}
-            <div className="billing-section">
-              <div className="billing-card">
-                {/* Removed small logo block here */}
+            <div className="vmd-medical-field-box">
+              <label className="vmd-field-label-text">Diagnosis</label>
+              <div className="vmd-field-content-readonly">
+                {docData.diagnosis || "No diagnosis provided"}
+              </div>
+            </div>
 
-                {bill ? (
-                  <>
-                    <div className="billing-services">
-                      <div className="service-row service-header">
-                        <span>Services</span>
-                        <span className="align-right">Amount</span>
-                      </div>
+            <div className="vmd-medical-field-box">
+              <label className="vmd-field-label-text">Treatment</label>
+              <div className="vmd-field-content-readonly">
+                {docData.treatment || "No treatment provided"}
+              </div>
+            </div>
 
-                      {services.length === 0 && (
-                        <div className="no-billing"><p>No billed services available</p></div>
-                      )}
+            <div className="vmd-medical-field-box">
+              <label className="vmd-field-label-text">Prescription</label>
+              <div className="vmd-field-content-readonly">
+                {docData.prescription || "No prescription provided"}
+              </div>
+            </div>
+          </div>
 
-                      {services.map((s) => (
-                        <div key={s.id} className="service-row service-item">
-                          <span>{s.serviceName}{s.quantity ? ` x${s.quantity}` : ""}</span>
-                          <span className="align-right">{formatCurrency(s.subtotal)}</span>
-                        </div>
-                      ))}
-                    </div>
+          {/* Right Side - Billing Receipt Container */}
+          <div className="vmd-billing-container-right">
+            <div className="vmd-billing-header-logo">
+            <h2 className="vmd-billing-clinic-title">Leonardo Medical Services</h2>
+            <p className="vmd-billing-subtitle">B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+            </div>
 
-                    <div className="billing-summary">
-                      <div className="summary-row">
-                        <span>Total Amount:</span>
-                        <span className="amount-value">{formatCurrency(bill.totalAmount)}</span>
-                      </div>
-                      <div className="summary-row">
-                        <span>Amount Paid:</span>
-                        <span className="amount-value">{formatCurrency(bill.amountPaid)}</span>
-                      </div>
-                      <div className="summary-row">
-                        <span>Balance:</span>
-                        <span className="amount-value">{formatCurrency(bill.balance)}</span>
-                      </div>
-                      <div className="summary-row">
-                        <span>Status:</span>
-                        <span className="status-value">{bill.paymentStatus ?? docData.status ?? "unpaid"}</span>
-                      </div>
-                      <div className="summary-row">
-                        <span>Payment Method:</span>
-                        <span className="payment-value">Cash</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="no-billing">
-                    <p>No billing information available</p>
+            {bill ? (
+              <div className="vmd-receipt-content">
+                {/* Services List */}
+                {services.map((service) => (
+                  <div key={service.id} className="vmd-receipt-row-item">
+                    <span className="vmd-receipt-label">
+                      {service.serviceName} {service.quantity > 1 ? `(x${service.quantity})` : ""}:
+                    </span>
+                    <span className="vmd-receipt-value">{formatCurrency(service.subtotal)}</span>
+                  </div>
+                ))}
+
+                {services.length > 0 && <div className="vmd-receipt-separator-line"></div>}
+
+                {/* Subtotal */}
+                <div className="vmd-receipt-row-item">
+                  <span className="vmd-receipt-label">Subtotal:</span>
+                  <span className="vmd-receipt-value">{formatCurrency(subtotal)}</span>
+                </div>
+
+                {/* Discount */}
+                {discountAmount > 0 && (
+                  <div className="vmd-receipt-row-item vmd-discount-row">
+                    <span className="vmd-receipt-label">Discount ({discountPercent}%):</span>
+                    <span className="vmd-receipt-value">- {formatCurrency(discountAmount)}</span>
                   </div>
                 )}
 
-                {/* Removed duplicate PRINT from here */}
+                <div className="vmd-receipt-separator-line"></div>
+
+                {/* Total Amount */}
+                <div className="vmd-receipt-row-item vmd-total-row">
+                  <span className="vmd-receipt-label">TOTAL AMOUNT:</span>
+                  <span className="vmd-receipt-value vmd-total-value">{formatCurrency(totalAmount)}</span>
+                </div>
+
+                {/* Payment Status Details */}
+                {paymentStatus === "partially_paid" && amountPaid > 0 && (
+                  <>
+                    <div className="vmd-receipt-row-item vmd-paid-amount-row">
+                      <span className="vmd-receipt-label">Amount Paid:</span>
+                      <span className="vmd-receipt-value">{formatCurrency(amountPaid)}</span>
+                    </div>
+                    <div className="vmd-receipt-row-item vmd-balance-row">
+                      <span className="vmd-receipt-label">Balance Due:</span>
+                      <span className="vmd-receipt-value">{formatCurrency(balance)}</span>
+                    </div>
+                  </>
+                )}
+
+                {paymentStatus === "paid" && (
+                  <div className="vmd-receipt-row-item vmd-paid-status-row">
+                    <span className="vmd-receipt-label">Status:</span>
+                    <span className="vmd-receipt-value vmd-status-paid">✓ FULLY PAID</span>
+                  </div>
+                )}
+
+                {paymentStatus === "unpaid" && (
+                  <div className="vmd-receipt-row-item vmd-unpaid-status-row">
+                    <span className="vmd-receipt-label">Status:</span>
+                    <span className="vmd-receipt-value vmd-status-unpaid">UNPAID</span>
+                  </div>
+                )}
+
+                <div className="vmd-receipt-separator-line"></div>
+
+                {/* Payment Method */}
+                <div className="vmd-receipt-row-item">
+                  <span className="vmd-receipt-label">Payment Method:</span>
+                  <span className="vmd-receipt-value">
+                    {paymentOption === "gcash" ? "GCash" : "Cash"}
+                  </span>
+                </div>
+
+               
               </div>
-            </div>
+            ) : (
+              <div className="vmd-no-billing-message">
+                <p>No billing information available</p>
+              </div>
+            )}
           </div>
 
-          {/* Footer Info */}
-          <div className="doc-footer-info">
-            <div className="footer-item">
-              <label>Created By:</label>
-              <span>{docData.createdByName ?? "N/A"} ({docData.createdByRole ?? "N/A"})</span>
-            </div>
-            {docData.admittedByName && (
-              <div className="footer-item">
-                <label>Admitted By:</label>
-                <span>{docData.admittedByName}</span>
-              </div>
-            )}
-            {docData.lastUpdatedByName && (
-              <div className="footer-item">
-                <label>Last Updated By:</label>
-                <span>{docData.lastUpdatedByName} ({docData.lastUpdatedByRole ?? ""})</span>
-              </div>
-            )}
-            <div className="footer-item">
-              <label>Last Updated:</label>
-              <span>{formatDate(docData.updatedAt)}</span>
-            </div>
+             {/* Print Button */}
+          <div className="vmd-print-button-container">
+          <button className="vmd-print-button-receipt" onClick={handleDownloadPDF}>
+           DOWNLOAD PDF
+          </button>
+          </div>
+
+        </div>
+
+        
+
+        {/* Bottom Footer: Admitted By, Created By, Last Updated */}
+        <div className="vmd-footer-info-container">
+          <div className="vmd-footer-info-item">
+            <label className="vmd-footer-label-text">Admitted by:</label>
+            <span className="vmd-footer-value-text">
+              {docData.admittedByName || "N/A"}
+            </span>
+          </div>
+          <div className="vmd-footer-info-item">
+            <label className="vmd-footer-label-text">Created by:</label>
+            <span className="vmd-footer-value-text">
+              {docData.createdByName || "N/A"} ({docData.createdByRole || "N/A"})
+            </span>
+          </div>
+          <div className="vmd-footer-info-item">
+            <label className="vmd-footer-label-text">Last Updated:</label>
+            <span className="vmd-footer-value-text">
+              {formatDate(docData.updatedAt)}
+            </span>
           </div>
         </div>
       </div>
