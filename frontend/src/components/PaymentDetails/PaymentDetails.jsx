@@ -1,19 +1,56 @@
-
-import { useState } from 'react';
-import './PaymentDetails.css'
+import { useState, useEffect } from "react";
+import "./PaymentDetails.css";
+import api from '../../axios/api';
 
 export default function PaymentDetails() {
   const [records, setRecords] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
-  const [updateStatus, setUpdateStatus] = useState('');
-  const [partialAmount, setPartialAmount] = useState('');
+  const [updateStatus, setUpdateStatus] = useState("");
+  const [partialAmount, setPartialAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
-  const statusOptions = ['Partially Paid', 'Unpaid', 'Paid'];
+  const statusOptions = ["Partially Paid", "Unpaid", "Paid"];
+  const paymentMethods = ["cash", "card", "gcash", "insurance", "bank_transfer"];
+
+  // Fetch unsettled bills from API
+  useEffect(() => {
+    fetchUnsettledBills();
+  }, []);
+
+  const fetchUnsettledBills = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await api.get('/bills/get-unsettled-bills');
+      
+      // Access the data property from the response
+      const billsData = response.data.data;
+      
+      // Ensure we have an array
+      if (Array.isArray(billsData)) {
+        setRecords(billsData);
+      } else {
+        console.error('Expected array but got:', billsData);
+        setRecords([]);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to fetch bills');
+      console.error('Error fetching bills:', err);
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleViewClick = (record) => {
     setSelectedRecord(record);
@@ -23,616 +60,515 @@ export default function PaymentDetails() {
   const handleUpdateClick = (record) => {
     setSelectedRecord(record);
     setUpdateStatus(record.paymentStatus);
-    setPartialAmount('');
+    setPartialAmount("");
+    setPaymentMethod("cash");
+    setNotes("");
     setShowUpdateModal(true);
   };
 
-  const handleSaveUpdate = () => {
+  const handleSaveUpdate = async () => {
     if (selectedRecord && updateStatus) {
-      setRecords(records.map(r => 
-        r.id === selectedRecord.id 
-          ? { ...r, paymentStatus: updateStatus, partialAmount: partialAmount }
-          : r
-      ));
-      setShowUpdateModal(false);
-      setSelectedRecord(null);
-      setUpdateStatus('');
-      setPartialAmount('');
+      setProcessingPayment(true);
+      setError(null);
+      
+      try {
+        // Calculate payment amount based on selection
+        let paymentAmount;
+        if (updateStatus === "Paid") {
+          paymentAmount = selectedRecord.balance;
+        } else if (updateStatus === "Partially Paid") {
+          paymentAmount = parseFloat(partialAmount);
+        } else {
+          paymentAmount = 0.01; // API requires minimum 0.01
+        }
+
+        // Validate payment amount
+        if (updateStatus === "Partially Paid") {
+          if (!partialAmount || parseFloat(partialAmount) <= 0) {
+            setError("Partial payment amount must be greater than 0");
+            setProcessingPayment(false);
+            return;
+          }
+          if (parseFloat(partialAmount) > (selectedRecord.balance || 0)) {
+            setError("Payment amount cannot exceed remaining balance");
+            setProcessingPayment(false);
+            return;
+          }
+        }
+
+        console.log("Payment calculation:", {
+          updateStatus,
+          balance: selectedRecord.balance,
+          partialAmount,
+          finalPaymentAmount: paymentAmount
+        });
+
+        // Prepare payment data according to the API schema
+        const paymentData = {
+          medicalBillId: selectedRecord.id,
+          paymentAmount: paymentAmount,
+          paymentMethod: paymentMethod,
+          notes: notes.trim() || undefined
+        };
+
+        console.log("Sending payment data to API:", paymentData);
+
+        // Use axios for the update call
+        const response = await api.post('/bills/update-payment', paymentData);
+        console.log("API Response:", response.data);
+
+        // Refresh the data
+        await fetchUnsettledBills();
+        setShowUpdateModal(false);
+        setSelectedRecord(null);
+        setUpdateStatus("");
+        setPartialAmount("");
+        setPaymentMethod("cash");
+        setNotes("");
+        
+      } catch (err) {
+        console.error('Full error object:', err);
+        console.error('Error response:', err.response);
+        console.error('Error message:', err.message);
+        console.error('Error data:', err.response?.data);
+        
+        const errorMessage = err.response?.data?.message || 
+                           err.response?.data?.error || 
+                           err.message || 
+                           'Failed to update payment';
+        
+        setError(errorMessage);
+      } finally {
+        setProcessingPayment(false);
+      }
     }
   };
 
-  const filteredRecords = records.filter(record => {
-    const matchesSearch = record.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !selectedStatus || record.paymentStatus === selectedStatus;
+  // Format patient name
+  const formatPatientName = (patient) => {
+    const { firstName, lastName, middleName } = patient;
+    return middleName ? `${firstName} ${middleName} ${lastName}` : `${firstName} ${lastName}`;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Format payment status for display
+  const formatPaymentStatus = (status) => {
+    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Format payment method for display
+  const formatPaymentMethod = (method) => {
+    return method.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  // Filter records based on search and status - with safety check
+  const filteredRecords = Array.isArray(records) ? records.filter(record => {
+    if (!record || !record.medicalDocumentation || !record.medicalDocumentation.patient) {
+      return false;
+    }
+    
+    const patientName = formatPatientName(record.medicalDocumentation.patient).toLowerCase();
+    const matchesSearch = patientName.includes(searchTerm.toLowerCase());
+    const formattedStatus = formatPaymentStatus(record.paymentStatus);
+    const matchesStatus = !selectedStatus || formattedStatus === selectedStatus;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
-  return (
-    <div className="min-h-screen bg-pink-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-8">
-          <div className="flex items-center gap-3">
-            <img src="logo.png" alt="LMS Logo" className="w-16 h-16" />
-            <div>
-              <h1 className="text-3xl font-bold text-red-700">LEONARDO MEDICAL SERVICES</h1>
-              <p className="text-red-600">B1 L17-E Neovista, Bagumbong, Caloocan City</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="flex gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-700"
-          />
-          <div className="relative">
-            <button
-              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-              className="px-6 py-2 border border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-700 min-w-[150px] text-left"
-            >
-              {selectedStatus || 'Status'}
-            </button>
-            {showStatusDropdown && (
-              <div className="absolute top-full mt-2 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                <div
-                  onClick={() => {
-                    setSelectedStatus('');
-                    setShowStatusDropdown(false);
-                  }}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  All Status
-                </div>
-                {statusOptions.map((status) => (
-                  <div
-                    key={status}
-                    onClick={() => {
-                      setSelectedStatus(status);
-                      setShowStatusDropdown(false);
-                    }}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {status}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Records Table */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-red-900 text-white">
-                <th className="px-6 py-4 text-left font-semibold">Name</th>
-                <th className="px-6 py-4 text-left font-semibold">Date</th>
-                <th className="px-6 py-4 text-left font-semibold">Payment Status</th>
-                <th className="px-6 py-4 text-left font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                    No payment records available.
-                  </td>
-                </tr>
-              ) : (
-                filteredRecords.map((record, index) => (
-                  <tr key={record.id} className={index % 2 === 0 ? 'bg-white' : 'bg-pink-100'}>
-                    <td className="px-6 py-4">{record.name}</td>
-                    <td className="px-6 py-4">{record.date}</td>
-                    <td className="px-6 py-4">{record.paymentStatus}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleViewClick(record)}
-                          className="px-4 py-1 bg-red-700 text-white rounded hover:bg-red-800"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleUpdateClick(record)}
-                          className="px-4 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                          Update
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* View Details Modal */}
-        {showViewModal && selectedRecord && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-              <div className="bg-red-700 text-white text-xl font-bold py-4 px-6 rounded-t-lg">
-                Details
-              </div>
-              
-              <div className="p-8 space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b-2 border-gray-300">
-                  <span className="font-bold">PROCEDURE</span>
-                  <span className="font-bold">FEES</span>
-                </div>
-
-                <div>
-                  <div className="font-semibold mb-2">Consultation</div>
-                  <div className="flex justify-between items-center pl-8 text-sm italic">
-                    <span>Standard Fee</span>
-                    <span>₱ 350</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="font-semibold mb-2">Laboratory</div>
-                  <div className="flex justify-between items-center pl-8 text-sm italic">
-                    <span>Urinalysis</span>
-                    <span>₱ 350</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="font-semibold mb-2">Injection</div>
-                  <div className="flex justify-between items-center pl-8 text-sm italic">
-                    <span>Anti-Rabies</span>
-                    <span>₱ 350</span>
-                  </div>
-                  <div className="flex justify-between items-center pl-8 text-sm italic">
-                    <span>Service Fee</span>
-                    <span>₱ 350</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-2">
-                  <span className="font-semibold">Payment Option:</span>
-                  <span>Cash</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Senior Discount: <input type="checkbox" className="ml-2" /></span>
-                  <div>
-                    <span className="font-semibold">Status:</span>
-                    <span className="ml-2 italic">{selectedRecord.paymentStatus}</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-2 border-t-2 border-gray-300 font-bold">
-                  <span>Total Amount</span>
-                  <span>₱ 350</span>
-                </div>
-              </div>
-
-              <div className="pb-6 text-center">
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="px-8 py-2 bg-white border-2 border-red-700 text-red-700 font-bold rounded hover:bg-red-50"
-                >
-                  Back
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Update Status Modal */}
-        {showUpdateModal && selectedRecord && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-              <div className="space-y-6">
-                <div>
-                  <label className="block font-semibold mb-2">Name:</label>
-                  <div className="text-lg">{selectedRecord.name}</div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-2">Date:</label>
-                  <div className="text-lg">{selectedRecord.date}</div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Unpaid"
-                      checked={updateStatus === 'Unpaid'}
-                      onChange={(e) => setUpdateStatus(e.target.value)}
-                      className="w-5 h-5"
-                    />
-                    <span className="text-lg">Unpaid</span>
-                  </label>
-
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Paid"
-                      checked={updateStatus === 'Paid'}
-                      onChange={(e) => setUpdateStatus(e.target.value)}
-                      className="w-5 h-5"
-                    />
-                    <span className="text-lg">Paid</span>
-                  </label>
-
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Partially Paid"
-                      checked={updateStatus === 'Partially Paid'}
-                      onChange={(e) => setUpdateStatus(e.target.value)}
-                      className="w-5 h-5"
-                    />
-                    <span className="text-lg">Partially Paid</span>
-                    {updateStatus === 'Partially Paid' && (
-                      <input
-                        type="text"
-                        value={partialAmount}
-                        onChange={(e) => setPartialAmount(e.target.value)}
-                        className="ml-2 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-700"
-                        placeholder="Amount"
-                      />
-                    )}
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-8 justify-center">
-                <button
-                  onClick={() => {
-                    setShowUpdateModal(false);
-                    setSelectedRecord(null);
-                    setUpdateStatus('');
-                    setPartialAmount('');
-                  }}
-                  className="px-8 py-2 bg-white border border-gray-400 text-gray-700 rounded hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveUpdate}
-                  className="px-8 py-2 bg-red-700 text-white rounded hover:bg-red-800"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+  if (loading) {
+    return (
+      <div className="payment-details-container">
+        <div className="loading-state">Loading payment records...</div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-//magkahiwalay  paymentdetails.jsx
-
-import { useState } from 'react';
-import './paymentdetails.css';
-
-export default function PaymentDetails() {
-  const [records, setRecords] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [updateStatus, setUpdateStatus] = useState('');
-  const [partialAmount, setPartialAmount] = useState('');
-
-  const statusOptions = ['Partially Paid', 'Unpaid', 'Paid'];
-
-  const handleViewClick = (record) => {
-    setSelectedRecord(record);
-    setShowViewModal(true);
-  };
-
-  const handleUpdateClick = (record) => {
-    setSelectedRecord(record);
-    setUpdateStatus(record.paymentStatus);
-    setPartialAmount('');
-    setShowUpdateModal(true);
-  };
-
-  const handleSaveUpdate = () => {
-    if (selectedRecord && updateStatus) {
-      setRecords(records.map(r => 
-        r.id === selectedRecord.id 
-          ? { ...r, paymentStatus: updateStatus, partialAmount: partialAmount }
-          : r
-      ));
-      setShowUpdateModal(false);
-      setSelectedRecord(null);
-      setUpdateStatus('');
-      setPartialAmount('');
-    }
-  };
-
-  const filteredRecords = records.filter(record => {
-    const matchesSearch = record.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !selectedStatus || record.paymentStatus === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
+  if (error) {
+    return (
+      <div className="payment-details-container">
+        <div className="error-state">Error: {error}</div>
+        <button onClick={fetchUnsettledBills} className="btn-retry">
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="payment-container">
-      <div className="payment-wrapper">
-        {/* Header */}
-        <div className="payment-header">
-          <div className="header-content">
-            <img src="logo.png" alt="LMS Logo" className="logo" />
-            <div>
-              <h1 className="header-title">LEONARDO MEDICAL SERVICES</h1>
-              <p className="header-subtitle">B1 L17-E Neovista, Bagumbong, Caloocan City</p>
-            </div>
-          </div>
-        </div>
+    <div className="payment-details-container">
+      {/* Universal Header */}
+      <div className="header">
+        <h1>LEONARDO MEDICAL SERVICES</h1>
+        <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+      </div>
 
-        {/* Search and Filter Bar */}
-        <div className="search-filter-bar">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <div className="filter-dropdown-wrapper">
-            <button
-              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-              className="filter-button"
-            >
-              {selectedStatus || 'Status'}
-            </button>
-            {showStatusDropdown && (
-              <div className="dropdown-menu">
+      {/* Page Title */}
+      <div className="payment-header">
+        <h1 className="payment-title">Payment Details</h1>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="filter-bar">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+
+        <div className="status-filter">
+          <button
+            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+            className="status-btn"
+          >
+            {selectedStatus || "All Status ▾"}
+          </button>
+          {showStatusDropdown && (
+            <div className="status-dropdown">
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  setSelectedStatus("");
+                  setShowStatusDropdown(false);
+                }}
+              >
+                All Status
+              </div>
+              {statusOptions.map((status) => (
                 <div
+                  key={status}
+                  className="dropdown-item"
                   onClick={() => {
-                    setSelectedStatus('');
+                    setSelectedStatus(status);
                     setShowStatusDropdown(false);
                   }}
-                  className="dropdown-item"
                 >
-                  All Status
+                  {status}
                 </div>
-                {statusOptions.map((status) => (
-                  <div
-                    key={status}
-                    onClick={() => {
-                      setSelectedStatus(status);
-                      setShowStatusDropdown(false);
-                    }}
-                    className="dropdown-item"
-                  >
-                    {status}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Records Table */}
-        <div className="table-container">
-          <table className="records-table">
-            <thead>
-              <tr className="table-header">
-                <th className="table-header-cell">Name</th>
-                <th className="table-header-cell">Date</th>
-                <th className="table-header-cell">Payment Status</th>
-                <th className="table-header-cell">Action</th>
+      {/* Records Table */}
+      <div className="table-container">
+        <table className="records-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Payment Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRecords.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="no-data">
+                  {records.length === 0 ? 'No payment records available.' : 'No records match your search.'}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="empty-state">
-                    No payment records available.
+            ) : (
+              filteredRecords.map((record, index) => (
+                <tr key={record.id} className={index % 2 ? "odd" : "even"}>
+                  <td>
+                    {formatPatientName(record.medicalDocumentation.patient)}
+                  </td>
+                  <td>{formatDate(record.createdAt)}</td>
+                  <td>
+                    <span className={`status-badge status-${record.paymentStatus.toLowerCase().replace('_', '-')}`}>
+                      {formatPaymentStatus(record.paymentStatus)}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="view-btn"
+                      onClick={() => handleViewClick(record)}
+                    >
+                      View
+                    </button>
+                    <button
+                      className="update-btn"
+                      onClick={() => handleUpdateClick(record)}
+                    >
+                      Update
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                filteredRecords.map((record, index) => (
-                  <tr key={record.id} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                    <td className="table-cell">{record.name}</td>
-                    <td className="table-cell">{record.date}</td>
-                    <td className="table-cell">{record.paymentStatus}</td>
-                    <td className="table-cell">
-                      <div className="action-buttons">
-                        <button
-                          onClick={() => handleViewClick(record)}
-                          className="btn-view"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleUpdateClick(record)}
-                          className="btn-update"
-                        >
-                          Update
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* View Details Modal */}
-        {showViewModal && selectedRecord && (
-          <div className="modal-overlay">
-            <div className="modal-container modal-view">
-              <div className="modal-header">
-                Details
+      {/* View Modal */}
+      {showViewModal && selectedRecord && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">Payment Details</div>
+            <div className="modal-body">
+              <div className="patient-info">
+                <div className="info-item">
+                  <span className="info-label">Patient:</span>
+                  <span className="info-value">
+                    {formatPatientName(selectedRecord.medicalDocumentation.patient)}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Date:</span>
+                  <span className="info-value">{formatDate(selectedRecord.createdAt)}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Senior/PWD ID:</span>
+                  <span className="info-value">
+                    {selectedRecord.medicalDocumentation.patient.csdIdOrPwdId || 'None'}
+                  </span>
+                </div>
               </div>
-              
-              <div className="modal-content">
-                <div className="details-header">
-                  <span className="details-label">PROCEDURE</span>
-                  <span className="details-label">FEES</span>
-                </div>
 
-                <div>
-                  <div className="procedure-title">Consultation</div>
-                  <div className="procedure-item">
-                    <span>Standard Fee</span>
-                    <span>₱ 350</span>
-                  </div>
-                </div>
+              <div className="details-header">
+                <span className="details-label">PROCEDURE</span>
+                <span className="details-label">FEES</span>
+              </div>
 
-                <div>
-                  <div className="procedure-title">Laboratory</div>
-                  <div className="procedure-item">
-                    <span>Urinalysis</span>
-                    <span>₱ 350</span>
-                  </div>
+              <div className="procedure-section">
+                <div className="procedure-title">Consultation</div>
+                <div className="procedure-item">
+                  <span>Consultation Fee</span>
+                  <span>₱ {selectedRecord.consultationFee?.toFixed(2) || '0.00'}</span>
                 </div>
+              </div>
 
-                <div>
-                  <div className="procedure-title">Injection</div>
-                  <div className="procedure-item">
-                    <span>Anti-Rabies</span>
-                    <span>₱ 350</span>
-                  </div>
-                  <div className="procedure-item">
-                    <span>Service Fee</span>
-                    <span>₱ 350</span>
-                  </div>
+              <div className="procedure-section">
+                <div className="procedure-title">Additional Services</div>
+                <div className="procedure-item">
+                  <span>Other Services</span>
+                  <span>₱ {((selectedRecord.totalAmount || 0) - (selectedRecord.consultationFee || 0)).toFixed(2)}</span>
                 </div>
+              </div>
 
+              <div className="grand-total-section">
+                <div className="grand-total-item">
+                  <span className="grand-total-label">GRAND TOTAL</span>
+                  <span className="grand-total-amount">₱ {selectedRecord.totalAmount?.toFixed(2) || '0.00'}</span>
+                </div>
+              </div>
+
+              <div className="payment-details">
                 <div className="payment-info">
-                  <span className="payment-label">Payment Option:</span>
-                  <span>Cash</span>
+                  <span className="payment-label">Current Status:</span>
+                  <span className={`status-text status-${selectedRecord.paymentStatus?.toLowerCase().replace('_', '-')}`}>
+                    {formatPaymentStatus(selectedRecord.paymentStatus)}
+                  </span>
                 </div>
 
                 <div className="payment-info">
                   <span className="payment-label">
-                    Senior Discount: <input type="checkbox" className="discount-checkbox" />
+                    Senior/PWD Discount Applied: 
                   </span>
-                  <div>
-                    <span className="payment-label">Status:</span>
-                    <span className="status-text">{selectedRecord.paymentStatus}</span>
-                  </div>
+                  <span>{selectedRecord.isSeniorPwdDiscountApplied ? 'Yes' : 'No'}</span>
                 </div>
 
-                <div className="total-section">
-                  <span>Total Amount</span>
-                  <span>₱ 350</span>
+                {selectedRecord.isSeniorPwdDiscountApplied && (
+                  <div className="payment-info">
+                    <span className="payment-label">Discount Rate:</span>
+                    <span>{selectedRecord.discountRate}%</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="amounts-section">
+                <div className="amount-item">
+                  <span className="amount-label">Amount Paid:</span>
+                  <span className="amount-value">₱ {selectedRecord.amountPaid?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="amount-item">
+                  <span className="amount-label">Remaining Balance:</span>
+                  <span className="amount-value">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
                 </div>
               </div>
+
+              {selectedRecord.notes && (
+                <div className="notes-section">
+                  <span className="notes-label">Notes:</span>
+                  <span className="notes-value">{selectedRecord.notes}</span>
+                </div>
+              )}
 
               <div className="modal-footer">
                 <button
+                  className="close-btn"
                   onClick={() => setShowViewModal(false)}
-                  className="btn-back"
                 >
-                  Back
+                  Close
                 </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Update Status Modal */}
-        {showUpdateModal && selectedRecord && (
-          <div className="modal-overlay">
-            <div className="modal-container modal-update">
-              <div className="update-content">
-                <div className="update-field">
-                  <label className="update-label">Name:</label>
-                  <div className="update-value">{selectedRecord.name}</div>
+      {/* Update Modal */}
+      {showUpdateModal && selectedRecord && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">Update Payment Status</div>
+            <div className="modal-body">
+              <div className="patient-info">
+                <div className="info-item">
+                  <span className="info-label">Name:</span>
+                  <span className="info-value">
+                    {formatPatientName(selectedRecord.medicalDocumentation.patient)}
+                  </span>
                 </div>
-
-                <div className="update-field">
-                  <label className="update-label">Date:</label>
-                  <div className="update-value">{selectedRecord.date}</div>
+                <div className="info-item">
+                  <span className="info-label">Date:</span>
+                  <span className="info-value">{formatDate(selectedRecord.createdAt)}</span>
                 </div>
-
-                <div className="radio-group">
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Unpaid"
-                      checked={updateStatus === 'Unpaid'}
-                      onChange={(e) => setUpdateStatus(e.target.value)}
-                      className="radio-input"
-                    />
-                    <span className="radio-text">Unpaid</span>
-                  </label>
-
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Paid"
-                      checked={updateStatus === 'Paid'}
-                      onChange={(e) => setUpdateStatus(e.target.value)}
-                      className="radio-input"
-                    />
-                    <span className="radio-text">Paid</span>
-                  </label>
-
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Partially Paid"
-                      checked={updateStatus === 'Partially Paid'}
-                      onChange={(e) => setUpdateStatus(e.target.value)}
-                      className="radio-input"
-                    />
-                    <span className="radio-text">Partially Paid</span>
-                    {updateStatus === 'Partially Paid' && (
-                      <input
-                        type="text"
-                        value={partialAmount}
-                        onChange={(e) => setPartialAmount(e.target.value)}
-                        className="partial-amount-input"
-                        placeholder="Amount"
-                      />
-                    )}
-                  </label>
+                <div className="info-item">
+                  <span className="info-label">Current Balance:</span>
+                  <span className="info-value">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
                 </div>
               </div>
 
-              <div className="update-actions">
+              {/* Payment Method Selection */}
+              <div className="payment-method-section">
+                <label className="payment-method-label">Payment Method:</label>
+                <select 
+                  value={paymentMethod} 
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="payment-method-select"
+                >
+                  {paymentMethods.map(method => (
+                    <option key={method} value={method}>
+                      {formatPaymentMethod(method)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status Selection */}
+              <div className="radio-group">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Unpaid"
+                    checked={updateStatus === "Unpaid"}
+                    onChange={(e) => setUpdateStatus(e.target.value)}
+                  />
+                  <span className="radio-text">Unpaid (₱ 0.00)</span>
+                </label>
+
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Paid"
+                    checked={updateStatus === "Paid"}
+                    onChange={(e) => setUpdateStatus(e.target.value)}
+                  />
+                  <span className="radio-text">Paid (Full Amount: ₱ {selectedRecord.balance?.toFixed(2) || '0.00'})</span>
+                </label>
+
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Partially Paid"
+                    checked={updateStatus === "Partially Paid"}
+                    onChange={(e) => setUpdateStatus(e.target.value)}
+                  />
+                  <span className="radio-text">Partially Paid</span>
+                  {updateStatus === "Partially Paid" && (
+                    <input
+                      type="number"
+                      placeholder="Enter amount"
+                      value={partialAmount}
+                      onChange={(e) => setPartialAmount(e.target.value)}
+                      className="partial-input"
+                      min="0.01"
+                      max={selectedRecord.balance || 0}
+                      step="0.01"
+                    />
+                  )}
+                </label>
+              </div>
+
+              {/* Notes Field */}
+              <div className="notes-input-section">
+                <label className="notes-label">Notes (Optional):</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="notes-textarea"
+                  placeholder="Add any notes about this payment..."
+                  rows="3"
+                />
+              </div>
+
+              {updateStatus === 'Partially Paid' && partialAmount && (
+                <div className="payment-preview">
+                  <div className="preview-item">
+                    <span>Payment Amount:</span>
+                    <span>₱ {parseFloat(partialAmount || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="preview-item">
+                    <span>Remaining Balance:</span>
+                    <span>₱ {((selectedRecord.balance || 0) - parseFloat(partialAmount || 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="error-message">
+                  {error}
+                </div>
+              )}
+
+              <div className="modal-footer">
                 <button
+                  className="cancel-btn"
                   onClick={() => {
                     setShowUpdateModal(false);
                     setSelectedRecord(null);
-                    setUpdateStatus('');
-                    setPartialAmount('');
+                    setUpdateStatus("");
+                    setPartialAmount("");
+                    setPaymentMethod("cash");
+                    setNotes("");
+                    setError(null);
                   }}
-                  className="btn-cancel"
+                  disabled={processingPayment}
                 >
                   Cancel
                 </button>
-                <button
+                <button 
+                  className="save-btn" 
                   onClick={handleSaveUpdate}
-                  className="btn-save"
+                  disabled={
+                    processingPayment ||
+                    (updateStatus === 'Partially Paid' && (!partialAmount || parseFloat(partialAmount) <= 0)) ||
+                    (updateStatus === 'Partially Paid' && parseFloat(partialAmount) > (selectedRecord.balance || 0))
+                  }
                 >
-                  Save
+                  {processingPayment ? "Processing..." : "Process Payment"}
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
-
-

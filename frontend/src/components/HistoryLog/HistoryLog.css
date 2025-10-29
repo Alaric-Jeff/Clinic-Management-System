@@ -2,7 +2,7 @@
 
 .history-log-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
   font-family: 'Poppins', sans-serif;
@@ -55,6 +55,7 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 3px solid #7f1d1d;
+  overflow-x: auto;
 }
 
 /* Table Header Styles */
@@ -63,10 +64,37 @@
   color: white !important;
   font-weight: 700 !important;
   text-align: center !important;
-  padding: 16px 12px !important;
-  font-size: 15px !important;
+  padding: 16px 8px !important;
+  font-size: 14px !important;
   border-right: 1px solid #993333 !important;
   font-family: 'Poppins', sans-serif !important;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.history-log-th:first-child {
+  min-width: 160px; /* Date & Time */
+}
+
+.history-log-th:nth-child(2) {
+  min-width: 140px; /* Source & Action */
+}
+
+.history-log-th:nth-child(3) {
+  min-width: 180px; /* Changed Field(s) */
+}
+
+.history-log-th:nth-child(4),
+.history-log-th:nth-child(5) {
+  min-width: 200px; /* Old Value & New Value */
+}
+
+.history-log-th:nth-child(6) {
+  min-width: 140px; /* Changed By */
+}
+
+.history-log-th:nth-child(7) {
+  min-width: 100px; /* Role */
 }
 
 .history-log-th:last-child {
@@ -90,12 +118,14 @@
 /* Table Cell Styles */
 .history-log-cell {
   text-align: center !important;
-  padding: 14px 12px !important;
-  font-size: 14px !important;
+  padding: 12px 8px !important;
+  font-size: 13px !important;
   color: #333 !important;
   border-right: 1px solid #ffdddd !important;
   font-family: 'Poppins', sans-serif !important;
   font-weight: 500 !important;
+  vertical-align: top;
+  line-height: 1.4;
 }
 
 .history-log-cell:last-child {
@@ -104,26 +134,151 @@
 
 .history-log-cell-center {
   text-align: center !important;
-  padding: 30px !important;
+  padding: 40px !important;
   color: #666 !important;
   font-size: 16px !important;
   font-family: 'Poppins', sans-serif !important;
 }
 
+/* Source and Action Styling */
+.source-action {
+  text-align: center;
+  line-height: 1.3;
+}
+
+.source-action strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #7f1d1d;
+}
+
+.action-badge {
+  background-color: #7f1d1d;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+/* Value Styling */
+.old-value {
+  color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+  font-style: italic;
+  word-break: break-word;
+}
+
+.new-value {
+  color: #059669 !important;
+  background-color: #f0fdf4 !important;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* Role Badges */
+.role-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.role-admin {
+  background-color: #7f1d1d;
+  color: white;
+}
+
+.role-encoder {
+  background-color: #d97706;
+  color: white;
+}
+
+.role-doctor {
+  background-color: #0369a1;
+  color: white;
+}
+
+/* Error and Loading States */
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+.retry-button {
+  background-color: #7f1d1d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  font-size: 14px;
+}
+
+.retry-button:hover {
+  background-color: #991b1b;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  font-size: 16px;
+}
+
+/* Compact text for better fitting */
+.compact-text {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+/* Value containers with better spacing */
+.value-container {
+  max-height: 60px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .history-log-container {
     padding: 15px;
+    max-width: 100%;
   }
 
-  .history-log-title {
-    font-size: 28px;
-  }
-
-  .history-log-th,
-  .history-log-cell {
-    padding: 12px 10px !important;
+  .history-log-th {
+    padding: 14px 6px !important;
     font-size: 13px !important;
+    min-width: 100px;
+  }
+
+  .history-log-th:first-child {
+    min-width: 140px;
+  }
+
+  .history-log-th:nth-child(4),
+  .history-log-th:nth-child(5) {
+    min-width: 150px;
+  }
+
+  .history-log-cell {
+    padding: 10px 6px !important;
+    font-size: 12px !important;
   }
 }
 
@@ -138,25 +293,82 @@
     font-size: 20px;
   }
 
-  .history-log-th,
-  .history-log-cell {
-    padding: 10px 8px !important;
+  .history-log-th {
+    padding: 12px 4px !important;
     font-size: 12px !important;
+    min-width: 80px;
   }
 
-  .history-log-table-wrapper {
-    overflow-x: auto;
+  .history-log-th:first-child {
+    min-width: 120px;
+  }
+
+  .history-log-th:nth-child(4),
+  .history-log-th:nth-child(5) {
+    min-width: 120px;
+  }
+
+  .history-log-cell {
+    padding: 8px 4px !important;
+    font-size: 11px !important;
+  }
+
+  .source-action strong {
+    font-size: 11px;
+  }
+
+  .action-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .role-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    min-width: 50px;
   }
 }
 
 @media (max-width: 480px) {
+  .history-log-container {
+    padding: 10px;
+  }
+
   .history-log-title {
     font-size: 20px;
   }
 
+  .history-log-header {
+    margin-bottom: 15px;
+  }
+
   .history-log-th,
   .history-log-cell {
-    padding: 8px 6px !important;
-    font-size: 11px !important;
+    padding: 8px 3px !important;
+    font-size: 10px !important;
   }
+
+  .history-log-cell-center {
+    padding: 20px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Scrollbar styling for table wrapper */
+.history-log-table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.history-log-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.history-log-table-wrapper::-webkit-scrollbar-thumb {
+  background: #7f1d1d;
+  border-radius: 4px;
+}
+
+.history-log-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #991b1b;
 }

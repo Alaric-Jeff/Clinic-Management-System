@@ -16,6 +16,7 @@ import PatientRecordView from "./components/PatientRecord";
 import SuccesfulReset from "./modals/view-patient/SuccessfulReset";
 import UserManagement from "./components/UserManagement/UserManagement";
 import HistoryLog from "./components/HistoryLog/HistoryLog";
+import PaymentDetails from "./components/PaymentDetails/PaymentDetails";
 
 import "./App.css";
 
@@ -44,7 +45,7 @@ function App() {
             <Route path="patient-list" element={<PatientList />} />
             <Route path="patient-details/:id" element={<PatientDetail />} />
             <Route path="services" element={<MedicalServices />} />
-            <Route path="payments" element={<div>Payment Details Page</div>} />
+            <Route path="payments" element={<PaymentDetails/>} />
             <Route path="archive" element={<Archive />} />
             <Route path="add-new-user" element={<AddNewUserPage />} />
             <Route path="user-management" element={<UserManagement />} />
