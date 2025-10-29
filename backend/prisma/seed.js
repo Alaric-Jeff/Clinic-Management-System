@@ -141,176 +141,223 @@ async function createServicesIfNotExist() {
   return medicalServices;
 }
 
-async function generateServiceDailyAnalytics() {
-  console.log('\n📊 Generating service daily analytics (2 years)...');
+async function generateComprehensiveAnalytics() {
+  console.log('\n📊 Generating comprehensive analytics (2 years)...');
   
   const services = await prisma.service.findMany();
   if (services.length === 0) {
     console.log('❌ No services found. Please create services first.');
-    return 0;
+    return { serviceRecords: 0, categoryRecords: 0 };
   }
 
   const today = new Date();
   const monthsToGenerate = 24;
   let serviceRecordsCreated = 0;
+  let categoryRecordsCreated = 0;
+  let dailyRecordsCreated = 0;
 
   for (let monthOffset = monthsToGenerate; monthOffset > 0; monthOffset--) {
     const monthStart = startOfMonth(subMonths(today, monthOffset));
     const monthEnd = endOfMonth(monthStart);
 
-    // Get or create daily analytics for this month
     let currentDate = new Date(monthStart);
     
     while (currentDate <= monthEnd) {
-      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) { // Weekdays only
-        // Find or create daily sales analytics record
-        let dailyAnalytics = await prisma.dailySalesAnalytics.findUnique({
+      // Only weekdays (Mon-Fri)
+      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+        // Check if this date already exists
+        const existingDaily = await prisma.dailySalesAnalytics.findUnique({
           where: { date: currentDate }
         });
 
-        if (!dailyAnalytics) {
-          dailyAnalytics = await prisma.dailySalesAnalytics.create({
+        if (!existingDaily) {
+          // Generate analytics for this day
+          const dailyData = await generateSingleDayAnalytics(services, new Date(currentDate));
+          
+          // Create daily sales analytics record
+          const dailyAnalytics = await prisma.dailySalesAnalytics.create({
             data: {
-              date: currentDate,
-              totalRevenue: 0,
-              totalBills: 0,
-              totalServices: 0,
-              paidBills: 0,
-              unpaidBills: 0,
-              partiallyPaidBills: 0,
-              averageBillAmount: 0
+              date: new Date(currentDate),
+              totalRevenue: dailyData.totalRevenue,
+              totalBills: dailyData.totalBills,
+              totalServices: dailyData.totalServices,
+              paidBills: dailyData.paidBills,
+              unpaidBills: dailyData.unpaidBills,
+              partiallyPaidBills: dailyData.partiallyPaidBills,
+              averageBillAmount: dailyData.averageBillAmount
             }
           });
-        }
 
-        // Generate service-level data for this day
-        const dailyServiceRecords = await generateDailyServiceData(dailyAnalytics.id, services, currentDate);
-        serviceRecordsCreated += dailyServiceRecords;
+          // Create service analytics records
+          for (const serviceData of dailyData.serviceAnalytics) {
+            await prisma.serviceDailyAnalytics.create({
+              data: {
+                dailyAnalyticsId: dailyAnalytics.id,
+                serviceId: serviceData.serviceId,
+                serviceName: serviceData.serviceName,
+                serviceCategory: serviceData.serviceCategory,
+                totalRevenue: serviceData.totalRevenue,
+                quantitySold: serviceData.quantitySold,
+                averagePrice: serviceData.averagePrice
+              }
+            });
+            serviceRecordsCreated++;
+          }
+
+          // Create category analytics records
+          for (const categoryData of dailyData.categoryAnalytics) {
+            await prisma.categoryDailyAnalytics.create({
+              data: {
+                dailyAnalyticsId: dailyAnalytics.id,
+                category: categoryData.category,
+                totalRevenue: categoryData.totalRevenue,
+                totalServices: categoryData.totalServices,
+                quantitySold: categoryData.quantitySold
+              }
+            });
+            categoryRecordsCreated++;
+          }
+
+          dailyRecordsCreated++;
+        }
       }
       
       currentDate = addDays(currentDate, 1);
     }
 
-    console.log(`✅ ${format(monthStart, 'MMM yyyy')}: Service analytics generated`);
+    console.log(`✅ ${format(monthStart, 'MMM yyyy')}: Analytics generated`);
   }
 
-  console.log(`🎉 Created ${serviceRecordsCreated} service daily analytics records!`);
-  return serviceRecordsCreated;
+  console.log(`\n🎉 Analytics Summary:`);
+  console.log(`   📅 Daily records: ${dailyRecordsCreated}`);
+  console.log(`   🩺 Service records: ${serviceRecordsCreated}`);
+  console.log(`   📂 Category records: ${categoryRecordsCreated}`);
+  
+  return { serviceRecords: serviceRecordsCreated, categoryRecords: categoryRecordsCreated };
 }
 
-async function generateDailyServiceData(dailyAnalyticsId, services, date) {
-  let recordsCreated = 0;
-  const dayOfMonth = date.getDate();
+async function generateSingleDayAnalytics(services, date) {
+  const dayOfWeek = date.getDay();
   const month = date.getMonth();
   
-  // Seasonal factors affecting different services
+  // Base activity level - varies by day and season
+  let baseActivityLevel = 0.6; // 60% base
+  
+  // Day of week factor
+  if (dayOfWeek === 3 || dayOfWeek === 4) { // Wed/Thu busier
+    baseActivityLevel *= 1.3;
+  } else if (dayOfWeek === 1) { // Monday busiest
+    baseActivityLevel *= 1.5;
+  } else if (dayOfWeek === 5) { // Friday slower
+    baseActivityLevel *= 0.9;
+  }
+  
+  // Seasonal variation
   const seasonalFactors = {
-    // Flu season affects related tests
-    9: { 'Complete Blood Count': 1.3, 'Flu Vaccine': 1.8 }, // October
-    10: { 'Complete Blood Count': 1.4, 'Flu Vaccine': 2.0 }, // November
-    11: { 'Complete Blood Count': 1.2, 'Flu Vaccine': 1.5 }, // December
-    0: { 'Complete Blood Count': 1.1, 'Flu Vaccine': 1.2 }, // January
-    
-    // Summer - more travel vaccines
-    5: { 'Hepatitis B Vaccine': 1.3 }, // June
-    6: { 'Hepatitis B Vaccine': 1.4 }, // July
-    
-    // Routine checkup season
-    3: { 'Cholesterol Panel': 1.2, 'Blood Glucose Test': 1.3 }, // April
-    8: { 'Cholesterol Panel': 1.2, 'Blood Glucose Test': 1.3 }, // September
+    9: 1.3,  // October - flu season start
+    10: 1.4, // November - peak flu season
+    11: 1.3, // December - holidays
+    0: 1.2,  // January - new year checkups
+    1: 1.1,  // February
+    3: 1.2,  // April - summer prep checkups
+    8: 1.2,  // September - back to routine
   };
-
+  
+  baseActivityLevel *= (seasonalFactors[month] || 1.0);
+  
+  // Random daily variation
+  baseActivityLevel *= (0.8 + Math.random() * 0.4); // ±20% random
+  
+  // Generate service-level data
+  const serviceAnalytics = [];
+  const categoryMap = new Map();
+  
   for (const service of services) {
-    // Base probability of this service being ordered
-    let baseProbability = servicePopularity[service.name] || 0.15;
+    let serviceProbability = servicePopularity[service.name] || 0.15;
+    serviceProbability *= baseActivityLevel;
     
-    // Apply seasonal factors
-    const monthFactors = seasonalFactors[month];
-    if (monthFactors && monthFactors[service.name]) {
-      baseProbability *= monthFactors[service.name];
+    // Service-specific seasonal factors
+    if (month >= 9 || month <= 1) { // Flu season
+      if (service.name === 'Complete Blood Count') serviceProbability *= 1.4;
+      if (service.name === 'Flu Vaccine') serviceProbability *= 2.0;
+    }
+    if (month >= 5 && month <= 7) { // Summer
+      if (service.name === 'Hepatitis B Vaccine') serviceProbability *= 1.4;
     }
     
-    // Day-of-week variation (mid-week busier)
-    const dayOfWeek = date.getDay();
-    const dayFactor = dayOfWeek === 3 ? 1.2 : dayOfWeek === 4 ? 1.1 : 1.0; // Wed/Thu busier
-    baseProbability *= dayFactor;
-
-    // Random variation
-    const randomFactor = 0.7 + Math.random() * 0.6;
-    baseProbability *= randomFactor;
-
-    // Determine if this service was ordered today
-    if (Math.random() < baseProbability) {
-      // Calculate quantity sold (usually 1, but sometimes multiple for panels)
+    if (Math.random() < serviceProbability) {
+      // Determine quantity
       let quantity = 1;
       if (service.name.includes('Panel') && Math.random() < 0.3) {
-        quantity = Math.floor(1 + Math.random() * 2); // 1-3 for panels
+        quantity = Math.floor(1 + Math.random() * 2);
       }
-
-      // Small chance of price variation (discounts or premium)
-      const priceVariation = 0.9 + Math.random() * 0.2; // ±10% price variation
+      
+      // Price variation (±10%)
+      const priceVariation = 0.9 + Math.random() * 0.2;
       const actualPrice = service.price * priceVariation;
-      
       const totalRevenue = quantity * actualPrice;
-
-      // Create service daily analytics record
-      await prisma.serviceDailyAnalytics.create({
-        data: {
-          dailyAnalyticsId: dailyAnalyticsId,
-          serviceId: service.id,
-          serviceName: service.name,
-          serviceCategory: service.category,
-          totalRevenue: Math.round(totalRevenue * 100) / 100,
-          quantitySold: quantity,
-          averagePrice: Math.round(actualPrice * 100) / 100
-        }
+      
+      serviceAnalytics.push({
+        serviceId: service.id,
+        serviceName: service.name,
+        serviceCategory: service.category,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        quantitySold: quantity,
+        averagePrice: Math.round(actualPrice * 100) / 100
       });
-
-      recordsCreated++;
+      
+      // Aggregate by category
+      if (!categoryMap.has(service.category)) {
+        categoryMap.set(service.category, {
+          category: service.category,
+          totalRevenue: 0,
+          totalServices: 0,
+          quantitySold: 0
+        });
+      }
+      
+      const categoryData = categoryMap.get(service.category);
+      categoryData.totalRevenue += totalRevenue;
+      categoryData.totalServices += 1;
+      categoryData.quantitySold += quantity;
     }
   }
-
-  return recordsCreated;
-}
-
-async function updateDailySalesTotals() {
-  console.log('\n🔄 Updating daily sales totals from service data...');
   
-  const allDailyRecords = await prisma.dailySalesAnalytics.findMany({
-    include: {
-      serviceAnalytics: true
-    }
-  });
-
-  let updatedCount = 0;
-
-  for (const dailyRecord of allDailyRecords) {
-    const serviceAnalytics = dailyRecord.serviceAnalytics;
-    
-    if (serviceAnalytics.length > 0) {
-      const totalRevenue = serviceAnalytics.reduce((sum, service) => sum + service.totalRevenue, 0);
-      const totalServices = serviceAnalytics.reduce((sum, service) => sum + service.quantitySold, );
-      const totalBills = Math.ceil(totalServices / 2.5); // Estimate bills from services
-      
-      // Update the daily record with calculated totals
-      await prisma.dailySalesAnalytics.update({
-        where: { id: dailyRecord.id },
-        data: {
-          totalRevenue: Math.round(totalRevenue * 100) / 100,
-          totalServices: totalServices,
-          totalBills: totalBills,
-          paidBills: Math.floor(totalBills * (0.7 + Math.random() * 0.25)),
-          unpaidBills: Math.floor(totalBills * 0.1),
-          partiallyPaidBills: Math.floor(totalBills * 0.2),
-          averageBillAmount: totalBills > 0 ? Math.round((totalRevenue / totalBills) * 100) / 100 : 0
-        }
-      });
-      
-      updatedCount++;
-    }
-  }
-
-  console.log(`✅ Updated ${updatedCount} daily sales records with service-based totals`);
+  // Calculate daily totals
+  const totalServices = serviceAnalytics.reduce((sum, s) => sum + s.quantitySold, 0);
+  const totalRevenue = serviceAnalytics.reduce((sum, s) => sum + s.totalRevenue, 0);
+  
+  // Add consultation fees (250 per bill, assume avg 2-3 services per bill)
+  const totalBills = totalServices > 0 ? Math.ceil(totalServices / 2.5) : 0;
+  const consultationRevenue = totalBills * 250;
+  const grandTotalRevenue = totalRevenue + consultationRevenue;
+  
+  // Payment status distribution (realistic)
+  const paidBills = Math.floor(totalBills * (0.65 + Math.random() * 0.15)); // 65-80% paid
+  const partiallyPaidBills = Math.floor(totalBills * (0.10 + Math.random() * 0.10)); // 10-20% partial
+  const unpaidBills = totalBills - paidBills - partiallyPaidBills;
+  
+  const averageBillAmount = totalBills > 0 
+    ? Math.round((grandTotalRevenue / totalBills) * 100) / 100 
+    : 0;
+  
+  // Round category totals
+  const categoryAnalytics = Array.from(categoryMap.values()).map(cat => ({
+    ...cat,
+    totalRevenue: Math.round(cat.totalRevenue * 100) / 100
+  }));
+  
+  return {
+    totalRevenue: Math.round(grandTotalRevenue * 100) / 100,
+    totalBills,
+    totalServices,
+    paidBills,
+    unpaidBills,
+    partiallyPaidBills,
+    averageBillAmount,
+    serviceAnalytics,
+    categoryAnalytics
+  };
 }
 
 async function main() {
@@ -337,7 +384,7 @@ async function main() {
     });
 
     console.log('✅ Admin account created:', admin.email);
-    console.log('⚠️  Default password:', process.env.ADMIN_DEFAULT_PASSWORD || 'admin123');
+    console.log('⚠️  Default password:', process.env.ADMIN_DEFAULT_PASSWORD || 'Adminpass123!');
     console.log('🔐 Please change the password after first login!');
   } else {
     console.log('✅ Admin account already exists:', existingAdmin.email);
@@ -357,38 +404,34 @@ async function main() {
     });
 
     if (existingDoctor) {
-      console.log(`⏭️  Dr. ${doctor.firstName} ${doctor.lastName} already exists`);
       skippedCount++;
     } else {
-      const newDoctor = await prisma.doctors.create({
+      await prisma.doctors.create({
         data: {
           firstName: doctor.firstName,
           lastName: doctor.lastName,
           middleInitial: doctor.middleInitial,
         }
       });
-      console.log(`✅ Created: Dr. ${newDoctor.firstName} ${newDoctor.lastName}`);
       createdCount++;
     }
   }
 
-  console.log(`\n📊 Doctors Summary: ${createdCount} created, ${skippedCount} skipped`);
+  console.log(`📊 Doctors Summary: ${createdCount} created, ${skippedCount} skipped`);
 
   // Create medical services
   await createServicesIfNotExist();
 
-  // Generate service daily analytics
-  const serviceRecordsCreated = await generateServiceDailyAnalytics();
-
-  // Update daily sales totals based on service data
-  await updateDailySalesTotals();
+  // Generate comprehensive analytics
+  const analyticsResults = await generateComprehensiveAnalytics();
 
   console.log('\n🎯 SEED COMPLETE SUMMARY:');
-  console.log(`   👨‍⚕️  Doctors: ${createdCount} created, ${skippedCount} skipped`);
-  console.log(`   🩺 Services: ${medicalServices.length} medical services`);
-  console.log(`   📈 Service Analytics: ${serviceRecordsCreated} daily service records`);
-  console.log(`   💰 2 years of detailed service performance data now available!`);
-  console.log('\n🚀 Your service forecasting API now has rich data to work with!');
+  console.log(`   👨‍⚕️  Doctors: ${createdCount} created`);
+  console.log(`   🩺 Services: ${medicalServices.length} total`);
+  console.log(`   📈 Service Analytics: ${analyticsResults.serviceRecords} records`);
+  console.log(`   📂 Category Analytics: ${analyticsResults.categoryRecords} records`);
+  console.log(`   💰 2 years of comprehensive analytics data ready!`);
+  console.log('\n🚀 Your analytics dashboard now has rich historical data!');
 }
 
 main()
