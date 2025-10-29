@@ -156,6 +156,7 @@ export const patientWithDocPreviewSchema = Type.Object({
   residentialAddress: Type.Union([Type.String(), Type.Null()]),
   isArchived: Type.Boolean(),
   registeredAt: Type.String(),
+  notes: Type.Union([Type.String(), Type.Null()]),
   
   // Audit fields
   createdByName: Type.String(),

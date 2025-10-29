@@ -1,0 +1,241 @@
+/* ViewPaymentDetails.css - VIEW MODAL STYLES ONLY */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 32rem;
+}
+
+.modal-view {
+  max-width: 36rem;
+}
+
+.modal-header {
+  background-color: #b91c1c;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: bold;
+  padding: 1rem 1.5rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.modal-content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.info-value {
+  color: #6b7280;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.details-label {
+  font-weight: bold;
+  color: #374151;
+}
+
+.procedure-section {
+  margin-bottom: 1.5rem;
+}
+
+.procedure-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  font-size: 1.125rem;
+}
+
+.procedure-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.procedure-item span:first-child {
+  flex: 1;
+}
+
+.procedure-item span:last-child {
+  min-width: 80px;
+  text-align: right;
+}
+
+.category-total {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+.no-services {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.grand-total-section {
+  border-top: 3px double #b91c1c;
+  border-bottom: 3px double #b91c1c;
+  padding: 1rem 0;
+  margin: 1rem 0;
+  background-color: #fef2f2;
+}
+
+.grand-total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.grand-total-label {
+  color: #b91c1c;
+  font-size: 1.1rem;
+}
+
+.grand-total-amount {
+  color: #b91c1c;
+  font-size: 1.3rem;
+}
+
+.payment-details {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+}
+
+.payment-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.payment-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.status-text {
+  font-style: italic;
+  font-weight: 600;
+}
+
+.status-paid {
+  color: #059669;
+}
+
+.status-unpaid {
+  color: #dc2626;
+}
+
+.status-partially-paid {
+  color: #d97706;
+}
+
+.amounts-section {
+  border-top: 2px solid #d1d5db;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.amount-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.amount-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.amount-value {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.notes-section {
+  background-color: #fef3c7;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-top: 1rem;
+  border-left: 4px solid #d97706;
+}
+
+.notes-label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #92400e;
+}
+
+.notes-value {
+  font-style: italic;
+  color: #92400e;
+}
+
+.modal-footer {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+.btn-back {
+  padding: 0.5rem 2rem;
+  background-color: white;
+  border: 2px solid #b91c1c;
+  color: #b91c1c;
+  font-weight: bold;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background-color: #fef2f2;
+}

@@ -11,10 +11,9 @@ import type { FastifyInstance } from "fastify";
  * @returns List of unsettled bills with patient details
  */
 
-export async function getUnsettledBills(
-    fastify: FastifyInstance
-){
-    try{
+// In your getUnsettledBills service, update the select to include billedServices:
+export async function getUnsettledBills(fastify: FastifyInstance) {
+    try {
         fastify.log.debug("Starting to fetch the unsettled bills from medical bills");
         const result = await fastify.prisma.medicalBill.findMany({
             where: {
@@ -23,20 +22,43 @@ export async function getUnsettledBills(
                     { paymentStatus: 'unpaid' }
                 ]
             },
-            include: {
+            select: {
+                // Medical bill fields
+                id: true,
+                totalAmount: true,
+                amountPaid: true,
+                balance: true,
+                paymentStatus: true,
+                isSeniorPwdDiscountApplied: true,
+                discountRate: true,
+                consultationFee: true,
+                notes: true,
+                createdAt: true,
+                updatedAt: true,
+                
+                // Related medical documentation and patient
                 medicalDocumentation: {
-                    include: {
+                    select: {
                         patient: {
                             select: {
                                 id: true,
                                 firstName: true,
                                 lastName: true,
                                 middleName: true,
-                                mobileNumber: true,
-                                birthDate: true,
-                                gender: true
+                                csdIdOrPwdId: true,  
                             }
                         }
+                    }
+                },
+                // Add billed services
+                billedServices: {
+                    select: {
+                        id: true,
+                        serviceName: true,
+                        serviceCategory: true,
+                        servicePriceAtTime: true,
+                        quantity: true,
+                        subtotal: true
                     }
                 }
             },
@@ -47,6 +69,7 @@ export async function getUnsettledBills(
         
         return result;
     } catch(err: unknown) {
+        fastify.log.error("Error fetching unsettled bills:");
         throw err;
     }
 }

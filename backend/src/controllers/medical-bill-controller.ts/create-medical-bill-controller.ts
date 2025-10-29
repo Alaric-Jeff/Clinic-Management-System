@@ -13,7 +13,15 @@ import type { Role } from "@prisma/client";
  * Handles HTTP request/response for creating a medical bill with associated services.
  * Extracts auth data from JWT and combines with request body for service call.
  * Creates bill and all services in a single atomic transaction.
- * Calculates payment status and balance from PaymentHistory.
+ *
+ * CALCULATION:
+ * - Services Subtotal = Σ(service.price × quantity)
+ * - Discount applies ONLY to services:
+ *   - 20% if isSeniorPwdDiscountApplied (requires valid csdIdOrPwdId)
+ *   - Custom % if discountRate provided (0-100)
+ * - Services Total = Services Subtotal - Discount
+ * - Consultation Fee = 250 (default) or 350 (follow-up) — NOT discounted
+ * - TOTAL BILL = Services Total + Consultation Fee
  *
  * @param request - Fastify request with bill data in body
  * @param reply - Fastify reply object
@@ -31,6 +39,7 @@ export async function createMedicalBillController(
     services,
     notes,
     initialPaymentAmount,
+    consultationFee: inputConsultationFee,
     paymentMethod,
     isSeniorPwdDiscountApplied,
     discountRate
@@ -49,6 +58,14 @@ export async function createMedicalBillController(
     const name: string = user.name;
     const role: Role = user.role as Role;
 
+    // Normalize consultation fee - only 250 or 350 are valid
+    const normalizeConsultationFee = (fee: number | null | undefined): number | null => {
+      const VALID_FEES = [250, 350];
+      if (fee === null || fee === undefined) return null;
+      return VALID_FEES.includes(fee) ? fee : null;
+    };
+    const effectiveConsultationFee = normalizeConsultationFee(inputConsultationFee);
+
     // Log bill creation request
     request.server.log.info(
       {
@@ -56,8 +73,9 @@ export async function createMedicalBillController(
         servicesCount: services.length,
         createdBy: name,
         userRole: role,
+        consultationFee: effectiveConsultationFee ?? "default (250)",
         hasInitialPayment: initialPaymentAmount ? true : false,
-        paymentMethod,
+        paymentMethod: paymentMethod ?? "default (cash)",
         isSeniorPwdDiscountApplied: isSeniorPwdDiscountApplied ?? false,
         discountRate: discountRate ?? 0
       },
@@ -71,20 +89,23 @@ export async function createMedicalBillController(
       notes: notes ?? null,
       createdByName: name,
       createdByRole: role,
+      isSeniorPwdDiscountApplied: isSeniorPwdDiscountApplied ?? false,
+      discountRate: discountRate ?? 0,
     };
 
-    // Add optional fields if they have values
-    if (initialPaymentAmount !== undefined) {
+    // Add optional fields only if they have values
+    if (initialPaymentAmount !== undefined && initialPaymentAmount !== null) {
       serviceInput.initialPaymentAmount = initialPaymentAmount;
     }
-    if (paymentMethod !== undefined) {
+    
+    if (paymentMethod !== undefined && paymentMethod !== null) {
       serviceInput.paymentMethod = paymentMethod;
     }
-    if (isSeniorPwdDiscountApplied !== undefined) {
-      serviceInput.isSeniorPwdDiscountApplied = isSeniorPwdDiscountApplied;
-    }
-    if (discountRate !== undefined) {
-      serviceInput.discountRate = discountRate;
+    
+    // Only pass consultationFee if it's a valid value (250 or 350)
+    // Service will normalize null/undefined to 250
+    if (effectiveConsultationFee !== null) {
+      serviceInput.consultationFee = effectiveConsultationFee;
     }
 
     const result = await createMedicalBillWithServices(request.server, serviceInput);
@@ -105,13 +126,13 @@ export async function createMedicalBillController(
         "Error creating medical bill"
       );
 
-      // Senior/PWD discount without valid ID - NEW ERROR
+      // Senior/PWD discount without valid ID
       if (err.message.includes("Cannot apply senior/PWD discount")) {
         throw request.server.httpErrors.badRequest(err.message);
       }
 
       // Payment exceeds total
-      if (err.message.includes("cannot exceed total bill amount")) {
+      if (err.message.includes("Initial payment") && err.message.includes("exceeds total")) {
         throw request.server.httpErrors.badRequest(err.message);
       }
 
@@ -125,9 +146,9 @@ export async function createMedicalBillController(
         throw request.server.httpErrors.badRequest(err.message);
       }
 
-      // Bill already exists
-      if (err.message === "Medical bill already exists for this documentation") {
-        throw request.server.httpErrors.conflict(err.message);
+      // Services validation
+      if (err.message === "At least one service must be provided.") {
+        throw request.server.httpErrors.badRequest(err.message);
       }
 
       // Service not found
@@ -145,12 +166,22 @@ export async function createMedicalBillController(
         throw request.server.httpErrors.badRequest(err.message);
       }
 
+      // Service quantity validation
+      if (err.message.includes("Service quantity must be positive")) {
+        throw request.server.httpErrors.badRequest(err.message);
+      }
+
+      // Service ID missing
+      if (err.message.includes("Each service must include serviceId")) {
+        throw request.server.httpErrors.badRequest(err.message);
+      }
+
       // Invalid reference (Prisma foreign key error)
       if (err.message.includes("Invalid reference:")) {
         throw request.server.httpErrors.badRequest(err.message);
       }
 
-      // Referenced record not found
+      // Referenced record not found (Prisma P2025)
       if (err.message === "Referenced record not found") {
         throw request.server.httpErrors.notFound(err.message);
       }

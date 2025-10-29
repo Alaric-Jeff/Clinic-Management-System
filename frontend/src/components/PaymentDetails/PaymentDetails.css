@@ -74,6 +74,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 .dropdown-item {
   padding: 8px 12px;
@@ -114,6 +115,27 @@
   padding: 20px;
   color: #666;
 }
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.status-paid {
+  background-color: #dcfce7;
+  color: #166534;
+}
+.status-unpaid {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+.status-partially-paid {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
 .view-btn,
 .update-btn {
   padding: 6px 14px;
@@ -122,6 +144,7 @@
   color: white;
   cursor: pointer;
   margin-right: 6px;
+  font-size: 0.85rem;
 }
 .view-btn {
   background-color: #800000;
@@ -144,46 +167,228 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 .modal {
   background: white;
   border-radius: 10px;
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
 }
+
+/* View Modal Specific Styles */
+.patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.info-label {
+  font-weight: 600;
+  color: #374151;
+}
+.info-value {
+  color: #6b7280;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.details-label {
+  font-weight: bold;
+  color: #374151;
+}
+
+.procedure-section {
+  margin-bottom: 16px;
+}
+.procedure-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 1rem;
+}
+.procedure-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 12px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+.procedure-item span:first-child {
+  flex: 1;
+}
+.procedure-item span:last-child {
+  min-width: 80px;
+  text-align: right;
+}
+
+.grand-total-section {
+  border-top: 3px double #7f1d1d;
+  border-bottom: 3px double #7f1d1d;
+  padding: 16px 0;
+  margin: 16px 0;
+  background-color: #fef2f2;
+}
+.grand-total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+.grand-total-label {
+  color: #7f1d1d;
+  font-size: 1.1rem;
+}
+.grand-total-amount {
+  color: #7f1d1d;
+  font-size: 1.3rem;
+}
+
+.payment-details {
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+.payment-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.payment-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.status-text {
+  font-style: italic;
+  font-weight: 600;
+}
+.status-paid {
+  color: #059669;
+}
+.status-unpaid {
+  color: #dc2626;
+}
+.status-partially-paid {
+  color: #d97706;
+}
+
+.amounts-section {
+  border-top: 2px solid #d1d5db;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.amount-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.amount-label {
+  font-weight: 600;
+  color: #374151;
+}
+.amount-value {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.notes-section {
+  background-color: #fef3c7;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 12px;
+  border-left: 4px solid #d97706;
+}
+.notes-label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+  color: #92400e;
+}
+.notes-value {
+  font-style: italic;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+/* Update Modal Specific Styles */
 .modal-header {
   background-color: #7f1d1d;
   color: white;
   padding: 14px 20px;
   font-weight: bold;
   border-radius: 10px 10px 0 0;
+  font-size: 1.1rem;
 }
 .modal-body {
   padding: 20px;
 }
-.modal-section-header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 600;
-  border-bottom: 2px solid #ddd;
+.modal-body p {
+  margin-bottom: 12px;
   padding-bottom: 8px;
-  margin-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
 }
-.modal-item {
+
+.radio-label {
   display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-style: italic;
-}
-.modal-total {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  border-top: 2px solid #ddd;
+  align-items: center;
+  gap: 8px;
   margin-top: 10px;
-  padding-top: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
 }
+.radio-label:hover {
+  background-color: #f9fafb;
+}
+.partial-input {
+  margin-left: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  width: 120px;
+}
+.partial-input:focus {
+  border-color: #7f1d1d;
+  box-shadow: 0 0 0 2px rgba(127, 29, 29, 0.1);
+}
+
+.payment-preview {
+  background-color: #f0f9ff;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+  border-left: 4px solid #0369a1;
+}
+.preview-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
 .modal-footer {
   text-align: center;
   margin-top: 20px;
@@ -191,10 +396,12 @@
 .close-btn,
 .cancel-btn,
 .save-btn {
-  padding: 8px 20px;
+  padding: 8px 24px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
 .close-btn {
   background-color: #fff;
@@ -210,27 +417,89 @@
   color: #333;
   margin-right: 8px;
 }
+.cancel-btn:hover {
+  background-color: #e5e7eb;
+}
 .save-btn {
   background: #7f1d1d;
   color: white;
   border: none;
 }
-.save-btn:hover {
+.save-btn:hover:not(:disabled) {
   background-color: #a00000;
 }
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+.save-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
-.partial-input {
-  margin-left: 8px;
-  padding: 4px 8px;
+
+/* Loading and Error States */
+.loading-state, .error-state {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1rem;
+}
+.error-state {
+  color: #dc2626;
+}
+.btn-retry {
+  padding: 8px 16px;
+  background-color: #7f1d1d;
+  color: white;
+  border: none;
   border-radius: 6px;
-  border: 1px solid #ccc;
-  outline: none;
+  cursor: pointer;
+  margin-top: 12px;
 }
-.partial-input:focus {
+.btn-retry:hover {
+  background-color: #a00000;
+}
+
+/* Payment Method Section */
+.payment-method-section {
+  margin-bottom: 16px;
+}
+.payment-method-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+.payment-method-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 0.9rem;
+}
+.payment-method-select:focus {
   border-color: #7f1d1d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(127, 29, 29, 0.1);
+}
+
+/* Notes Input Section */
+.notes-input-section {
+  margin-top: 16px;
+}
+.notes-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+.notes-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+.notes-textarea:focus {
+  border-color: #7f1d1d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(127, 29, 29, 0.1);
 }

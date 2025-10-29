@@ -7,12 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.png" // or "./ERD.png" if you prefer a PNG file
+}
+
 // ---------------- ENUMS ----------------
 
 // Roles for staff accounts
 enum Role {
   admin
   encoder
+}
+
+enum ConsultationType {
+  first
+  follow_up
 }
 
 // Patient gender
@@ -108,6 +118,7 @@ model Patient {
   registeredAt       DateTime @default(now())
   isArchived         Boolean  @default(false)
 
+  notes         String?
   // Denormalized audit fields only (no relations needed!)
   createdByName String
   updatedByName String?
@@ -227,7 +238,8 @@ model MedicalBill {
   medicalDocumentationId     String        @unique // One-to-one with medical documentation
   isSeniorPwdDiscountApplied Boolean       @default(false) // this is kind of weird; based on my client this is applied manually: this can only be true if the patient has seniororpwd id, but even if the patient is seniororpwd even with recorder number, it doesn't automatically applied to them.
   discountRate               Float         @default(0.00) //fixed 20% if applied isSeniorPwdDiscountApplied, also it can be manually input like 1% - 100% sometimes for special cases, like relatives going on a checkup, it's like a discount other than pwdorsendior
-  totalAmount                Float         @default(250.00) // every checkup counts as consultation with fixed base rate 250
+  consultationFee            Float         @default(250) // I added this because it's the default price of consultation, it could be either 350 when it's a follow up.
+  totalAmount                Float         @default(0.00) // every checkup counts as consultation with fixed base rate 250
   amountPaid                 Float         @default(0.00)
   balance                    Float         @default(0.00)
   paymentStatus              PaymentStatus @default(unpaid)
