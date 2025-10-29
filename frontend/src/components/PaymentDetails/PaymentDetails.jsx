@@ -18,7 +18,7 @@ export default function PaymentDetails() {
   const [error, setError] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
 
-  const statusOptions = ["Partially Paid", "Unpaid", "Paid"];
+  const statusOptions = ["Partially Paid", "Unpaid"];
   const paymentMethods = ["cash", "card", "gcash", "insurance", "bank_transfer"];
 
   // Fetch unsettled bills from API
