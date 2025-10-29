@@ -6,6 +6,28 @@
   color: #2b2b2b;
 }
 
+/* HEADER (copied from PatientList for consistency) */
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 1.9rem;
+  color: #7f1d1d;
+  font-weight: 900;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.header p {
+  color: #7f1d1d;
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+
 /* Header */
 .services-header {
   display: flex;
@@ -35,6 +57,7 @@
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
+  background-color:#fff ;
 }
 
 .search-input {
@@ -50,6 +73,7 @@
 .category-select {
   min-width: 150px;
   cursor: pointer;
+  color: black;
 }
 
 .add-service-btn {

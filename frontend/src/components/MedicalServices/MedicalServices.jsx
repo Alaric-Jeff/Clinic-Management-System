@@ -26,7 +26,6 @@ const MedicalServices = () => {
       const res = await api.get("/service/get-all-medical-services");
       
       if (res.data.success) {
-        console.log(res.data.data);
         setServices(res.data.data || []);
         setFilteredServices(res.data.data || []);
       } else {
@@ -44,18 +43,15 @@ const MedicalServices = () => {
     }
   };
 
-  // Filter services based on search and category
   useEffect(() => {
     let filtered = services;
 
-    // Filter by search query
     if (searchQuery.trim()) {
       filtered = filtered.filter((service) =>
         service.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter(
         (service) => service.category === selectedCategory
@@ -72,7 +68,6 @@ const MedicalServices = () => {
       const res = await api.delete(`/service/delete-medical-service/${selectedService.id}`);
       
       if (res.data.success) {
-        // Remove service from state immediately
         setServices((prev) =>
           prev.filter((service) => service.id !== selectedService.id)
         );
@@ -101,7 +96,6 @@ const MedicalServices = () => {
     fetchServices();
   }, []);
 
-  // Get unique categories for filter dropdown
   const categories = [...new Set(services.map((s) => s.category))];
 
   if (loading) {
@@ -114,6 +108,14 @@ const MedicalServices = () => {
 
   return (
     <div className="medical-services-container">
+      {/* ✅ Added header (copied and styled from PatientList) */}
+      <div className="header">
+        <div className="title-section">
+          <h1>LEONARDO MEDICAL SERVICES</h1>
+          <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+        </div>
+      </div>
+
       <div className="services-header">
         <h1 className="services-title">Medical Services</h1>
         <button
@@ -124,7 +126,6 @@ const MedicalServices = () => {
         </button>
       </div>
 
-      {/* Search and Filter */}
       <div className="services-filters">
         <input
           type="text"
@@ -195,7 +196,6 @@ const MedicalServices = () => {
         </table>
       </div>
 
-      {/* Modals */}
       {showAddModal && (
         <AddServiceModal
           onClose={() => setShowAddModal(false)}

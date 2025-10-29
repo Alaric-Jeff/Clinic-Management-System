@@ -138,3 +138,81 @@
     margin-left: 220px; /* ✅ prevent sidebar overlap */
   }
 }
+
+/* Logout Confirmation Modal */
+.um-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000; /* higher than sidebar */
+}
+
+.um-confirm-content {
+  background: #fff;
+  color: #222;
+  padding: 25px 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 350px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.3s ease;
+}
+
+.um-confirm-content h3 {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #b40000;
+}
+
+.um-confirm-content p {
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.um-confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.um-btn-confirm-yes,
+.um-btn-confirm-no {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.um-btn-confirm-yes {
+  background: #b40000;
+  color: #fff;
+}
+
+.um-btn-confirm-yes:hover {
+  background: #d93636;
+}
+
+.um-btn-confirm-no {
+  background: #ccc;
+  color: #222;
+}
+
+.um-btn-confirm-no:hover {
+  background: #999;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+

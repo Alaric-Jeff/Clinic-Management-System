@@ -219,19 +219,11 @@ const UserManagement = () => {
 
   return (
     <div className="user-management-container">
-      {/* Header */}
-      <div className="um-header">
-        <div className="um-logo-section">
-          <div className="um-medical-symbol">
-            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L10.5 8H14.5L12 2ZM12 22L13.5 16H9.5L12 22ZM2 12L8 13.5V9.5L2 12ZM22 12L16 10.5V14.5L22 12ZM12 8C10.9 8 10 8.9 10 10V11H9C8.4 11 8 11.4 8 12C8 12.6 8.4 13 9 13H10V14C10 15.1 10.9 16 12 16C13.1 16 14 15.1 14 14V13H15C15.6 13 16 12.6 16 12C16 11.4 15.6 11 15 11H14V10C14 8.9 13.1 8 12 8Z"/>
-            </svg>
-          </div>
-          <div className="um-lms-text">LMS</div>
-        </div>
-        <div className="um-company-info">
-          <h1 className="um-company-name">LEONARDO MEDICAL SERVICES</h1>
-          <p className="um-address">B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+      {/* ✅ Header copied and matched from Medical Services */}
+      <div className="header">
+        <div className="title-section">
+          <h1>LEONARDO MEDICAL SERVICES</h1>
+          <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
         </div>
       </div>
 
@@ -491,13 +483,12 @@ const UserManagement = () => {
       )}
 
       {/* Toast Notification */}
-{showToast && (
-  <div className="um-toast-wrapper um-toast-success">
-    <div className="um-toast-icon">✓</div>
-    <div className="um-toast-message">{toastMessage}</div>
-  </div>
-)}
-
+      {showToast && (
+        <div className="um-toast-wrapper um-toast-success">
+          <div className="um-toast-icon">✓</div>
+          <div className="um-toast-message">{toastMessage}</div>
+        </div>
+      )}
     </div>
   );
 };

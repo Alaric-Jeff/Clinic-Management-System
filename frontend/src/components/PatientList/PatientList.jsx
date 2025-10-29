@@ -23,9 +23,19 @@ const PatientList = () => {
     year: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
   const rowsPerPage = 10;
 
-  const handleArchive = async (patientId) => {
+  const handleArchiveClick = (patientId) => {
+    setSelectedPatientId(patientId);
+    setShowArchiveConfirm(true);
+  };
+
+  const confirmArchive = async () => {
+    if (!selectedPatientId) return;
+    const patientId = selectedPatientId;
+    setShowArchiveConfirm(false);
     if (archivingIds.has(patientId)) return;
     try {
       setArchivingIds((prev) => new Set(prev).add(patientId));
@@ -45,7 +55,13 @@ const PatientList = () => {
         newSet.delete(patientId);
         return newSet;
       });
+      setSelectedPatientId(null);
     }
+  };
+
+  const cancelArchive = () => {
+    setShowArchiveConfirm(false);
+    setSelectedPatientId(null);
   };
 
   const handleViewPatient = (id) => {
@@ -88,7 +104,6 @@ const PatientList = () => {
     switch (filter) {
       case "today":
         return d.toDateString() === now.toDateString();
-      
       case "yesterday":
         const y = new Date();
         y.setDate(now.getDate() - 1);
@@ -111,24 +126,17 @@ const PatientList = () => {
 
   useEffect(() => {
     let filtered = [...patients];
-
-    // Search by name
     if (searchQuery.trim()) {
       filtered = filtered.filter((p) =>
         `${p.lastName} ${p.firstName}`.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Sort
     filtered.sort((a, b) => {
       const nameA = `${a.lastName}, ${a.firstName}`.toLowerCase();
       const nameB = `${b.lastName}, ${b.firstName}`.toLowerCase();
       return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     });
-
-    // Date Filter
     filtered = filtered.filter((p) => isWithinDateRange(p.createdAt, dateFilter));
-
     setFilteredPatients(filtered);
     setCurrentPage(1);
   }, [patients, searchQuery, sortOrder, dateFilter, customDate]);
@@ -152,7 +160,6 @@ const PatientList = () => {
           <h1>LEONARDO MEDICAL SERVICES</h1>
           <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
         </div>
-       
       </div>
 
       <div className="filter-bar">
@@ -199,7 +206,7 @@ const PatientList = () => {
             </select>
           </div>
         )}
-         <button className="adds" onClick={() => setShowAddPatient(true)}>+ Add Patient</button>
+        <button className="adds" onClick={() => setShowAddPatient(true)}>+ Add Patient</button>
       </div>
 
       <div className="table-wrapper">
@@ -218,16 +225,14 @@ const PatientList = () => {
                   <td>{formatName(p)}</td>
                   <td>{formatDateTime(p.createdAt)}</td>
                   <td>
-                  
                     <button onClick={() => handleViewPatient(p.id)} className="view-btn3">View</button>
                     <button
-                      onClick={() => handleArchive(p.id)}
+                      onClick={() => handleArchiveClick(p.id)}
                       className="archive-btn3"
                       disabled={archivingIds.has(p.id)}
                     >
                       {archivingIds.has(p.id) ? "Archiving..." : "Archive"}
                     </button>
-                   
                   </td>
                 </tr>
               ))
@@ -260,6 +265,24 @@ const PatientList = () => {
             fetchPatients();
           }}
         />
+      )}
+
+      {/* ✅ Archive Confirmation Modal */}
+      {showArchiveConfirm && (
+        <div className="um-confirm-overlay">
+          <div className="um-confirm-content">
+            <h3>Confirm Archive</h3>
+            <p>Are you sure you want to archive this patient?</p>
+            <div className="um-confirm-buttons">
+              <button className="um-btn-confirm-yes" onClick={confirmArchive}>
+                Yes, Archive
+              </button>
+              <button className="um-btn-confirm-no" onClick={cancelArchive}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
