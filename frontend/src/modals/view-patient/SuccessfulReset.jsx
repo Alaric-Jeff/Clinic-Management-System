@@ -6,7 +6,7 @@ export default function SuccesfulReset() {
   const navigate = useNavigate();
 
   const handleContinue = () => {
-    navigate('/');
+    navigate('/login');
   };
 
   return (

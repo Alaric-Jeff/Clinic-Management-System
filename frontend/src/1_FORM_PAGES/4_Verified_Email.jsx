@@ -6,7 +6,7 @@ export default function VerifiedEmailPage() {
   const navigate = useNavigate();
 
   const handleContinue = () => {
-    navigate('/');
+    navigate('/login');
   };
 
   return (

@@ -1,20 +1,30 @@
 import type { FastifyInstance } from "fastify";
-import type { getTotalPatientsParamsType } from "../../type-schemas/patients/get-total-paginated-schema.js"
+import { startOfMonth, endOfMonth } from "date-fns";
+import type { getTotalPatientsParamsType } from "../../type-schemas/patients/get-total-paginated-schema.js";
 
-export async function getTotalPatients(
+export async function getThisMonthPatients(
   fastify: FastifyInstance,
   body: getTotalPatientsParamsType
 ) {
   const { limit, cursor, direction = "next" } = body;
+
+  // Local timezone adjustment (for Manila +08:00)
+  const now = new Date();
+  const localNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 8 * 60 * 60 * 1000);
+
+  const start = startOfMonth(localNow);
+  const end = endOfMonth(localNow);
+
+  // Convert local Manila time back to UTC for DB query
+  const startUTC = new Date(start.getTime() - 8 * 60 * 60 * 1000);
+  const endUTC = new Date(end.getTime() - 8 * 60 * 60 * 1000);
 
   try {
     let cursorObj: any = undefined;
 
     if (cursor) {
       const [createdAtStr, id] = cursor.split("|");
-      if (!createdAtStr || !id) {
-        throw new Error("Invalid cursor format");
-      }
+      if (!createdAtStr || !id) throw new Error("Invalid cursor format");
 
       cursorObj = {
         createdAt: new Date(createdAtStr),
@@ -23,7 +33,11 @@ export async function getTotalPatients(
     }
 
     const findManyArgs: any = {
-      where:{
+      where: {
+        createdAt: {
+          gte: startUTC,
+          lte: endUTC,
+        },
         isArchived: false
       },
       select: {
@@ -47,10 +61,7 @@ export async function getTotalPatients(
 
     let patients = await fastify.prisma.patient.findMany(findManyArgs);
 
-    // If going "prev", reverse results to maintain correct chronological order
-    if (direction === "prev") {
-      patients = patients.reverse();
-    }
+    if (direction === "prev") patients = patients.reverse();
 
     const hasNextPage = direction === "next" ? patients.length > limit : !!cursor;
     const hasPreviousPage = direction === "prev" ? patients.length > limit : !!cursor;
@@ -73,7 +84,7 @@ export async function getTotalPatients(
 
     return {
       success: true,
-      message: "Patients retrieved successfully",
+      message: "This month's patients retrieved successfully",
       data: patients.map((p) => ({
         ...p,
         createdAt: p.createdAt.toISOString(),
@@ -88,8 +99,8 @@ export async function getTotalPatients(
     };
   } catch (err: unknown) {
     fastify.log.error(
-      { error: err, operation: "getTotalPatients" },
-      "Failed to retrieve paginated patients"
+      { error: err, operation: "getThisMonthPatients" },
+      "Failed to retrieve this month's patients"
     );
     throw err;
   }

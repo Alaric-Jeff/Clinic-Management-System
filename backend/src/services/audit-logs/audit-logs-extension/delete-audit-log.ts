@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 
 import type {
     AuditLogIdType
-} from '../type-schemas/audit-log-schema.js'
+} from '../../../type-schemas/audit-log-schema.js'
 
 export async function deleteAuditLogService(
     fastify: FastifyInstance,

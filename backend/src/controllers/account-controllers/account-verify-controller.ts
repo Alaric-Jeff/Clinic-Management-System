@@ -58,7 +58,7 @@ export async function accountVerifyController(
                 "Account activated successfully via email verification"
             );
             
-            return reply.redirect(`${process.env.FRONTEND_URL}/activation-success`);
+            return reply.redirect(`${process.env.SUCCESSFUL_CREATE_ACCOUNT}`);
         } else {
             throw new Error("Account activation service returned false");
         }

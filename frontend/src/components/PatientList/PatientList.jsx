@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 import api from "../../axios/api";
 import { useAuth } from "../../context/AuthContext";
 import "./PatientList.css";
@@ -9,21 +10,28 @@ const PatientList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [patients, setPatients] = useState([]);
-  const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [archivingIds, setArchivingIds] = useState(new Set());
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
-  const [dateFilter, setDateFilter] = useState("today");
+  const [dateFilter, setDateFilter] = useState("all");
   const [customDate, setCustomDate] = useState({
     day: "",
     month: "",
     year: "",
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+
+  // Pagination
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState(false);
+  const [currentCursor, setCurrentCursor] = useState(null);
+  const [cursorHistory, setCursorHistory] = useState([]);
+  const [pageDirection, setPageDirection] = useState(null);
+
+  const LIMIT = 10;
+  const searchTimeoutRef = useRef(null);
 
   const handleArchive = async (patientId) => {
     if (archivingIds.has(patientId)) return;
@@ -32,7 +40,7 @@ const PatientList = () => {
       setError("");
       const res = await api.post("/patient/archive-patient", { id: patientId });
       if (res.data.success) {
-        setPatients((prev) => prev.filter((p) => p.id !== patientId));
+        fetchPatients(currentCursor, pageDirection || "next", dateFilter);
       } else {
         setError(res.data.message || "Failed to archive patient");
       }
@@ -53,16 +61,133 @@ const PatientList = () => {
     navigate(`${prefix}/patient-details/${id}`);
   };
 
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async (cursor = null, dir = "next", filter = "all") => {
     try {
-      const res = await api.get("/patient/get-today-patients");
-      if (res.data.success) setPatients(res.data.data || []);
-      else setPatients([]);
+      setLoading(true);
+      setError("");
+
+      let endpoint = "/patient/get-total-patients";
+      if (filter === "today") {
+        endpoint = "/search/search-today-patients";
+      } else if (filter === "week") {
+        endpoint = "/search/search-week-patients";
+      } else if (filter === "month") {
+        endpoint = "/search/search-month-patients";
+      }
+
+      const params = {
+        limit: LIMIT,
+        ...(cursor && { cursor, direction: dir }),
+      };
+
+      const res = await api.get(endpoint, { params });
+
+      if (res.data.success) {
+        const fetchedPatients = res.data.data || [];
+        setPatients(fetchedPatients);
+        setHasNextPage(res.data.meta.hasNextPage);
+        setHasPreviousPage(res.data.meta.hasPreviousPage);
+        setCurrentCursor(cursor);
+        setPageDirection(dir);
+      } else {
+        setPatients([]);
+        setError(res.data.message || "Failed to fetch patients");
+      }
     } catch (err) {
       console.error("Error fetching patients:", err);
       setPatients([]);
+      setError("Unable to fetch patients. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const searchPatients = useCallback(async (query) => {
+    if (!query.trim()) {
+      setCursorHistory([]);
+      setCurrentCursor(null);
+      setPageDirection(null);
+      fetchPatients(null, "next", dateFilter);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const res = await api.post("/search/search-patient", {
+        searchBody: query.trim(),
+      });
+
+      if (res.data.result && res.data.result.length > 0) {
+        const searchResults = res.data.result.map((p) => ({
+          ...p,
+          createdAt: new Date().toISOString(),
+        }));
+        setPatients(searchResults);
+        setHasNextPage(false);
+        setHasPreviousPage(false);
+      } else {
+        setPatients([]);
+        setError("No patients found matching your search.");
+      }
+    } catch (err) {
+      console.error("Error searching patients:", err);
+      setPatients([]);
+      setError("No patients found matching your search.");
+    } finally {
+      setLoading(false);
+    }
+  }, [dateFilter, fetchPatients]);
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      searchPatients(query);
+    }, 300);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCursorHistory([]);
+    setCurrentCursor(null);
+    setPageDirection(null);
+    fetchPatients(null, "next", dateFilter);
+  };
+
+  const handleDateFilterChange = (filter) => {
+    setDateFilter(filter);
+    setCursorHistory([]);
+    setCurrentCursor(null);
+    setPageDirection(null);
+    setSearchQuery("");
+    fetchPatients(null, "next", filter);
+  };
+
+  const handleNextPage = () => {
+    if (hasNextPage && patients.length > 0) {
+      const lastPatient = patients[patients.length - 1];
+      const nextCursor = `${lastPatient.createdAt}|${lastPatient.id}`;
+      setCursorHistory((prev) => [...prev, currentCursor]);
+      fetchPatients(nextCursor, "next", dateFilter);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (hasPreviousPage && cursorHistory.length > 0) {
+      const newHistory = [...cursorHistory];
+      const prevCursor = newHistory.pop();
+      setCursorHistory(newHistory);
+      if (prevCursor === null) {
+        fetchPatients(null, "next", dateFilter);
+      } else {
+        fetchPatients(prevCursor, "next", dateFilter);
+      }
+    } else if (hasPreviousPage) {
+      const firstPatient = patients[0];
+      const prevCursor = `${firstPatient.createdAt}|${firstPatient.id}`;
+      fetchPatients(prevCursor, "prev", dateFilter);
     }
   };
 
@@ -73,7 +198,9 @@ const PatientList = () => {
 
   const formatDateTime = (dateStr) => {
     const d = new Date(dateStr);
-    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }).toLowerCase();
+    const time = d
+      .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      .toLowerCase();
     const day = d.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -82,68 +209,31 @@ const PatientList = () => {
     return `${time} ${day.replace(/\s/g, " ")}`;
   };
 
-  const isWithinDateRange = (date, filter) => {
-    const now = new Date();
-    const d = new Date(date);
-    switch (filter) {
-      case "today":
-        return d.toDateString() === now.toDateString();
-      
-      case "yesterday":
-        const y = new Date();
-        y.setDate(now.getDate() - 1);
-        return d.toDateString() === y.toDateString();
-      case "lastweek":
-        return (now - d) / (1000 * 60 * 60 * 24) <= 7;
-      case "lastmonth":
-        return now.getMonth() === d.getMonth() + 1 || (now - d) / (1000 * 60 * 60 * 24) <= 30;
-      case "custom":
-        const { day, month, year } = customDate;
-        return (
-          (!day || d.getDate() === Number(day)) &&
-          (!month || d.getMonth() + 1 === Number(month)) &&
-          (!year || d.getFullYear() === Number(year))
-        );
-      default:
-        return true;
-    }
-  };
+  const sortedPatients = [...patients].sort((a, b) => {
+    const nameA = `${a.lastName}, ${a.firstName}`.toLowerCase();
+    const nameB = `${b.lastName}, ${b.firstName}`.toLowerCase();
+    return sortOrder === "asc"
+      ? nameA.localeCompare(nameB)
+      : nameB.localeCompare(nameA);
+  });
 
   useEffect(() => {
-    let filtered = [...patients];
-
-    // Search by name
-    if (searchQuery.trim()) {
-      filtered = filtered.filter((p) =>
-        `${p.lastName} ${p.firstName}`.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      const nameA = `${a.lastName}, ${a.firstName}`.toLowerCase();
-      const nameB = `${b.lastName}, ${b.firstName}`.toLowerCase();
-      return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-    });
-
-    // Date Filter
-    filtered = filtered.filter((p) => isWithinDateRange(p.createdAt, dateFilter));
-
-    setFilteredPatients(filtered);
-    setCurrentPage(1);
-  }, [patients, searchQuery, sortOrder, dateFilter, customDate]);
-
-  useEffect(() => {
-    fetchPatients();
+    fetchPatients(null, "next", dateFilter);
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
   }, []);
 
-  const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
-  const displayedPatients = filteredPatients.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
-
-  if (loading) return <p>Loading patients...</p>;
+  if (loading && patients.length === 0) {
+    return (
+      <div className="patient-container">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading patients...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="patient-container">
@@ -152,37 +242,78 @@ const PatientList = () => {
           <h1>LEONARDO MEDICAL SERVICES</h1>
           <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
         </div>
-       
       </div>
 
+      {error && (
+        <div className="error-message">
+          <span className="error-icon">⚠</span>
+          {error}
+        </div>
+      )}
+
       <div className="filter-bar">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+        <div className="search-wrapper">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="search-input"
+          />
+          {searchQuery && (
+            <button
+              className="clear-search"
+              onClick={handleClearSearch}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          className="filter-select"
+        >
           <option value="asc">Ascending ↑</option>
           <option value="desc">Descending ↓</option>
         </select>
-        <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+
+        <select
+          value={dateFilter}
+          onChange={(e) => handleDateFilterChange(e.target.value)}
+          className="filter-select"
+          disabled={!!searchQuery}
+        >
+          <option value="all">All Patients</option>
           <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="lastweek">Last Week</option>
-          <option value="lastmonth">Last Month</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
           <option value="custom">Custom Range</option>
         </select>
 
         {dateFilter === "custom" && (
           <div className="custom-range">
-            <select value={customDate.day} onChange={(e) => setCustomDate({ ...customDate, day: e.target.value })}>
+            <select
+              value={customDate.day}
+              onChange={(e) =>
+                setCustomDate({ ...customDate, day: e.target.value })
+              }
+            >
               <option value="">Day</option>
               {[...Array(31)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>{i + 1}</option>
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}
+                </option>
               ))}
             </select>
-            <select value={customDate.month} onChange={(e) => setCustomDate({ ...customDate, month: e.target.value })}>
+            <select
+              value={customDate.month}
+              onChange={(e) =>
+                setCustomDate({ ...customDate, month: e.target.value })
+              }
+            >
               <option value="">Month</option>
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -190,65 +321,95 @@ const PatientList = () => {
                 </option>
               ))}
             </select>
-            <select value={customDate.year} onChange={(e) => setCustomDate({ ...customDate, year: e.target.value })}>
+            <select
+              value={customDate.year}
+              onChange={(e) =>
+                setCustomDate({ ...customDate, year: e.target.value })
+              }
+            >
               <option value="">Year</option>
               {Array.from({ length: 10 }, (_, i) => {
                 const year = new Date().getFullYear() - i;
-                return <option key={year} value={year}>{year}</option>;
+                return (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                );
               })}
             </select>
           </div>
         )}
-         <button className="adds" onClick={() => setShowAddPatient(true)}>+ Add Patient</button>
+
+        <button className="adds" onClick={() => setShowAddPatient(true)}>
+          + Add Patient
+        </button>
       </div>
 
       <div className="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Time and Date</th>
-              <th>Action</th>
+              <th>NAME</th>
+              <th>TIME AND DATE</th>
+              <th>ACTION</th>
             </tr>
           </thead>
           <tbody>
-            {displayedPatients.length > 0 ? (
-              displayedPatients.map((p) => (
+            {sortedPatients.length > 0 ? (
+              sortedPatients.map((p) => (
                 <tr key={p.id}>
                   <td>{formatName(p)}</td>
                   <td>{formatDateTime(p.createdAt)}</td>
                   <td>
-                  
-                    <button onClick={() => handleViewPatient(p.id)} className="view-btn3">View</button>
+                    <button
+                      onClick={() => handleViewPatient(p.id)}
+                      className="view-btn"
+                    >
+                      View
+                    </button>
                     <button
                       onClick={() => handleArchive(p.id)}
-                      className="archive-btn3"
+                      className="archive-btn"
                       disabled={archivingIds.has(p.id)}
                     >
                       {archivingIds.has(p.id) ? "Archiving..." : "Archive"}
                     </button>
-                   
                   </td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="3" className="no-data">No records found</td></tr>
+              <tr>
+                <td colSpan="3" className="no-data">
+                  {searchQuery
+                    ? "No patients found matching your search"
+                    : "No records found"}
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {totalPages > 1 && (
+      {!searchQuery && (hasPreviousPage || hasNextPage) && (
         <div className="pagination">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => setCurrentPage(i + 1)}
-              className={currentPage === i + 1 ? "active" : ""}
-            >
-              {i + 1}
-            </button>
-          ))}
+          <button
+            onClick={handlePreviousPage}
+            disabled={!hasPreviousPage}
+            className="pagination-btn"
+          >
+            ← Previous
+          </button>
+          <span className="pagination-info">
+            {patients.length}{" "}
+            {patients.length === 1 ? "patient" : "patients"} displayed
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={!hasNextPage}
+            className="pagination-btn"
+          >
+            Next →
+          </button>
         </div>
       )}
 
@@ -257,7 +418,11 @@ const PatientList = () => {
           onClose={() => setShowAddPatient(false)}
           onSuccess={() => {
             setShowAddPatient(false);
-            fetchPatients();
+            setSearchQuery("");
+            setCursorHistory([]);
+            setCurrentCursor(null);
+            setPageDirection(null);
+            fetchPatients(null, "next", dateFilter);
           }}
         />
       )}

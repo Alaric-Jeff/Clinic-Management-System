@@ -1,11 +1,20 @@
 import type { FastifyInstance } from "fastify";
-import type { getTotalPatientsParamsType } from "../../type-schemas/patients/get-total-paginated-schema.js"
+import { startOfWeek, endOfWeek, addHours } from "date-fns";
+import type { getTotalPatientsParamsType } from "../../type-schemas/patients/get-total-paginated-schema.js";
 
-export async function getTotalPatients(
+export async function getThisWeekPatient(
   fastify: FastifyInstance,
   body: getTotalPatientsParamsType
 ) {
-  const { limit, cursor, direction = "next" } = body;
+  const { cursor, limit, direction = "next" } = body;
+
+  // ✅ Force consistent timezone (Asia/Manila = UTC+8)
+  const now = new Date();
+  const start = addHours(startOfWeek(now, { weekStartsOn: 1 }), -8); // convert Manila start → UTC
+  const end = addHours(endOfWeek(now, { weekStartsOn: 1 }), -8);     // convert Manila end → UTC
+
+  fastify.log.info(`startOfWeek (UTC): ${start}`);
+  fastify.log.info(`endOfWeek (UTC): ${end}`);
 
   try {
     let cursorObj: any = undefined;
@@ -23,7 +32,11 @@ export async function getTotalPatients(
     }
 
     const findManyArgs: any = {
-      where:{
+      where: {
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
         isArchived: false
       },
       select: {
@@ -47,10 +60,7 @@ export async function getTotalPatients(
 
     let patients = await fastify.prisma.patient.findMany(findManyArgs);
 
-    // If going "prev", reverse results to maintain correct chronological order
-    if (direction === "prev") {
-      patients = patients.reverse();
-    }
+    if (direction === "prev") patients = patients.reverse();
 
     const hasNextPage = direction === "next" ? patients.length > limit : !!cursor;
     const hasPreviousPage = direction === "prev" ? patients.length > limit : !!cursor;
@@ -73,7 +83,7 @@ export async function getTotalPatients(
 
     return {
       success: true,
-      message: "Patients retrieved successfully",
+      message: "This week's patients retrieved successfully",
       data: patients.map((p) => ({
         ...p,
         createdAt: p.createdAt.toISOString(),
@@ -88,8 +98,8 @@ export async function getTotalPatients(
     };
   } catch (err: unknown) {
     fastify.log.error(
-      { error: err, operation: "getTotalPatients" },
-      "Failed to retrieve paginated patients"
+      { error: err, operation: "getThisWeekPatient" },
+      "Failed to retrieve this week's patients"
     );
     throw err;
   }

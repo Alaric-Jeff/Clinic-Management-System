@@ -192,7 +192,7 @@ async function generateComprehensiveAnalytics() {
           for (const serviceData of dailyData.serviceAnalytics) {
             await prisma.serviceDailyAnalytics.create({
               data: {
-                dailyAnalyticsId: dailyAnalytics.id,
+                dailyAnalyticsId: dailyAnalytics.id,  
                 serviceId: serviceData.serviceId,
                 serviceName: serviceData.serviceName,
                 serviceCategory: serviceData.serviceCategory,

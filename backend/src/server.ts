@@ -1,4 +1,4 @@
-import Fastify, { fastify } from 'fastify'
+import Fastify from 'fastify'
 import dotenv from 'dotenv'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import prismaPlugin from './plugins/prisma-plug.js'

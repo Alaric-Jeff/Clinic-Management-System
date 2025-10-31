@@ -1,11 +1,17 @@
 import type { FastifyInstance } from "fastify";
-import type { getTotalPatientsParamsType } from "../../type-schemas/patients/get-total-paginated-schema.js"
+import { startOfDay, endOfDay } from "date-fns";
+import type { getTotalPatientsParamsType } from "../../type-schemas/patients/get-total-paginated-schema.js";
 
-export async function getTotalPatients(
+export async function getThisDayPatients(
   fastify: FastifyInstance,
   body: getTotalPatientsParamsType
 ) {
   const { limit, cursor, direction = "next" } = body;
+
+  // Philippine timezone safe range for today
+  const now = new Date();
+  const start = startOfDay(now);
+  const end = endOfDay(now);
 
   try {
     let cursorObj: any = undefined;
@@ -23,8 +29,12 @@ export async function getTotalPatients(
     }
 
     const findManyArgs: any = {
-      where:{
-        isArchived: false
+      where: {
+        isArchived: false,
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
       },
       select: {
         id: true,
@@ -47,7 +57,6 @@ export async function getTotalPatients(
 
     let patients = await fastify.prisma.patient.findMany(findManyArgs);
 
-    // If going "prev", reverse results to maintain correct chronological order
     if (direction === "prev") {
       patients = patients.reverse();
     }
@@ -73,7 +82,7 @@ export async function getTotalPatients(
 
     return {
       success: true,
-      message: "Patients retrieved successfully",
+      message: "Today's patients retrieved successfully",
       data: patients.map((p) => ({
         ...p,
         createdAt: p.createdAt.toISOString(),
@@ -88,8 +97,8 @@ export async function getTotalPatients(
     };
   } catch (err: unknown) {
     fastify.log.error(
-      { error: err, operation: "getTotalPatients" },
-      "Failed to retrieve paginated patients"
+      { error: err, operation: "getThisDayPatients" },
+      "Failed to retrieve today's patients"
     );
     throw err;
   }

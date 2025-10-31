@@ -1,4 +1,4 @@
-import { getAuditLogs } from "../../audit-logs/get-audit-logs.js";
+import { getAuditLogs } from "../../services/audit-logs/audit-logs-extension/get-audit-logs.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 
 export async function getLogsController(

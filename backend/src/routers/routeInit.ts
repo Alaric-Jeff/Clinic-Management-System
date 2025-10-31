@@ -8,6 +8,7 @@ import { medicalDocumentationRoutes } from "./medical-documentation-routes.js";
 import { doctorRoutes } from "./doctor-routes.js";
 import { statisticRoutes } from "./statistic-routes.js";
 import { requireRole } from "../hooks/authorization.js";
+import { searchEngineRoutes } from "./search-engine-routes.js";
 import { Role } from "@prisma/client";
 import { auditLogRoutes } from "./auditLogs.js";
 
@@ -41,6 +42,7 @@ const routeInit = async (fastify: FastifyInstance) => {
     fastify.register(doctorRoutes, {prefix: "/api/v1/doctors"});
     fastify.register(auditLogRoutes, {prefix: "/api/v1/logs"})
     fastify.register(statisticRoutes, {prefix: "/api/v1/statistics"})
+    fastify.register(searchEngineRoutes, {prefix: "/api/v1/search"})
 };
 
 export default routeInit;

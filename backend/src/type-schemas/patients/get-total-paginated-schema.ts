@@ -29,7 +29,7 @@ export const totalPatientPaginatedResponseSchema = Type.Object({
     endCursor: Type.Union([Type.String(), Type.Null()]),   
     limit: Type.Number(),
   }),
-});
+}); 
 
 export type totalPatientPaginatedResponseType = Static<
   typeof totalPatientPaginatedResponseSchema
