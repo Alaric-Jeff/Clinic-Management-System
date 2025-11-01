@@ -73,25 +73,30 @@ export async function updatePaymentService(
             });
 
             // 5. Create bill audit log
-            await tx.billAuditLog.create({
-                data: {
-                    medicalBillId: medicalBillId,
-                    action: "payment_recorded",
-                    fieldsChanged: "amountPaid,balance,paymentStatus",
-                    previousData: JSON.stringify({
-                        amountPaid: medicalBill.amountPaid,
-                        balance: medicalBill.balance,
-                        paymentStatus: medicalBill.paymentStatus
-                    }),
-                    newData: JSON.stringify({
-                        amountPaid: newAmountPaid,
-                        balance: newBalance,
-                        paymentStatus: newPaymentStatus
-                    }),
-                    changedByName: updatedByName,
-                    changedByRole: updatedByRole
-                }
-            });
+await tx.billAuditLog.create({
+  data: {
+    medicalBillId: medicalBillId,
+    action: "payment_recorded",
+    fieldsChanged: "amountPaid,balance,paymentStatus,paymentMethod", // Added paymentMethod
+    previousData: JSON.stringify({
+      amountPaid: medicalBill.amountPaid,
+      balance: medicalBill.balance,
+      paymentStatus: medicalBill.paymentStatus,
+      paymentMethod: null // or previous method if tracked
+    }),
+    newData: JSON.stringify({
+      amountPaid: newAmountPaid,
+      balance: newBalance,
+      paymentStatus: newPaymentStatus,
+      paymentMethod: paymentMethod, // Include this
+      paymentAmount: paymentAmount, // The amount paid in THIS transaction
+      notes: notes
+    }),
+    changedByName: updatedByName,
+    changedByRole: updatedByRole
+  }
+});
+            
 
             return {
                 medicalBill: updatedBill,
