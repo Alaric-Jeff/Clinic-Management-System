@@ -329,12 +329,20 @@ tbody tr:hover {
   background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
+  /* Removed blue border effect */
+  border-color: transparent !important;
+  outline: none;
 }
 
 .archive-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.archive-btn:focus {
+  outline: none;
+  border-color: transparent;
 }
 
 /* PAGINATION */

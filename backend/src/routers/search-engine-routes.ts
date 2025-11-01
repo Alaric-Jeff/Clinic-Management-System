@@ -4,7 +4,9 @@ import { searchPatientController } from "../controllers/search-engine-controller
 import { searchPatientWeekController } from "../controllers/search-engine-controller/search-patient-week-controller.js";
 import { searchPatientMonthController } from "../controllers/search-engine-controller/search-patient-month-controller.js";
 import { searchPatientDayController } from "../controllers/search-engine-controller/get-this-day-patient-controller.js";
+import { searchMedicalServiceController } from "../controllers/search-engine-controller/medical-services-search-controller/search-medical-service.controller.js";
 
+import { searchServiceSchema, searchServiceEngineResponse } from "../type-schemas/search-engine-schemas/search-service-schema.js";
 import { searchBodySchema, searchPatientEngineResponse } from "../type-schemas/search-engine-schemas/search-patient-schema.js";
 import {getTotalPatientsParams, totalPatientPaginatedResponseSchema} from '../type-schemas/patients/get-total-paginated-schema.js'
 import { requireRole } from "../hooks/authorization.js";
@@ -60,5 +62,17 @@ export async function searchEngineRoutes(
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: searchPatientDayController
     })
+
+    fastify.route({
+        method: "POST",
+        url: '/search-medical-service',
+        schema: {
+            body: searchServiceSchema,
+            response: {
+                200: searchServiceEngineResponse
+            }
+        }, preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: searchMedicalServiceController
+    })    
 
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from "flowbite-react";
 import { useNavigate } from 'react-router-dom';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import Toast from '../Toast/Toast';
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -32,6 +34,59 @@ const HistoryLog = ({ patient, onBack }) => {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
   const [collapsedDates, setCollapsedDates] = useState(new Set());
+
+  // Modal and Toast states
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    type: 'warning',
+    title: '',
+    message: '',
+    onConfirm: null,
+    isLoading: false
+  });
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success',
+    duration: 4000
+  });
+
+  // Show toast function
+  const showToast = (message, type = 'success', duration = 4000) => {
+    setToastConfig({
+      isVisible: true,
+      message,
+      type,
+      duration
+    });
+  };
+
+  // Close toast function
+  const closeToast = () => {
+    setToastConfig(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // Show modal function
+  const showModal = (title, message, type = 'warning', onConfirm) => {
+    setModalConfig({
+      isOpen: true,
+      type,
+      title,
+      message,
+      onConfirm,
+      isLoading: false
+    });
+  };
+
+  // Close modal function
+  const closeModal = () => {
+    setModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Set modal loading state
+  const setModalLoading = (isLoading) => {
+    setModalConfig(prev => ({ ...prev, isLoading }));
+  };
 
   // Get icon for source type
   const getSourceIcon = (sourceType) => {
@@ -448,18 +503,11 @@ const HistoryLog = ({ patient, onBack }) => {
     });
   };
 
-  const handleDeleteSelected = async () => {
-    if (selectedLogs.size === 0) {
-      alert('Please select logs to delete');
-      return;
-    }
-
-    if (!window.confirm(`Are you sure you want to delete ${selectedLogs.size} audit log(s)? This action cannot be undone.`)) {
-      return;
-    }
+  const performDelete = async () => {
+    if (selectedLogs.size === 0) return;
 
     try {
-      setDeleting(true);
+      setModalLoading(true);
       const logIds = Array.from(selectedLogs);
 
       const response = await api.post('/logs/delete-audit-logs', {
@@ -469,16 +517,31 @@ const HistoryLog = ({ patient, onBack }) => {
       if (response.data.success) {
         setHistoryLogs(prev => prev.filter(log => !selectedLogs.has(log.id)));
         setSelectedLogs(new Set());
-        alert(`Successfully deleted ${response.data.deletedCount} audit log(s)`);
+        showToast(`Successfully deleted ${response.data.deletedCount} audit log(s)`, 'success');
+        closeModal();
       } else {
         throw new Error(response.data.message || 'Failed to delete logs');
       }
     } catch (error) {
       console.error('Error deleting logs:', error);
-      alert(error.response?.data?.message || error.message || 'Failed to delete audit logs');
+      showToast(error.response?.data?.message || error.message || 'Failed to delete audit logs', 'error');
     } finally {
-      setDeleting(false);
+      setModalLoading(false);
     }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedLogs.size === 0) {
+      showToast('Please select logs to delete', 'warning');
+      return;
+    }
+
+    showModal(
+      `Delete ${selectedLogs.size} Audit Log(s)`,
+      `Are you sure you want to delete ${selectedLogs.size} audit log(s)? This action cannot be undone.`,
+      'danger',
+      performDelete
+    );
   };
 
   const fetchHistoryLogs = useCallback(async () => {
@@ -496,6 +559,7 @@ const HistoryLog = ({ patient, onBack }) => {
     } catch (error) {
       console.error('Error fetching history logs:', error);
       setError(error.response?.data?.message || error.message || 'Failed to load history logs. Please try again.');
+      showToast('Failed to load history logs', 'error');
     } finally {
       setLoading(false);
     }
@@ -505,54 +569,74 @@ const HistoryLog = ({ patient, onBack }) => {
     fetchHistoryLogs();
   }, [fetchHistoryLogs]);
 
-  const handleClose = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      navigate(-1);
-    }
-  };
-
   const groupedLogs = groupLogsByDate(historyLogs);
+
+  if (loading) {
+    return (
+      <div className="history-log-container">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading audit logs...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="history-log-container">
-      <div className="history-log-header">
-        <h1 className="history-log-title">System Audit Logs</h1>
-        <div className="header-actions">
-          {selectedLogs.size > 0 && (
-            <button 
-              className="delete-selected-btn"
-              onClick={handleDeleteSelected}
-              disabled={deleting}
-            >
-              <Trash2 size={18} />
-              {deleting ? 'Deleting...' : `Delete ${selectedLogs.size} Selected`}
-            </button>
-          )}
-          <button 
-            className="history-log-close-btn" 
-            onClick={handleClose}
-            aria-label="Close history log"
-          >
-            ✕
-          </button>
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        isLoading={modalConfig.isLoading}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        isVisible={toastConfig.isVisible}
+        onClose={closeToast}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        position="bottom-right"
+      />
+
+      {/* Leonardo Medical Services Header */}
+      <div className="header">
+        <div className="title-section">
+          <h1>LEONARDO MEDICAL SERVICES</h1>
+          <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
         </div>
       </div>
 
-      {loading ? (
-        <div className="loading-state">
-          <div className="loading-spinner">Loading audit logs...</div>
+      {error && (
+        <div className="error-message">
+          <span className="error-icon">⚠</span>
+          {error}
         </div>
-      ) : error ? (
-        <div className="error-state">
-          <AlertCircle size={48} className="error-icon" />
-          <div className="error-message">{error}</div>
-          <button onClick={fetchHistoryLogs} className="retry-button">
-            Try Again
+      )}
+
+      {/* Delete Selected Button - Moved to top right */}
+      {selectedLogs.size > 0 && (
+        <div className="delete-toolbar">
+          <button 
+            className="delete-selected-btn"
+            onClick={handleDeleteSelected}
+            disabled={deleting}
+          >
+            <Trash2 size={18} />
+            {deleting ? 'Deleting...' : `Delete ${selectedLogs.size} Selected`}
           </button>
         </div>
-      ) : Object.keys(groupedLogs).length === 0 ? (
+      )}
+
+      {Object.keys(groupedLogs).length === 0 ? (
         <div className="empty-state">
           <FileText size={64} className="empty-icon" />
           <p>No audit logs found in the system</p>
@@ -786,7 +870,7 @@ const HistoryLog = ({ patient, onBack }) => {
             );
           })}
         </div>
-      )}  
+      )}
     </div>
   );
 };

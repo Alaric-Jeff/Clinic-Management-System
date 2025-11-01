@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Toast Container Positioning */
+.toast-container {
+  position: fixed;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-width: 320px;
+  max-width: 420px;
+  font-family: 'Poppins', sans-serif;
+  animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Position Variants */
+.toast-bottom-right {
+  bottom: 24px;
+  right: 24px;
+}
+
+.toast-bottom-left {
+  bottom: 24px;
+  left: 24px;
+}
+
+.toast-top-right {
+  top: 24px;
+  right: 24px;
+}
+
+.toast-top-left {
+  top: 24px;
+  left: 24px;
+}
+
+/* Toast Content */
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  position: relative;
+}
+
+.toast-icon-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.toast-icon {
+  color: white;
+}
+
+/* Type Variants */
+.toast-success .toast-icon-wrapper {
+  background-color: #10b981;
+}
+
+.toast-error .toast-icon-wrapper {
+  background-color: #ef4444;
+}
+
+.toast-warning .toast-icon-wrapper {
+  background-color: #f59e0b;
+}
+
+.toast-info .toast-icon-wrapper {
+  background-color: #3b82f6;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.toast-close-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.toast-close-btn:hover {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+/* Progress Bar */
+.toast-progress-bar {
+  height: 4px;
+  width: 100%;
+  background-color: #f3f4f6;
+  overflow: hidden;
+}
+
+.toast-progress-fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  animation: shrink linear forwards;
+}
+
+.toast-success .toast-progress-fill {
+  background-color: #10b981;
+}
+
+.toast-error .toast-progress-fill {
+  background-color: #ef4444;
+}
+
+.toast-warning .toast-progress-fill {
+  background-color: #f59e0b;
+}
+
+.toast-info .toast-progress-fill {
+  background-color: #3b82f6;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .toast-container {
+    min-width: 280px;
+    max-width: calc(100vw - 32px);
+    margin: 0 16px;
+  }
+  
+  .toast-bottom-right,
+  .toast-bottom-left {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+  
+  .toast-top-right,
+  .toast-top-left {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}

@@ -5,6 +5,8 @@ import api from "../../axios/api";
 import { useAuth } from "../../context/AuthContext";
 import "./PatientList.css";
 import AddPatient from "../../modals/add-patient/AddPatient";
+import Toast from "../Toast/Toast";
+import ConfirmModal from "../ConfirmModal/ConfirmModal";
 
 const PatientList = () => {
   const navigate = useNavigate();
@@ -23,6 +25,22 @@ const PatientList = () => {
     year: "",
   });
 
+  // Modal and Toast states
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    type: 'warning',
+    title: '',
+    message: '',
+    onConfirm: null,
+    isLoading: false
+  });
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success',
+    duration: 4000
+  });
+
   // Pagination
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
@@ -33,27 +51,77 @@ const PatientList = () => {
   const LIMIT = 10;
   const searchTimeoutRef = useRef(null);
 
-  const handleArchive = async (patientId) => {
+  // Show toast function
+  const showToast = (message, type = 'success', duration = 4000) => {
+    setToastConfig({
+      isVisible: true,
+      message,
+      type,
+      duration
+    });
+  };
+
+  // Close toast function
+  const closeToast = () => {
+    setToastConfig(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // Show modal function
+  const showModal = (title, message, type = 'warning', onConfirm) => {
+    setModalConfig({
+      isOpen: true,
+      type,
+      title,
+      message,
+      onConfirm,
+      isLoading: false
+    });
+  };
+
+  // Close modal function
+  const closeModal = () => {
+    setModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Set modal loading state
+  const setModalLoading = (isLoading) => {
+    setModalConfig(prev => ({ ...prev, isLoading }));
+  };
+
+  const performArchive = async (patientId) => {
     if (archivingIds.has(patientId)) return;
     try {
+      setModalLoading(true);
       setArchivingIds((prev) => new Set(prev).add(patientId));
       setError("");
       const res = await api.post("/patient/archive-patient", { id: patientId });
       if (res.data.success) {
         fetchPatients(currentCursor, pageDirection || "next", dateFilter);
+        showToast('Patient archived successfully', 'success');
+        closeModal();
       } else {
-        setError(res.data.message || "Failed to archive patient");
+        throw new Error(res.data.message || "Failed to archive patient");
       }
     } catch (err) {
       console.error(err);
-      setError("Unable to archive patient.");
+      showToast("Unable to archive patient.", 'error');
     } finally {
       setArchivingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(patientId);
         return newSet;
       });
+      setModalLoading(false);
     }
+  };
+
+  const handleArchive = (patientId) => {
+    showModal(
+      "Archive Patient",
+      "Are you sure you want to archive this patient? This will move this patient to the archive page.",
+      'warning',
+      () => performArchive(patientId)
+    );
   };
 
   const handleViewPatient = (id) => {
@@ -92,11 +160,13 @@ const PatientList = () => {
       } else {
         setPatients([]);
         setError(res.data.message || "Failed to fetch patients");
+        showToast(res.data.message || "Failed to fetch patients", 'error');
       }
     } catch (err) {
       console.error("Error fetching patients:", err);
       setPatients([]);
       setError("Unable to fetch patients. Please try again.");
+      showToast("Unable to fetch patients. Please try again.", 'error');
     } finally {
       setLoading(false);
     }
@@ -129,11 +199,13 @@ const PatientList = () => {
       } else {
         setPatients([]);
         setError("No patients found matching your search.");
+        showToast("No patients found matching your search.", 'warning');
       }
     } catch (err) {
       console.error("Error searching patients:", err);
       setPatients([]);
       setError("No patients found matching your search.");
+      showToast("No patients found matching your search.", 'error');
     } finally {
       setLoading(false);
     }
@@ -237,6 +309,29 @@ const PatientList = () => {
 
   return (
     <div className="patient-container">
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        isLoading={modalConfig.isLoading}
+        confirmText="Archive"
+        cancelText="Cancel"
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        isVisible={toastConfig.isVisible}
+        onClose={closeToast}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        position="bottom-right"
+      />
+
       <div className="header">
         <div className="title-section">
           <h1>LEONARDO MEDICAL SERVICES</h1>
@@ -423,6 +518,7 @@ const PatientList = () => {
             setCurrentCursor(null);
             setPageDirection(null);
             fetchPatients(null, "next", dateFilter);
+            showToast('Patient added successfully', 'success');
           }}
         />
       )}

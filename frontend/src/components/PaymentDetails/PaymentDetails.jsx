@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import "./PaymentDetails.css";
+import Toast from "../Toast/Toast";
+import ConfirmModal from "../ConfirmModal/ConfirmModal";
 import api from '../../axios/api';
 
 export default function PaymentDetails() {
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [dateFilter, setDateFilter] = useState("all");
   const [showViewModal, setShowViewModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [updateStatus, setUpdateStatus] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
@@ -17,9 +20,24 @@ export default function PaymentDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
+  
+  // Toast state
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
 
-  const statusOptions = ["Partially Paid", "Unpaid"];
-  const paymentMethods = ["cash", "card", "gcash", "insurance", "bank_transfer"];
+  const statusOptions = ["Partially Paid"];
+  const paymentMethods = [
+    { value: "cash", label: "Cash" },
+    { value: "card", label: "Card" },
+    { value: "gcash", label: "GCash" },
+    { value: "insurance", label: "Insurance" },
+    { value: "bank_transfer", label: "Bank Transfer" }
+  ];
+
+  const MAX_NOTES_LENGTH = 150;
 
   // Fetch unsettled bills from API
   useEffect(() => {
@@ -32,11 +50,8 @@ export default function PaymentDetails() {
       setError(null);
       
       const response = await api.get('/bills/get-unsettled-bills');
-      
-      // Access the data property from the response
       const billsData = response.data.data;
       
-      // Ensure we have an array
       if (Array.isArray(billsData)) {
         setRecords(billsData);
       } else {
@@ -52,6 +67,14 @@ export default function PaymentDetails() {
     }
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ isVisible: true, message, type });
+  };
+
+  const closeToast = () => {
+    setToast({ ...toast, isVisible: false });
+  };
+
   const handleViewClick = (record) => {
     setSelectedRecord(record);
     setShowViewModal(true);
@@ -59,65 +82,102 @@ export default function PaymentDetails() {
 
   const handleUpdateClick = (record) => {
     setSelectedRecord(record);
-    setUpdateStatus(record.paymentStatus);
+    setUpdateStatus("");
     setPartialAmount("");
     setPaymentMethod("cash");
     setNotes("");
     setShowUpdateModal(true);
   };
 
-  const handleSaveUpdate = async () => {
-    if (selectedRecord && updateStatus) {
-      setProcessingPayment(true);
-      setError(null);
+  const handlePartialAmountChange = (e) => {
+    const value = e.target.value;
+    
+    // Allow empty string
+    if (value === "") {
+      setPartialAmount("");
+      return;
+    }
+
+    // Parse as number
+    const numValue = parseFloat(value);
+    
+    // Validate: must be positive and not exceed balance
+    if (!isNaN(numValue) && numValue >= 0) {
+      if (numValue <= (selectedRecord?.balance || 0)) {
+        setPartialAmount(value);
+      } else {
+        showToast("Amount cannot exceed balance", "error");
+      }
+    }
+  };
+
+  const handleNotesChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= MAX_NOTES_LENGTH) {
+      setNotes(value);
+    }
+  };
+
+  const handlePreparePayment = () => {
+    // Validation
+    if (!updateStatus) {
+      showToast("Please select a payment type", "error");
+      return;
+    }
+
+    if (updateStatus === "Partially Paid") {
+      const amount = parseFloat(partialAmount);
       
-      try {
-        // Calculate payment amount based on selection
-        let paymentAmount;
-        if (updateStatus === "Paid") {
-          paymentAmount = selectedRecord.balance;
-        } else if (updateStatus === "Partially Paid") {
-          paymentAmount = parseFloat(partialAmount);
-        } else {
-          paymentAmount = 0.01; // API requires minimum 0.01
-        }
+      if (!partialAmount || isNaN(amount)) {
+        showToast("Please enter a valid payment amount", "error");
+        return;
+      }
+      
+      if (amount <= 0) {
+        showToast("Payment amount must be greater than 0", "error");
+        return;
+      }
+      
+      if (amount > (selectedRecord.balance || 0)) {
+        showToast("Payment amount cannot exceed remaining balance", "error");
+        return;
+      }
 
-        // Validate payment amount
-        if (updateStatus === "Partially Paid") {
-          if (!partialAmount || parseFloat(partialAmount) <= 0) {
-            setError("Partial payment amount must be greater than 0");
-            setProcessingPayment(false);
-            return;
-          }
-          if (parseFloat(partialAmount) > (selectedRecord.balance || 0)) {
-            setError("Payment amount cannot exceed remaining balance");
-            setProcessingPayment(false);
-            return;
-          }
-        }
+      // Check if partial payment equals full balance
+      if (amount === selectedRecord.balance) {
+        showToast("This amount equals the full balance. Please select 'Full Payment' instead.", "error");
+        return;
+      }
+    }
 
-        console.log("Payment calculation:", {
-          updateStatus,
-          balance: selectedRecord.balance,
-          partialAmount,
-          finalPaymentAmount: paymentAmount
-        });
+    // Show confirmation modal
+    setShowConfirmModal(true);
+  };
 
-        // Prepare payment data according to the API schema
-        const paymentData = {
-          medicalBillId: selectedRecord.id,
-          paymentAmount: paymentAmount,
-          paymentMethod: paymentMethod,
-          notes: notes.trim() || undefined
-        };
+  const handleConfirmPayment = async () => {
+    setProcessingPayment(true);
+    setShowConfirmModal(false);
+    
+    try {
+      // Calculate payment amount
+      let paymentAmount;
+      if (updateStatus === "Paid") {
+        paymentAmount = selectedRecord.balance;
+      } else if (updateStatus === "Partially Paid") {
+        paymentAmount = parseFloat(partialAmount);
+      }
 
-        console.log("Sending payment data to API:", paymentData);
+      const paymentData = {
+        medicalBillId: selectedRecord.id,
+        paymentAmount: paymentAmount,
+        paymentMethod: paymentMethod,
+        notes: notes.trim() || undefined
+      };
 
-        // Use axios for the update call
-        const response = await api.post('/bills/update-payment', paymentData);
-        console.log("API Response:", response.data);
+      const response = await api.post('/bills/update-payment', paymentData);
 
-        // Refresh the data
+      if (response.data.success) {
+        showToast("Payment processed successfully!", "success");
         await fetchUnsettledBills();
         setShowUpdateModal(false);
         setSelectedRecord(null);
@@ -125,22 +185,16 @@ export default function PaymentDetails() {
         setPartialAmount("");
         setPaymentMethod("cash");
         setNotes("");
-        
-      } catch (err) {
-        console.error('Full error object:', err);
-        console.error('Error response:', err.response);
-        console.error('Error message:', err.message);
-        console.error('Error data:', err.response?.data);
-        
-        const errorMessage = err.response?.data?.message || 
-                           err.response?.data?.error || 
-                           err.message || 
-                           'Failed to update payment';
-        
-        setError(errorMessage);
-      } finally {
-        setProcessingPayment(false);
       }
+    } catch (err) {
+      console.error('Payment error:', err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.message || 
+                          'Failed to update payment';
+      showToast(errorMessage, "error");
+    } finally {
+      setProcessingPayment(false);
     }
   };
 
@@ -164,14 +218,30 @@ export default function PaymentDetails() {
     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Format payment method for display
-  const formatPaymentMethod = (method) => {
-    return method.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+  // Check if record is within date range
+  const isWithinDateRange = (dateString) => {
+    const recordDate = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const recordDay = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
+
+    switch (dateFilter) {
+      case 'today':
+        return recordDay.getTime() === today.getTime();
+      case 'week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(today.getDate() - 7);
+        return recordDay >= weekAgo;
+      case 'month':
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(today.getMonth() - 1);
+        return recordDay >= monthAgo;
+      default:
+        return true;
+    }
   };
 
-  // Filter records based on search and status - with safety check
+  // Filter records
   const filteredRecords = Array.isArray(records) ? records.filter(record => {
     if (!record || !record.medicalDocumentation || !record.medicalDocumentation.patient) {
       return false;
@@ -181,7 +251,9 @@ export default function PaymentDetails() {
     const matchesSearch = patientName.includes(searchTerm.toLowerCase());
     const formattedStatus = formatPaymentStatus(record.paymentStatus);
     const matchesStatus = !selectedStatus || formattedStatus === selectedStatus;
-    return matchesSearch && matchesStatus;
+    const matchesDate = isWithinDateRange(record.createdAt);
+    
+    return matchesSearch && matchesStatus && matchesDate;
   }) : [];
 
   if (loading) {
@@ -192,20 +264,9 @@ export default function PaymentDetails() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="payment-details-container">
-        <div className="error-state">Error: {error}</div>
-        <button onClick={fetchUnsettledBills} className="btn-retry">
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="payment-details-container">
-      {/* Universal Header */}
+      {/* Header */}
       <div className="header">
         <h1>LEONARDO MEDICAL SERVICES</h1>
         <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
@@ -226,39 +287,29 @@ export default function PaymentDetails() {
           className="search-input"
         />
 
-        <div className="status-filter">
-          <button
-            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-            className="status-btn"
-          >
-            {selectedStatus || "All Status ▾"}
-          </button>
-          {showStatusDropdown && (
-            <div className="status-dropdown">
-              <div
-                className="dropdown-item"
-                onClick={() => {
-                  setSelectedStatus("");
-                  setShowStatusDropdown(false);
-                }}
-              >
-                All Status
-              </div>
-              {statusOptions.map((status) => (
-                <div
-                  key={status}
-                  className="dropdown-item"
-                  onClick={() => {
-                    setSelectedStatus(status);
-                    setShowStatusDropdown(false);
-                  }}
-                >
-                  {status}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="filter-select"
+        >
+          <option value="">All Status</option>
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="all">All Dates</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
       </div>
 
       {/* Records Table */}
@@ -276,7 +327,7 @@ export default function PaymentDetails() {
             {filteredRecords.length === 0 ? (
               <tr>
                 <td colSpan="4" className="no-data">
-                  {records.length === 0 ? 'No payment records available.' : 'No records match your search.'}
+                  {records.length === 0 ? 'No payment records available.' : 'No records match your filters.'}
                 </td>
               </tr>
             ) : (
@@ -314,106 +365,91 @@ export default function PaymentDetails() {
 
       {/* View Modal */}
       {showViewModal && selectedRecord && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">Payment Details</div>
+        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="modal view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Payment Details</h3>
+              <button className="modal-close-btn" onClick={() => setShowViewModal(false)}>✕</button>
+            </div>
+            
             <div className="modal-body">
-              <div className="patient-info">
-                <div className="info-item">
-                  <span className="info-label">Patient:</span>
-                  <span className="info-value">
-                    {formatPatientName(selectedRecord.medicalDocumentation.patient)}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Date:</span>
-                  <span className="info-value">{formatDate(selectedRecord.createdAt)}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Senior/PWD ID:</span>
-                  <span className="info-value">
-                    {selectedRecord.medicalDocumentation.patient.csdIdOrPwdId || 'None'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="details-header">
-                <span className="details-label">PROCEDURE</span>
-                <span className="details-label">FEES</span>
-              </div>
-
-              <div className="procedure-section">
-                <div className="procedure-title">Consultation</div>
-                <div className="procedure-item">
-                  <span>Consultation Fee</span>
-                  <span>₱ {selectedRecord.consultationFee?.toFixed(2) || '0.00'}</span>
+              <div className="patient-info-card">
+                <h4 className="card-header">Patient Information</h4>
+                <div className="info-content">
+                  <div className="info-item">
+                    <span className="label">Name</span>
+                    <span className="value">
+                      {formatPatientName(selectedRecord.medicalDocumentation.patient)}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Date</span>
+                    <span className="value">{formatDate(selectedRecord.createdAt)}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Senior/PWD ID</span>
+                    <span className="value">
+                      {selectedRecord.medicalDocumentation.patient.csdIdOrPwdId || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="procedure-section">
-                <div className="procedure-title">Additional Services</div>
-                <div className="procedure-item">
-                  <span>Other Services</span>
-                  <span>₱ {((selectedRecord.totalAmount || 0) - (selectedRecord.consultationFee || 0)).toFixed(2)}</span>
+              <div className="billing-card">
+                <h4 className="card-header">Billing Summary</h4>
+                <div className="billing-content">
+                  <div className="billing-item">
+                    <span>Consultation Fee</span>
+                    <span className="price">₱ {selectedRecord.consultationFee?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="billing-item">
+                    <span>Additional Services</span>
+                    <span className="price">₱ {((selectedRecord.totalAmount || 0) - (selectedRecord.consultationFee || 0)).toFixed(2)}</span>
+                  </div>
+                  {selectedRecord.isSeniorPwdDiscountApplied && (
+                    <div className="billing-item discount-item">
+                      <span>Discount ({selectedRecord.discountRate}%)</span>
+                      <span className="price discount">- ₱ {(((selectedRecord.consultationFee || 0) + ((selectedRecord.totalAmount || 0) - (selectedRecord.consultationFee || 0))) * (selectedRecord.discountRate / 100)).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="billing-item total-item">
+                    <span>Total Amount</span>
+                    <span className="price total">₱ {selectedRecord.totalAmount?.toFixed(2) || '0.00'}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="grand-total-section">
-                <div className="grand-total-item">
-                  <span className="grand-total-label">GRAND TOTAL</span>
-                  <span className="grand-total-amount">₱ {selectedRecord.totalAmount?.toFixed(2) || '0.00'}</span>
-                </div>
-              </div>
-
-              <div className="payment-details">
-                <div className="payment-info">
-                  <span className="payment-label">Current Status:</span>
-                  <span className={`status-text status-${selectedRecord.paymentStatus?.toLowerCase().replace('_', '-')}`}>
-                    {formatPaymentStatus(selectedRecord.paymentStatus)}
-                  </span>
-                </div>
-
-                <div className="payment-info">
-                  <span className="payment-label">
-                    Senior/PWD Discount Applied: 
-                  </span>
-                  <span>{selectedRecord.isSeniorPwdDiscountApplied ? 'Yes' : 'No'}</span>
+              <div className="payment-info-card">
+                <h4 className="card-header">Payment Information</h4>
+                <div className="payment-content">
+                  <div className="payment-detail">
+                    <span className="detail-label">Status</span>
+                    <span className={`status-badge status-${selectedRecord.paymentStatus?.toLowerCase().replace('_', '-')}`}>
+                      {formatPaymentStatus(selectedRecord.paymentStatus)}
+                    </span>
+                  </div>
+                  <div className="payment-detail">
+                    <span className="detail-label">Amount Paid</span>
+                    <span className="detail-value paid">₱ {selectedRecord.amountPaid?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="payment-detail balance-detail">
+                    <span className="detail-label">Remaining Balance</span>
+                    <span className="detail-value balance">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
+                  </div>
                 </div>
 
-                {selectedRecord.isSeniorPwdDiscountApplied && (
-                  <div className="payment-info">
-                    <span className="payment-label">Discount Rate:</span>
-                    <span>{selectedRecord.discountRate}%</span>
+                {selectedRecord.notes && (
+                  <div className="notes-box">
+                    <strong>Notes:</strong> {selectedRecord.notes}
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="amounts-section">
-                <div className="amount-item">
-                  <span className="amount-label">Amount Paid:</span>
-                  <span className="amount-value">₱ {selectedRecord.amountPaid?.toFixed(2) || '0.00'}</span>
-                </div>
-                <div className="amount-item">
-                  <span className="amount-label">Remaining Balance:</span>
-                  <span className="amount-value">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
-                </div>
-              </div>
-
-              {selectedRecord.notes && (
-                <div className="notes-section">
-                  <span className="notes-label">Notes:</span>
-                  <span className="notes-value">{selectedRecord.notes}</span>
-                </div>
-              )}
-
-              <div className="modal-footer">
-                <button
-                  className="close-btn"
-                  onClick={() => setShowViewModal(false)}
-                >
-                  Close
-                </button>
-              </div>
+            <div className="modal-footer">
+              <button className="btn-close-only" onClick={() => setShowViewModal(false)}>
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -421,154 +457,179 @@ export default function PaymentDetails() {
 
       {/* Update Modal */}
       {showUpdateModal && selectedRecord && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">Update Payment Status</div>
+        <div className="modal-overlay" onClick={() => setShowUpdateModal(false)}>
+          <div className="modal update-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Update Payment</h3>
+              <button className="modal-close-btn" onClick={() => setShowUpdateModal(false)}>✕</button>
+            </div>
+            
             <div className="modal-body">
-              <div className="patient-info">
-                <div className="info-item">
-                  <span className="info-label">Name:</span>
-                  <span className="info-value">
+              <div className="patient-summary-card">
+                <div className="summary-row">
+                  <span className="summary-label">Patient:</span>
+                  <span className="summary-value">
                     {formatPatientName(selectedRecord.medicalDocumentation.patient)}
                   </span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">Date:</span>
-                  <span className="info-value">{formatDate(selectedRecord.createdAt)}</span>
+                <div className="summary-row">
+                  <span className="summary-label">Date:</span>
+                  <span className="summary-value">{formatDate(selectedRecord.createdAt)}</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">Current Balance:</span>
-                  <span className="info-value">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
+                <div className="summary-row balance-row">
+                  <span className="summary-label">Current Balance:</span>
+                  <span className="summary-value balance">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
                 </div>
               </div>
 
-              {/* Payment Method Selection */}
-              <div className="payment-method-section">
-                <label className="payment-method-label">Payment Method:</label>
-                <select 
-                  value={paymentMethod} 
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="payment-method-select"
-                >
-                  {paymentMethods.map(method => (
-                    <option key={method} value={method}>
-                      {formatPaymentMethod(method)}
-                    </option>
+              <div className="form-section">
+                <label className="form-label">Payment Method</label>
+                <div className="payment-method-grid">
+                  {paymentMethods.map((method) => (
+                    <button
+                      key={method.value}
+                      className={`payment-method-btn ${paymentMethod === method.value ? 'active' : ''}`}
+                      onClick={() => setPaymentMethod(method.value)}
+                    >
+                      {method.label}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              {/* Status Selection */}
-              <div className="radio-group">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Unpaid"
-                    checked={updateStatus === "Unpaid"}
-                    onChange={(e) => setUpdateStatus(e.target.value)}
-                  />
-                  <span className="radio-text">Unpaid (₱ 0.00)</span>
-                </label>
-
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Paid"
-                    checked={updateStatus === "Paid"}
-                    onChange={(e) => setUpdateStatus(e.target.value)}
-                  />
-                  <span className="radio-text">Paid (Full Amount: ₱ {selectedRecord.balance?.toFixed(2) || '0.00'})</span>
-                </label>
-
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Partially Paid"
-                    checked={updateStatus === "Partially Paid"}
-                    onChange={(e) => setUpdateStatus(e.target.value)}
-                  />
-                  <span className="radio-text">Partially Paid</span>
-                  {updateStatus === "Partially Paid" && (
+              <div className="form-section">
+                <label className="form-label">Payment Type</label>
+                <div className="payment-type-options">
+                  <label className={`payment-type-card ${updateStatus === "Paid" ? 'selected' : ''}`}>
                     <input
-                      type="number"
-                      placeholder="Enter amount"
-                      value={partialAmount}
-                      onChange={(e) => setPartialAmount(e.target.value)}
-                      className="partial-input"
-                      min="0.01"
-                      max={selectedRecord.balance || 0}
-                      step="0.01"
+                      type="radio"
+                      name="paymentType"
+                      value="Paid"
+                      checked={updateStatus === "Paid"}
+                      onChange={(e) => {
+                        setUpdateStatus(e.target.value);
+                        setPartialAmount("");
+                      }}
                     />
-                  )}
-                </label>
+                    <div className="card-content">
+                      <span className="card-title">Full Payment</span>
+                      <span className="card-amount">₱ {selectedRecord.balance?.toFixed(2) || '0.00'}</span>
+                    </div>
+                  </label>
+
+                  <label className={`payment-type-card ${updateStatus === "Partially Paid" ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="Partially Paid"
+                      checked={updateStatus === "Partially Paid"}
+                      onChange={(e) => setUpdateStatus(e.target.value)}
+                    />
+                    <div className="card-content">
+                      <span className="card-title">Partial Payment</span>
+                      <span className="card-subtitle">Enter custom amount</span>
+                    </div>
+                  </label>
+                </div>
+
+                {updateStatus === "Partially Paid" && (
+                  <div className="partial-input-wrapper">
+                    <label className="input-label">Amount to Pay</label>
+                    <div className="currency-input">
+                      <span className="currency-symbol">₱</span>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={partialAmount}
+                        onChange={handlePartialAmountChange}
+                        className="amount-input"
+                        min="0.01"
+                        max={selectedRecord.balance || 0}
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="input-helper">
+                      Maximum: ₱ {selectedRecord.balance?.toFixed(2) || '0.00'}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Notes Field */}
-              <div className="notes-input-section">
-                <label className="notes-label">Notes (Optional):</label>
+              {updateStatus === 'Partially Paid' && partialAmount && parseFloat(partialAmount) > 0 && (
+                <div className="payment-preview-card">
+                  <div className="preview-row">
+                    <span>Payment Amount:</span>
+                    <span className="preview-amount">₱ {parseFloat(partialAmount || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="preview-row">
+                    <span>Remaining Balance:</span>
+                    <span className="preview-amount">₱ {Math.max(0, (selectedRecord.balance || 0) - parseFloat(partialAmount || 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="form-section">
+                <label className="form-label">
+                  Notes (Optional)
+                  <span className="char-count">{notes.length}/{MAX_NOTES_LENGTH}</span>
+                </label>
                 <textarea
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={handleNotesChange}
                   className="notes-textarea"
                   placeholder="Add any notes about this payment..."
                   rows="3"
+                  maxLength={MAX_NOTES_LENGTH}
                 />
               </div>
+            </div>
 
-              {updateStatus === 'Partially Paid' && partialAmount && (
-                <div className="payment-preview">
-                  <div className="preview-item">
-                    <span>Payment Amount:</span>
-                    <span>₱ {parseFloat(partialAmount || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="preview-item">
-                    <span>Remaining Balance:</span>
-                    <span>₱ {((selectedRecord.balance || 0) - parseFloat(partialAmount || 0)).toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="error-message">
-                  {error}
-                </div>
-              )}
-
-              <div className="modal-footer">
-                <button
-                  className="cancel-btn"
-                  onClick={() => {
-                    setShowUpdateModal(false);
-                    setSelectedRecord(null);
-                    setUpdateStatus("");
-                    setPartialAmount("");
-                    setPaymentMethod("cash");
-                    setNotes("");
-                    setError(null);
-                  }}
-                  disabled={processingPayment}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="save-btn" 
-                  onClick={handleSaveUpdate}
-                  disabled={
-                    processingPayment ||
-                    (updateStatus === 'Partially Paid' && (!partialAmount || parseFloat(partialAmount) <= 0)) ||
-                    (updateStatus === 'Partially Paid' && parseFloat(partialAmount) > (selectedRecord.balance || 0))
-                  }
-                >
-                  {processingPayment ? "Processing..." : "Process Payment"}
-                </button>
-              </div>
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowUpdateModal(false)}
+                disabled={processingPayment}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={handlePreparePayment}
+                disabled={
+                  processingPayment ||
+                  !updateStatus ||
+                  (updateStatus === 'Partially Paid' && (!partialAmount || parseFloat(partialAmount) <= 0))
+                }
+              >
+                Process Payment
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmPayment}
+        title="Confirm Payment"
+        message={`Are you sure you want to process this ${updateStatus === 'Paid' ? 'full' : 'partial'} payment of ₱${updateStatus === 'Paid' ? selectedRecord?.balance?.toFixed(2) : parseFloat(partialAmount || 0).toFixed(2)}?`}
+        confirmText="Process Payment"
+        cancelText="Cancel"
+        type="warning"
+        isLoading={processingPayment}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={closeToast}
+        duration={4000}
+        position="bottom-right"
+      />
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../axios/api";
+import Toast from '../../components/Toast/Toast';
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
 import "./MedicalServices.css";
 import AddServiceModal from "../../modals/add-service/AddServiceModal";
-import DeleteServiceModal from "../../modals/delete-service/DeleteServiceModal";
 import EditServiceModal from "../../modals/edit-service/EditServiceModal";
 
 const MedicalServices = () => {
@@ -18,6 +19,22 @@ const MedicalServices = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast state
+  const [toast, setToast] = useState({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ ...toast, show: false });
+  };
 
   const fetchServices = async () => {
     try {
@@ -33,12 +50,14 @@ const MedicalServices = () => {
         setServices([]);
         setFilteredServices([]);
         setError(res.data.message || "Failed to fetch services");
+        showToast(res.data.message || 'Failed to fetch services', 'error');
       }
     } catch (err) {
       console.error("Error fetching services:", err);
       setError("Unable to load medical services. Please try again.");
       setServices([]);
       setFilteredServices([]);
+      showToast('Unable to load medical services', 'error');
     } finally {
       setLoading(false);
     }
@@ -65,9 +84,15 @@ const MedicalServices = () => {
     setFilteredServices(filtered);
   }, [searchQuery, selectedCategory, services]);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteClick = (service) => {
+    setSelectedService(service);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!selectedService) return;
 
+    setIsDeleting(true);
     try {
       const res = await api.delete(`/service/delete-medical-service/${selectedService.id}`);
       
@@ -77,13 +102,19 @@ const MedicalServices = () => {
           prev.filter((service) => service.id !== selectedService.id)
         );
         setShowDeleteModal(false);
+        showToast('Service successfully deleted', 'success');
         setSelectedService(null);
       } else {
         setError(res.data.message || "Failed to delete service");
+        showToast(res.data.message || 'Failed to delete service', 'error');
       }
     } catch (err) {
       console.error("Error deleting service:", err);
-      setError("Unable to delete service. Please try again.");
+      const errorMsg = err.response?.data?.message || "Unable to delete service. Please try again.";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -92,9 +123,17 @@ const MedicalServices = () => {
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (service) => {
-    setSelectedService(service);
-    setShowDeleteModal(true);
+  const handleAddSuccess = () => {
+    setShowAddModal(false);
+    showToast('Service successfully added', 'success');
+    fetchServices();
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    setSelectedService(null);
+    showToast('Service successfully updated', 'success');
+    fetchServices();
   };
 
   useEffect(() => {
@@ -107,47 +146,64 @@ const MedicalServices = () => {
   if (loading) {
     return (
       <div className="medical-services-container">
-        <p className="loading-state">Loading medical services...</p>
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading medical services...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="medical-services-container">
-      <div className="services-header">
-        <h1 className="services-title">Medical Services</h1>
+      {/* Leonardo Medical Services Header */}
+      <div className="header">
+        <div className="title-section">
+          <h1>LEONARDO MEDICAL SERVICES</h1>
+          <p>B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="error-message">
+          <span className="error-icon">⚠</span>
+          {error}
+        </div>
+      )}
+
+      {/* Search and Filter Section */}
+      <div className="services-controls">
+        <div className="services-search-filters">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Search services..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <select
+            className="category-select"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           className="add-service-btn"
           onClick={() => setShowAddModal(true)}
         >
-          + Add Services
+          + Add Service
         </button>
       </div>
-
-      {/* Search and Filter */}
-      <div className="services-filters">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <select
-          className="category-select"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          <option value="">Category ▾</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
 
       <div className="services-table-container">
         <table className="services-table">
@@ -199,10 +255,7 @@ const MedicalServices = () => {
       {showAddModal && (
         <AddServiceModal
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
-            setShowAddModal(false);
-            fetchServices();
-          }}
+          onSuccess={handleAddSuccess}
         />
       )}
 
@@ -213,24 +266,31 @@ const MedicalServices = () => {
             setShowEditModal(false);
             setSelectedService(null);
           }}
-          onSuccess={() => {
-            setShowEditModal(false);
-            setSelectedService(null);
-            fetchServices();
-          }}
+          onSuccess={handleEditSuccess}
         />
       )}
 
-      {showDeleteModal && selectedService && (
-        <DeleteServiceModal
-          serviceName={selectedService.name}
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => {
-            setShowDeleteModal(false);
-            setSelectedService(null);
-          }}
-        />
-      )}
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Service?"
+        message={selectedService ? `Are you sure you want to delete "${selectedService.name}"? This action cannot be undone.` : ''}
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.show}
+        onClose={hideToast}
+        position="bottom-right"
+      />
     </div>
   );
 };
