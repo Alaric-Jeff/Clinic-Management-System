@@ -17,11 +17,17 @@ export async function addNoteController(
         note
     } = request.body;
 
+    let user = request.currentUser;
+
+    if(!user || !user.name || !user.role){
+        throw request.server.httpErrors.unauthorized("Unauthorized access")
+    }
+
     request.log.info(`addNoteController: Starting note addition for patient ${id}`);
     request.log.info(`addNoteController: Note to add: ${note}`);
 
     try{
-        const newNote = await addNoteService(request.server, {id, note});
+        const newNote = await addNoteService(request.server, {id, note, changedByName: user.name, changedByRole: user.role});
 
         request.log.info(`addNoteController: Successfully added note for patient ${id}`);
 

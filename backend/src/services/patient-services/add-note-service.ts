@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
-import type { addNoteType } from "../../type-schemas/patients/add-note-schema.js";
+import type { addNoteServiceType } from "../../type-schemas/patients/add-note-schema.js";
 
 export async function addNoteService(
   fastify: FastifyInstance,
-  body: addNoteType
+  body: addNoteServiceType
 ) {
-  const { id, note } = body;
+  const { id, note, changedByName, changedByRole } = body;
 
   fastify.log.info(`addNoteService: Received request for patient ID: ${id}`);
   fastify.log.info(`addNoteService: Note content: ${note}`);
@@ -13,7 +13,7 @@ export async function addNoteService(
   try {
     const patient = await fastify.prisma.patient.findUnique({
       where: { id },
-      select: { notes: true },
+      select: { notes: true }
     });
 
     if (!patient) {
@@ -21,14 +21,21 @@ export async function addNoteService(
       throw new Error("Patient with id not found");
     }
 
-    fastify.log.info(`addNoteService: Current patient notes: ${patient.notes}`);
-
-    // REPLACE the notes instead of appending
     const result = await fastify.prisma.patient.update({
       where: { id },
-      data: { notes: note }, // Directly use the new note (replace)
-      select: {
-        notes: true
+      data: { notes: note },
+      select: { notes: true }
+    });
+
+    await fastify.prisma.patientAuditLog.create({
+      data: {
+        patientId: id,
+        action: "updated",
+        fieldsChanged: "notes",
+        previousData: JSON.stringify({ notes: patient.notes ?? "" }),
+        newData: JSON.stringify({ notes: note }),
+        changedByName,
+        changedByRole
       }
     });
 
