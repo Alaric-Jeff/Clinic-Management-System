@@ -96,7 +96,7 @@ export async function unarchivePatientService(
     await fastify.prisma.patientAuditLog.create({
       data: {
         patientId: id,
-        action: 'update',
+        action: 'updated',
         fieldsChanged: 'isArchived',
         previousData: 'true',
         newData: 'false',

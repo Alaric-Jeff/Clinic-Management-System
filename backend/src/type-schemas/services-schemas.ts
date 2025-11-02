@@ -28,17 +28,17 @@ import { Role } from "@prisma/client";
 
 
 export const createMedicalServiceSchema = Type.Object({
-    name: Type.String({minLength: 3}),
+    name: Type.String({minLength: 2}),
     category: Type.Enum(ServiceCategory),
-    price: Type.Number()
+    price: Type.Number({minimum: 1})
 })
 
 export type createMedicalServiceType = Static<typeof createMedicalServiceSchema>;
 
 export const createMedicalServiceFull = Type.Object({
-    name: Type.String({minLength: 3}),
+    name: Type.String({minLength: 2}),
     category: Type.Enum(ServiceCategory),
-    price: Type.Number(),
+    price: Type.Number({minimum: 1}),
     createdByName: Type.String(),
     createdByRole: Type.Enum(Role),
 })
@@ -57,9 +57,9 @@ export const createMedicalServiceSuccessResponse = Type.Object({
 
 export const updateMedicalServiceSchema = Type.Object({
     id: Type.String(),
-    name: Type.Union([Type.String({}), Type.Null()]),
+    name: Type.Union([Type.String({minLength: 1}), Type.Null()]),
     category: Type.Union([Type.String({}), Type.Null()]),
-    price: Type.Union([Type.Number(), Type.Null()])
+    price: Type.Union([Type.Number({minimum: 1}), Type.Null()])
 })
 
 export type updateMedicalServiceType = Static<typeof updateMedicalServiceSchema>;

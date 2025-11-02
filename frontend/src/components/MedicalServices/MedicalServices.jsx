@@ -221,7 +221,7 @@ const MedicalServices = () => {
                 <tr key={service.id}>
                   <td>{service.name}</td>
                   <td>{service.category}</td>
-                  <td>{service.price.toFixed(2)}php</td>
+                  <td>₱ {service.price.toFixed(2)}</td>
                   <td>
                     <button
                       className="edit-btn"
@@ -256,6 +256,7 @@ const MedicalServices = () => {
         <AddServiceModal
           onClose={() => setShowAddModal(false)}
           onSuccess={handleAddSuccess}
+          existingServices={services}
         />
       )}
 
