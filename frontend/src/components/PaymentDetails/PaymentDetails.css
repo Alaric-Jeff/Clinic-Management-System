@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 .btn-close-only {
   padding: 11px 32px;
   border-radius: 10px;
@@ -14,7 +16,7 @@
   background: linear-gradient(135deg, #a00000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(139, 0, 0, 0.3);
-}@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+}
 
 .payment-details-container {
   background-color: #fef3f3;
