@@ -24,7 +24,7 @@ export async function getOnePatientService(
   fastify: FastifyInstance, 
   body: { id: string; limit?: number } // ✅ Make limit configurable
 ) {
-  const { id, limit = 20 } = body; // ✅ Default to 20 most recent
+  const { id, limit = 50 } = body; 
 
   fastify.log.debug(
     { patientId: id, limit, operation: 'getOnePatientService' },
@@ -58,6 +58,9 @@ export async function getOnePatientService(
         
         // Medical documentation preview
         medicalDocumentations: {
+          where: {
+            isArchived: false
+          },
           select: {
             id: true,
             status: true, 

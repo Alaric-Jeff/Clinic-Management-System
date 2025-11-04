@@ -1,0 +1,60 @@
+import type { Role } from "@prisma/client";
+import type { FastifyInstance } from "fastify";
+
+export async function unarchiveMedicalDocument(
+  fastify: FastifyInstance,
+  body: {
+    id: string;
+    changedByName: string;
+    changedByRole: Role;
+  }
+) {
+  const { id, changedByName, changedByRole } = body;
+
+  try {
+    const document = await fastify.prisma.medicalDocumentation.findUnique({
+      where: { id },
+      select: { isArchived: true },
+    });
+
+    if (!document) {
+      fastify.log.error(`Document doesn't exist, current id: ${id}`);
+      throw new Error("Document doesn't exist");
+    }
+
+    if (document.isArchived === false) {
+      fastify.log.warn(`Idempotent operation, document is already active`);
+      throw new Error("The document is already active");
+    }
+
+    await fastify.prisma.$transaction(async (tx) => {
+      await tx.medicalDocumentation.update({
+        where: { id },
+        data: { isArchived: false },
+      });
+
+      await tx.documentAuditLog.create({
+        data: {
+          medicalDocumentationId: id,
+          action: "updated",
+          fieldsChanged: "isArchived",
+          previousData: JSON.stringify({ isArchived: true }),
+          newData: JSON.stringify({ isArchived: false }),
+          changedByName,
+          changedByRole,
+        },
+      });
+    });
+
+    fastify.log.info(`Successfully unarchived medical documentation ${id}`);
+    return;
+
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      fastify.log.error(
+        `Error occurred in unarchiving documentation service: ${err.message}`
+      );
+    }
+    throw err;
+  }
+}
