@@ -5,7 +5,6 @@ import {
   Users,
   UserCheck,
   Activity,
-  DollarSign,
   TrendingDown,
 } from "lucide-react";
 import "./Dashboard.css";
@@ -586,47 +585,72 @@ const Dashboard = () => {
           <div className="stats-grid">
             {/* Today's Revenue Card */}
             <div className="stat-card analytics">
-              <div className="stat-icon-small green">
-                <DollarSign size={20} />
-              </div>
-              <div className="stat-content">
-                <h3 className="stat-label-small">Today's Revenue</h3>
-                <p className="stat-value-large">
-                  {fmtCurrency(dailySales.totalRevenue)}
-                </p>
-              </div>
-            </div>
+  <div className="stat-icon-small green">
+    <span
+      style={{
+        fontSize: "20px",
+        fontWeight: 600,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: 1,
+      }}
+    >
+      ₱
+    </span>
+  </div>
+
+  <div className="stat-content">
+    <h3 className="stat-label-small">Today's Revenue</h3>
+    <p className="stat-value-large">
+      {fmtCurrency(dailySales.totalRevenue)}
+    </p>
+  </div>
+</div>
 
             {/* Monthly Revenue Card */}
             <div className="stat-card analytics">
-              <div className="stat-icon-small green">
-                <DollarSign size={20} />
-              </div>
-              <div className="stat-content">
-                <h3 className="stat-label-small">Monthly Revenue</h3>
-                <p className="stat-value-large">
-                  {fmtCurrency(monthlyRevenue.currentMonthRevenue)}
-                </p>
-                <div
-                  className={`stat-trend ${
-                    monthlyRevenue.isPositive ? "positive" : "negative"
-                  }`}
-                >
-                  {monthlyRevenue.isPositive ? (
-                    <TrendingUp size={14} />
-                  ) : (
-                    <TrendingDown size={14} />
-                  )}
-                  <span>
-                    {Math.abs(monthlyRevenue.percentageChange)}% vs last month
-                  </span>
-                </div>
-              </div>
-            </div>
+  <div className="stat-icon-small pink">
+    <span
+      style={{
+        fontSize: "20px",
+        fontWeight: 600,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: 1,
+      }}
+    >
+      ₱
+    </span>
+  </div>
+
+  <div className="stat-content">
+    <h3 className="stat-label-small">Monthly Revenue</h3>
+    <p className="stat-value-large">
+      {fmtCurrency(monthlyRevenue.currentMonthRevenue)}
+    </p>
+
+    <div
+      className={`stat-trend ${
+        monthlyRevenue.isPositive ? "positive" : "negative"
+      }`}
+    >
+      {monthlyRevenue.isPositive ? (
+        <TrendingUp size={14} />
+      ) : (
+        <TrendingDown size={14} />
+      )}
+      <span>
+        {Math.abs(monthlyRevenue.percentageChange)}% vs last month
+      </span>
+    </div>
+  </div>
+</div>
 
             {/* Forecast Card */}
             <div className="stat-card analytics forecast-card">
-              <div className="stat-icon-small blue">
+              <div className="stat-icon-small purple">
                 <TrendingUp size={20} />
               </div>
               <div className="stat-content">
@@ -636,16 +660,27 @@ const Dashboard = () => {
                 <p className="stat-value-large">
                   {fmtCurrency(monthlyRevenue.forecast.nextMonthPrediction)}
                 </p>
-                <div className="stat-meta">
-                  <span
-                    className={`trend-badge ${monthlyRevenue.forecast.trend}`}
-                  >
-                    {monthlyRevenue.forecast.trend}
-                  </span>
-                  <span className="confidence-score">
-                    {monthlyRevenue.forecast.confidenceScore}% confidence
-                  </span>
-                </div>
+               <div className="stat-meta">
+  <span
+    className={`trend-badge ${
+      monthlyRevenue.forecast.trend === "up"
+        ? "trend-up"
+        : monthlyRevenue.forecast.trend === "down"
+        ? "trend-down"
+        : "trend-neutral"
+    }`}
+  >
+    {monthlyRevenue.forecast.trend === "up"
+      ? "↑ Uptrend"
+      : monthlyRevenue.forecast.trend === "down"
+      ? "↓ Downtrend"
+      : "→ Stable"}
+  </span>
+
+  <span className="confidence-score">
+    {monthlyRevenue.forecast.confidenceScore}% Confidence
+  </span>
+</div>
               </div>
             </div>
           </div>

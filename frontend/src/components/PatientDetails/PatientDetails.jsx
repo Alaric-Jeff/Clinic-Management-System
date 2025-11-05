@@ -20,6 +20,7 @@ const PatientDetail = () => {
   const [remarks, setRemarks] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(null); // Track which record is being archived
 
   const fetchPatient = async () => {
     try {
@@ -79,6 +80,35 @@ const PatientDetail = () => {
     // Reset remarks to original patient notes and exit edit mode
     setRemarks(patient?.notes || "");
     setIsEditing(false);
+  };
+
+  const handleArchiveRecord = async (docId) => {
+    if (!window.confirm("Are you sure you want to archive this medical record?")) {
+      return;
+    }
+
+    try {
+      setArchiveLoading(docId);
+      
+      // Call the API to archive the medical documentation
+      const response = await api.post('/medical-documentation/archive', {
+        id: docId
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        // Refresh patient data to update the medical records list
+        await fetchPatient();
+        
+        // Optional: Show success message
+        console.log('Record archived successfully:', response.data);
+      }
+    } catch (err) {
+      console.error("Error archiving record:", err);
+      // Handle error - show a toast or error message
+      alert("Failed to archive record. Please try again.");
+    } finally {
+      setArchiveLoading(null);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -294,7 +324,7 @@ const PatientDetail = () => {
               <th>Date of Visit</th>
               <th>Admitted By</th>
               <th>Status of Record</th>
-              <th>Documents</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -309,12 +339,21 @@ const PatientDetail = () => {
                     </span>
                   </td>
                   <td>
-                    <button
-                      className="view-btn-modern"
-                      onClick={() => handleViewDoc(doc.id)}
-                    >
-                      View
-                    </button>
+                    <div className="action-buttons-container">
+                      <button
+                        className="view-btn-modern"
+                        onClick={() => handleViewDoc(doc.id)}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="archive-btn-modern"
+                        onClick={() => handleArchiveRecord(doc.id)}
+                        disabled={archiveLoading === doc.id}
+                      >
+                        {archiveLoading === doc.id ? "Archiving..." : "Archive"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

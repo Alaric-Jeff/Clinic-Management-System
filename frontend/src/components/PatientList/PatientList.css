@@ -292,40 +292,40 @@ tbody tr:hover {
 }
 
 /* ACTION BUTTONS - FIXED SIZES */
-.view-btn,
-.archive-btn {
+.view-btnxx,
+.archive-btnxx {
   margin: 0 5px;
   padding: 8px 20px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.85rem;
-  border-radius: 20px;
+  border-radius: 10px;
   transition: all 0.25s ease;
   border: 2px solid transparent;
   min-width: 90px;
   text-align: center;
 }
 
-.view-btn {
+.view-btnxx {
   background-color: #ffffff;
   color: #660000;
   border-color: #8a0000;
 }
 
-.view-btn:hover {
+.view-btnxx:hover {
   background-color: #f5f5f5;
   border-color: #660000;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(102, 0, 0, 0.2);
 }
 
-.archive-btn {
+.archive-btnxx {
   background: linear-gradient(135deg, #a00000 0%, #810000 100%);
   color: #fff;
   border-color: transparent;
 }
 
-.archive-btn:hover:not(:disabled) {
+.archive-btnxx:hover:not(:disabled) {
   background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
@@ -334,13 +334,13 @@ tbody tr:hover {
   outline: none;
 }
 
-.archive-btn:disabled {
+.archive-btnxx:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.archive-btn:focus {
+.archive-btnxx:focus {
   outline: none;
   border-color: transparent;
 }

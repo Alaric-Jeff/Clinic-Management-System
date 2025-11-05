@@ -1,421 +1,594 @@
-.modal-overlay {
+
+/* Overlay */
+.vmdm-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.modal-content-medical {
-  background-color: #fef3f3;
-  border-radius: 12px;
-  max-width: 1200px;
   width: 100%;
-  max-height: 95vh;
+  height: 100%;
+  background: rgba(20, 20, 20, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(3px);
+  padding: 20px;
+}
+
+/* Modal Content */
+.vmdm-modal-content-medical {
+  background: #ffffff;
+  color: #000;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 92vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 0;
   position: relative;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.4);
+  animation: vmdm-fadeIn 0.3s ease-in-out;
 }
 
-/* ===== HEADER ===== */
-.medical-doc-header {
-  background-color: #fff;
-  border-bottom: 3px solid #7a0000;
-  padding: 20px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 12px 12px 0 0;
+/* Fade Animation */
+@keyframes vmdm-fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.header-logo-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+/* Loading State */
+.vmdm-loading-text {
+  text-align: center;
+  color: #444;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 40px;
 }
 
-.logo-icon-modal {
-  width: 50px;
-  height: 50px;
-  background: #fff;
-  border: 3px solid #7a0000;
-  border-radius: 8px;
+/* Error State */
+.vmdm-error-state {
+  color: #8b0000;
+  font-weight: 600;
+  text-align: center;
+  padding: 40px;
+  font-size: 15px;
+}
+
+/* Header */
+.vmdm-medical-doc-header {
+  background: #8b0000;
+  color: white;
+  padding: 28px 32px;
+  position: relative;
+  text-align: center;
+}
+
+.vmdm-medical-doc-header > div:first-child {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.caduceus-modal {
-  font-size: 32px;
-  color: #7a0000;
-}
-
-.logo-text-modal h1 {
-  font-size: 18px;
-  font-weight: 700;
-  color: #7a0000;
+.vmdm-medical-doc-header h1 {
   margin: 0;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.logo-text-modal p {
-  font-size: 10px;
-  color: #666;
-  margin: 2px 0 0 0;
+.vmdm-medical-doc-header p {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: #f0f0f0;
+  font-weight: 400;
+  opacity: 0.95;
 }
 
-.close-modal-btn {
+/* Close Button */
+.vmdm-close-modal-btn {
+  position: absolute;
+  top: 35px;
+  right: 24px;
   background: none;
-  border: 2px solid #333;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  font-size: 20px;
-  color: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 25px;
+  width: 38px;
+  height: 38px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-}
-
-.close-modal-btn:hover {
-  background-color: #333;
-  color: #fff;
-}
-
-/* ===== BODY ===== */
-.medical-doc-body {
-  padding: 30px;
-}
-
-/* ===== PATIENT INFO HEADER ===== */
-.patient-info-header {
-  background-color: #fff;
-  border: 2px solid #7a0000;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 25px;
-}
-
-.patient-info-header h3 {
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
-  margin: 0 0 8px 0;
-}
-
-.patient-full-name {
-  font-size: 20px;
   font-weight: 700;
-  color: #7a0000;
-  margin: 0 0 10px 0;
 }
 
-.patient-mini-info {
+.vmdm-close-modal-btn:hover {
+  background: none;
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.5);
+}
+
+/* Print Button - Hidden globally */
+.vmdm-print-btn {
+  display: none;
+  
+}
+
+/* Body */
+.vmdm-medical-doc-body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #222;
+  padding: 28px 32px 32px;
+}
+
+/* Patient Header */
+.vmdm-patient-info-header {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-bottom: 28px;
+  background: none;
   display: flex;
-  gap: 20px;
-  font-size: 12px;
-  color: #666;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.patient-mini-info span {
-  font-weight: 500;
+.vmdm-patient-info-header h3 {
+  display: none;
 }
 
-/* ===== TWO COLUMN LAYOUT ===== */
-.doc-two-column {
+.vmdm-patient-full-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.vmdm-patient-mini-info {
+  font-size: 17px;
+  color: #000000;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Two Column Layout */
+.vmdm-doc-two-column {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 25px;
-  margin-bottom: 25px;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-bottom: 32px;
 }
 
-/* ===== MEDICAL NOTES SECTION (LEFT) ===== */
-.medical-notes-section {
-  background-color: #fff;
-  border: 2px solid #7a0000;
-  border-radius: 8px;
-  padding: 20px;
+/* Left: Notes Section */
+.vmdm-medical-notes-section {
+  display: flex;
+  flex-direction: column;
 }
 
-.notes-card {
+.vmdm-notes-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.vmdm-notes-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.notes-header-logo {
+.vmdm-note-section {
+  margin-bottom: 0;
+}
+
+.vmdm-note-section label {
+  font-weight: 700;
+  color: #8b0000;
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vmdm-note-text {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  min-height: 80px;
+  font-size: 15px;
+  color: #2a2a2a;
+  line-height: 1.6;
+}
+
+.vmdm-note-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0d9d9;
+  margin-bottom: 0;
 }
 
-.logo-icon-small {
-  width: 40px;
-  height: 40px;
-  background: #fff;
-  border: 2px solid #7a0000;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.vmdm-note-header label {
+  margin-bottom: 0;
 }
 
-.caduceus-small {
-  font-size: 24px;
-  color: #7a0000;
-}
-
-.logo-text-small h3 {
+/* Edit Button */
+.vmdm-edit-btn {
+  background: #800000;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  color: #fff;
   font-size: 14px;
   font-weight: 700;
-  color: #7a0000;
-  margin: 0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 20px;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(212, 160, 23, 0.3);
 }
 
-.logo-text-small p {
-  font-size: 9px;
-  color: #666;
-  margin: 2px 0 0 0;
+.vmdm-edit-btn:hover {
+  background: #b80f0f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 160, 23, 0.4);
 }
 
-.notes-content {
+/* Right: Billing Section */
+.vmdm-billing-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.note-section label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #7a0000;
+.vmdm-billing-card {
+  border: 2.5px solid #8b0000;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Billing Header */
+.vmdm-billing-card::before {
+  content: "Medical Receipt";
   display: block;
-  margin-bottom: 6px;
+  background: #8b0000;
+  color: white;
+  text-align: center;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
-.note-section p {
-  font-size: 13px;
-  color: #333;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.note-text {
-  background-color: #fef9f9;
-  border: 1px solid #e6d0d0;
+/* Billing Print Button */
+.vmdm-billing-print-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgb(255, 255, 255);
+  color: rgb(92, 0, 0);
   border-radius: 6px;
-  padding: 12px;
-  min-height: 60px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* ===== BILLING SECTION (RIGHT) ===== */
-.billing-section {
+.vmdm-billing-print-btn:hover {
+  background: rgb(161, 0, 0);
+  border-color: rgb(255, 255, 255);
+  color: #e0e0e0;
+}
+
+.vmdm-billing-services {
+  padding: 20px 24px;
+}
+
+.vmdm-service-row {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
 }
 
-.billing-card {
-  background-color: #fff;
-  border: 2px solid #7a0000;
-  border-radius: 8px;
-  padding: 20px;
+.vmdm-service-header {
+  font-weight: 700;
+  color: #1a1a1a;
+  border-bottom: 2px solid #8b0000;
+  margin-bottom: 8px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.vmdm-service-item {
+  color: #333;
+}
+
+.vmdm-align-right {
+  text-align: right;
+  font-weight: 600;
+}
+
+.vmdm-no-billing {
+  text-align: center;
+  padding: 30px 20px;
+  color: #888;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.vmdm-modal-content-medical::-webkit-scrollbar-thumb {
+  background-color: #7a0000; /* dark red */
+  border-radius: 10px;
+  
+}
+
+/* Billing Summary */
+.vmdm-billing-summary {
+  margin-top: 0;
+  border-top: 2px solid #e0e0e0;
+  padding: 20px 24px;
+  background: #fafafa;
+}
+
+.vmdm-summary-row {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  height: fit-content;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-.billing-header-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0d9d9;
+.vmdm-summary-row:last-child {
+  margin-bottom: 0;
 }
 
-.billing-services {
+.vmdm-amount-value {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.vmdm-status-value {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: #8b0000;
+  background: rgba(139, 0, 0, 0.1);
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.vmdm-payment-value {
+  font-weight: 600;
+  color: #444;
+}
+
+/* Footer Info */
+.vmdm-doc-footer-info {
+  background: #8b0000;
+  color: white;
+  padding: 28px 32px;
+  margin: 0 -32px -32px -32px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.vmdm-footer-item {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.service-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  padding: 8px 0;
-}
-
-.service-header {
+.vmdm-footer-item label {
   font-weight: 700;
-  color: #7a0000;
-  border-bottom: 1px solid #f0d9d9;
-}
-
-.service-item {
-  font-weight: 500;
-  color: #333;
-  padding-left: 15px;
-}
-
-.align-right {
-  text-align: right;
-  font-weight: 600;
-}
-
-.billing-summary {
-  background-color: #fef9f9;
-  border: 1px solid #e6d0d0;
-  border-radius: 6px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  color: #ffffff;
   font-size: 13px;
-}
-
-.summary-row span:first-child {
-  font-weight: 600;
-  color: #7a0000;
-}
-
-.amount-value {
-  font-weight: 700;
-  color: #333;
-  font-size: 16px;
-}
-
-.status-value {
-  text-transform: capitalize;
-  font-weight: 600;
-  color: #388e3c;
-}
-
-.payment-value {
-  font-weight: 600;
-  color: #333;
-}
-
-.print-btn {
-  background-color: #7a0000;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  letter-spacing: 0.5px;
-  margin-top: 10px;
-}
-
-.print-btn:hover {
-  background-color: #a30000;
-  box-shadow: 0 4px 10px rgba(122, 0, 0, 0.3);
-}
-
-.no-billing {
-  text-align: center;
-  padding: 40px 20px;
-  color: #999;
-  font-style: italic;
-}
-
-/* ===== FOOTER INFO ===== */
-.doc-footer-info {
-  background-color: #fff;
-  border: 2px solid #7a0000;
-  border-radius: 8px;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-
-.footer-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.footer-item label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #7a0000;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.95;
 }
 
-.footer-item span {
-  font-size: 13px;
-  color: #333;
-  font-weight: 500;
+.vmdm-footer-item span {
+  font-size: 14px;
+  color: #f5f5f5;
+  font-weight: 100;
+  line-height: 1.4;
 }
 
-/* ===== LOADING & ERROR ===== */
-.loading-text {
-  text-align: center;
-  padding: 60px;
-  color: #7a0000;
-  font-size: 16px;
-  font-weight: 500;
+/* Responsive Design */
+@media (max-width: 992px) {
+  .vmdm-doc-two-column {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .vmdm-modal-content-medical {
+    width: 96%;
+    max-width: 100%;
+  }
+
+  .vmdm-doc-footer-info {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
 }
 
-.error-state {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 16px;
-  border-radius: 8px;
-  border-left: 4px solid #c62828;
-  text-align: center;
-  margin: 20px;
+@media (max-width: 768px) {
+  .vmdm-modal-content-medical {
+    width: 98%;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+
+  .vmdm-medical-doc-header {
+    padding: 24px 20px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .vmdm-medical-doc-header h1 {
+    font-size: 22px;
+  }
+
+  .vmdm-medical-doc-header p {
+    font-size: 12px;
+  }
+
+  .vmdm-close-modal-btn {
+    top: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .vmdm-medical-doc-body {
+    padding: 20px;
+  }
+
+  .vmdm-patient-info-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 18px;
+  }
+
+  .vmdm-patient-full-name {
+    font-size: 18px;
+    width: 100%;
+  }
+
+  .vmdm-patient-mini-info {
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .vmdm-doc-two-column {
+    gap: 20px;
+  }
+
+  .vmdm-notes-card,
+  .vmdm-billing-services {
+    padding: 18px;
+  }
+
+  .vmdm-note-text {
+    font-size: 14px;
+    min-height: 70px;
+    padding: 12px 14px;
+  }
+
+  .vmdm-doc-footer-info {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px 20px;
+    margin: 0 -20px -20px -20px;
+  }
+
+  .vmdm-billing-print-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    top: 10px;
+    right: 10px;
+  }
 }
 
-/* ===== PRINT STYLES ===== */
+@media (max-width: 480px) {
+  .vmdm-modal-overlay {
+    padding: 10px;
+  }
+
+  .vmdm-medical-doc-header h1 {
+    font-size: 18px;
+  }
+
+  .vmdm-medical-doc-header p {
+    font-size: 11px;
+  }
+
+  .vmdm-patient-full-name {
+    font-size: 16px;
+  }
+
+  .vmdm-note-section label {
+    font-size: 14px;
+  }
+
+  .vmdm-note-text {
+    font-size: 13px;
+    min-height: 60px;
+  }
+
+  .vmdm-service-row {
+    font-size: 13px;
+  }
+
+  .vmdm-summary-row {
+    font-size: 13px;
+  }
+
+  .vmdm-footer-item label {
+    font-size: 12px;
+  }
+
+  .vmdm-footer-item span {
+    font-size: 13px;
+  }
+}
+
+/* Print Styles */
 @media print {
-  .modal-overlay {
-    background-color: transparent;
+  .vmdm-modal-overlay {
+    background: white;
     position: static;
     padding: 0;
   }
 
-  .modal-content-medical {
+  .vmdm-modal-content-medical {
+    max-width: 100%;
     max-height: none;
     box-shadow: none;
     border-radius: 0;
   }
 
-  .close-modal-btn,
-  .print-btn {
-    display: none;
+  .vmdm-close-modal-btn,
+  .vmdm-edit-btn,
+  .vmdm-billing-print-btn {
+    display: none !important;
   }
-}
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-  .doc-two-column {
-    grid-template-columns: 1fr;
-  }
-  
-  .doc-footer-info {
-    grid-template-columns: 1fr;
+  .vmdm-medical-doc-header {
+    border-radius: 0;
   }
 }

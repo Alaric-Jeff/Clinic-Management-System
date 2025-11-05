@@ -458,13 +458,13 @@ const PatientList = () => {
                   <td>
                     <button
                       onClick={() => handleViewPatient(p.id)}
-                      className="view-btn"
+                      className="view-btnxx"
                     >
                       View
                     </button>
                     <button
                       onClick={() => handleArchive(p.id)}
-                      className="archive-btn"
+                      className="archive-btnxx"
                       disabled={archivingIds.has(p.id)}
                     >
                       {archivingIds.has(p.id) ? "Archiving..." : "Archive"}

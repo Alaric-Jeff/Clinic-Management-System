@@ -1,74 +1,71 @@
-/* GENERAL LAYOUT */
-.landing-container {
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   font-family: "Poppins", sans-serif;
-  color: #333;
+}
+
+/* MAIN CONTAINER */
+.landing-container {
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
-/* NAVBAR */
+/* ===================== NAVBAR ===================== */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 40px;
+  padding: 18px 80px;
   position: fixed;
   width: 100%;
   top: 0;
-  z-index: 10;
-  background-color: rgb(0,0,0,0.5);
-  transition: 0.3s ease;
+  z-index: 100;
+  background: transparent;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.clinic-name {
-  font-size: 26px;
-  font-weight: 700;
-  color: rgb(255, 255, 255);
-  
+.navbar:hover {
+  background: rgba(0, 0, 0, 0.5);
 }
 
+/* Logo */
+.clinic-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+/* Navbar links */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 40px;
 }
 
 .nav-links a {
   text-decoration: none;
   color: white;
-  font-weight: 500;
-  transition: 0.3s;
+  font-weight: 600;
+  font-size: 18px;
+  transition: color 0.3s ease;
 }
 
 .nav-links a:hover {
-  color: #ffcccc;
+  color: #d40000;
 }
 
-.login-btn {
-  background-color: rgb(94, 0, 0);
-  color: #ffffff;
-  border: none;
-  padding: 15px 26px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-.login-btn:hover {
-  background-color: #8b0000;
-  color: white;
-}
-
-/* HERO SECTION */
+/* ===================== HERO SECTION ===================== */
 .hero-section {
   height: 100vh;
-  background: url("./src/assets/backGround.jpg") no-repeat center center/cover;
+  background: url("./src/assets/BackGround.webp") center/cover no-repeat;
   display: flex;
   align-items: center;
-  padding-left: 80px;
-  color: rgb(255, 222, 222);
+  padding-left: 10%;
+  color: #fff;
   position: relative;
+  animation: fadeIn 1.5s ease-out;
 }
 
 .hero-section::before {
@@ -81,33 +78,64 @@
 .hero-text {
   position: relative;
   z-index: 1;
-  max-width: 500px;
+  max-width: 600px;
+  animation: slideIn 1.5s ease;
 }
 
 .hero-text h2 {
-  color: #ffffff;
-  font-size: 50px;
-  font-weight: 700px;
-  margin-bottom: 20px;
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: rgb(255, 255, 255);
+  text-shadow: 2px 2px 5px rgba(128, 0, 0, 5);
+  -webkit-text-stroke: 0.5px #2e0000; /* Font border */
+  margin-bottom: 25px;
 }
 
 .hero-text p {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.6;
+  margin-bottom: 35px;
+  color: #f9eaea;
 }
 
-/* ABOUT SECTION */
+/* Login Button below the text */
+.login-btn {
+  background-color: #6b0000;
+  color: white;
+  border: none;
+  padding: 16px 60px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+  background-color: #8b0000;
+  transform: scale(1.05);
+}
+
+/* ===================== ABOUT SECTION ===================== */
 .about-section {
-  padding: 80px 100px;
-  background-color: #ffecec;
+  padding: 100px 80px;
+  background-color: #fff4f4;
   text-align: center;
+}
+
+.about-section h2 {
+  font-size: 36px;
+  color: #8b0000;
+  margin-bottom: 15px;
 }
 
 .about-desc {
   max-width: 700px;
   margin: 10px auto 40px auto;
   color: #444;
-  font-size: 17px;
+  font-size: 18px;
+  line-height: 1.6;
 }
 
 .about-cards {
@@ -121,10 +149,15 @@
   background-color: white;
   border-top: 5px solid #8b0000;
   border-radius: 10px;
-  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.15);
   padding: 25px;
-  max-width: 300px;
+  max-width: 320px;
   text-align: left;
+  transition: transform 0.3s ease;
+}
+
+.about-card:hover {
+  transform: translateY(-5px);
 }
 
 .about-card h4 {
@@ -132,62 +165,145 @@
   margin-bottom: 10px;
 }
 
-/* SERVICES SECTION */
+.about-card p {
+  color: #1d1d1d;
+  margin-bottom: 10px;
+}
+
+/* ===================== SERVICES SECTION ===================== */
 .services-section {
-  padding: 80px 100px;
+  padding: 100px 80px;
   background-color: white;
   text-align: center;
+}
+
+.services-section h2 {
+  font-size: 36px;
+  color: #8b0000;
 }
 
 .service-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
+  gap: 35px;
+  margin-top: 50px;
 }
 
 .service-card {
- 
   border-bottom: 5px solid #8b0000;
   background-color: #fff7f7;
   border-radius: 10px;
-  padding: 25px;
+  padding: 30px;
   text-align: left;
-  box-shadow: 0 2px 10px rgba(139, 0, 0, 0.7);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 15px rgba(139, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
 .service-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(139, 0, 0, 0.3);
+  box-shadow: 0 5px 20px rgba(139, 0, 0, 0.4);
 }
 
 .service-card h4 {
   color: #8b0000;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-/* CONTACT SECTION */
+.service-card p {
+  color: #1b1b1b;
+  margin-bottom: 12px;
+}
+
+
+/* ===================== CONTACT SECTION ===================== */
 .contact-section {
-  padding: 70px 100px;
-  background-color: #ffecec;
+  padding: 80px 80px;
+  background-color: #fff4f4;
   text-align: center;
+}
+
+.contact-section h2 {
+  font-size: 36px;
+  color: #8b0000;
 }
 
 .contact-info {
   text-align: left;
-  margin-top: 25px;
+  margin: 40px auto 0;
   line-height: 1.8;
-  font-size: 17px;
+  font-size: 18px;
   color: #333;
+  max-width: 700px;
 }
 
-/* FOOTER */
+/* ===================== FOOTER ===================== */
 .footer {
-  background-color: #400000;
+  background-color: #4b0000;
   color: white;
   text-align: center;
   padding: 25px;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.5px;
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 15px 25px;
+    flex-direction: column;
+  }
+
+  .nav-links {
+    gap: 15px;
+  }
+
+  .hero-section {
+    padding: 0 30px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .hero-text {
+    max-width: 100%;
+  }
+
+  .hero-text h2 {
+    font-size: 40px;
+  }
+
+  .hero-text p {
+    font-size: 16px;
+  }
+
+  .login-btn {
+    padding: 12px 25px;
+    font-size: 16px;
+  }
+
+  .about-section,
+  .services-section,
+  .contact-section {
+    padding: 60px 30px;
+  }
+}
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
