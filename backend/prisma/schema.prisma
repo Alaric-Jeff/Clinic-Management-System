@@ -186,6 +186,7 @@ model MedicalDocumentation {
   prescription String?
 
   status DocumentationStatus @default(complete)
+  isArchived Boolean @default(false)
 
   patient    Patient  @relation(fields: [patientId], references: [id])
   creator    Account  @relation(fields: [createdById], references: [id])
