@@ -14,7 +14,7 @@ export async function unarchiveMedicalDocument(
   try {
     const document = await fastify.prisma.medicalDocumentation.findUnique({
       where: { id },
-      select: { isArchived: true },
+      select: { isArchived: true, archivedAt: true },
     });
 
     if (!document) {
@@ -30,16 +30,27 @@ export async function unarchiveMedicalDocument(
     await fastify.prisma.$transaction(async (tx) => {
       await tx.medicalDocumentation.update({
         where: { id },
-        data: { isArchived: false },
+        data: {
+          isArchived: false,
+          archivedAt: null,
+        },
       });
 
       await tx.documentAuditLog.create({
         data: {
           medicalDocumentationId: id,
           action: "updated",
-          fieldsChanged: "isArchived",
-          previousData: JSON.stringify({ isArchived: true }),
-          newData: JSON.stringify({ isArchived: false }),
+          fieldsChanged: "isArchived, archivedAt",
+          previousData: JSON.stringify({
+            isArchived: true,
+            archivedAt: document.archivedAt
+              ? document.archivedAt.toISOString()
+              : null,
+          }),
+          newData: JSON.stringify({
+            isArchived: false,
+            archivedAt: null,
+          }),
           changedByName,
           changedByRole,
         },
@@ -47,8 +58,6 @@ export async function unarchiveMedicalDocument(
     });
 
     fastify.log.info(`Successfully unarchived medical documentation ${id}`);
-    return;
-
   } catch (err: unknown) {
     if (err instanceof Error) {
       fastify.log.error(

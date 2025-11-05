@@ -5,6 +5,12 @@ import { createMedicalDocumentationController } from "../controllers/medical-doc
 import { getMedicalDocumentationController } from "../controllers/medical-documentation/get-medical-documentation-controller.js";
 import { updateMedicalDocumentationController } from "../controllers/medical-documentation/update-documentation-controller.js";
 import { getWeeklyDocumentationsCount } from "../controllers/medical-documentation/get-weekly-documentation-controller.js";
+import { archiveDocumentController } from "../controllers/medical-documentation/archive-medical-document.js";
+import { unarchiveDocumentController } from "../controllers/medical-documentation/unarchive-medical-document.js";
+import { getArchivedDocumentController } from "../controllers/medical-documentation/get-archived-document-controller.js";
+
+import { ArchivedDocumentsResponse } from "../type-schemas/medical-document-schemas/get-archived-documents-schemas.js";
+import { changeIsArchivedBodySchema } from "../type-schemas/medical-document-schemas/archive-unarchive-schema.js";
 import {
     createMedicalDocumentationSchema,
     createMedicalDocumentationResponseSchema,
@@ -78,5 +84,36 @@ export async function medicalDocumentationRoutes(
         preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getMedicalDocumentationController
     });
+
+    //new stuffs
+
+    fastify.route({
+        method: 'POST',
+        url: '/archive-medical-documentation',
+        schema: {
+            body: changeIsArchivedBodySchema
+        }, preHandler:  requireRole([Role.admin, Role.encoder]),
+        handler: archiveDocumentController
+    })
+
+    fastify.route({
+        method: 'POST',
+        url: '/unarchive-medical-documentation',
+        schema: {
+            body: changeIsArchivedBodySchema
+        }, preHandler:  requireRole([Role.admin, Role.encoder]),
+        handler: unarchiveDocumentController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-archived-medical-documentations',
+        schema: {
+            response: {
+                200: ArchivedDocumentsResponse
+            }
+        }, preHandler:  requireRole([Role.admin, Role.encoder]),
+        handler: getArchivedDocumentController
+    })
 
 }

@@ -10,7 +10,7 @@ export async function archiveMedicalDocument(
   try {
     const document = await fastify.prisma.medicalDocumentation.findUnique({
       where: { id },
-      select: { isArchived: true }
+      select: { isArchived: true },
     });
 
     if (!document) {
@@ -23,31 +23,42 @@ export async function archiveMedicalDocument(
       throw new Error("The document is already archived");
     }
 
+    const archivedAt = new Date(); // ✅ single consistent timestamp
+
     await fastify.prisma.$transaction(async (tx) => {
       await tx.medicalDocumentation.update({
         where: { id },
-        data: { isArchived: true }
+        data: {
+          isArchived: true,
+          archivedAt, // ✅ consistent timestamp usage
+        },
       });
 
       await tx.documentAuditLog.create({
         data: {
           medicalDocumentationId: id,
           action: "updated",
-          fieldsChanged: "isArchived",
-          previousData: JSON.stringify({ isArchived: false }),
-          newData: JSON.stringify({ isArchived: true }),
+          fieldsChanged: "isArchived, archivedAt", // ✅ include both
+          previousData: JSON.stringify({
+            isArchived: false,
+            archivedAt: null,
+          }),
+          newData: JSON.stringify({
+            isArchived: true,
+            archivedAt: archivedAt.toISOString(),
+          }),
           changedByName,
-          changedByRole
-        }
+          changedByRole,
+        },
       });
     });
 
     fastify.log.info(`Successfully archived medical documentation ${id}`);
-
-    return;
   } catch (err: unknown) {
     if (err instanceof Error) {
-      fastify.log.error(`Error occurred in archiving documentation: ${err.message}`);
+      fastify.log.error(
+        `Error occurred in archiving documentation: ${err.message}`
+      );
     }
     throw err;
   }

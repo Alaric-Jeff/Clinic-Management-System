@@ -8,3 +8,7 @@ export const changeIsArchivedServiceSchema = Type.Object({
 })
 
 export type changeIsArchivedType = Static<typeof changeIsArchivedServiceSchema>
+
+export const changeIsArchivedBodySchema = Type.Object({
+    id: Type.String()
+})

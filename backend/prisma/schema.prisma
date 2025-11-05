@@ -117,6 +117,7 @@ model Patient {
   residentialAddress String?
   registeredAt       DateTime @default(now())
   isArchived         Boolean  @default(false)
+  archivedAt DateTime?
 
   notes         String?
   // Denormalized audit fields only (no relations needed!)
@@ -187,6 +188,7 @@ model MedicalDocumentation {
 
   status DocumentationStatus @default(complete)
   isArchived Boolean @default(false)
+  archivedAt DateTime?
 
   patient    Patient  @relation(fields: [patientId], references: [id])
   creator    Account  @relation(fields: [createdById], references: [id])

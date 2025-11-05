@@ -9,15 +9,16 @@ import routeInit from './routers/routeInit.js'
 import compressionPlugin from './plugins/compression-route-plug.js'
 import rateLimitPlugin from './plugins/rate-limit-plug.js'
 import mailerPlugin from './plugins/node-mailer-plug.js'
-
-// import corsPlugin from './plugins/cors-plug.js'
+import { setupColdArchiveCron } from './hooks/cron-cold-archive.js'
 import cors from "@fastify/cors"
+
 dotenv.config()
 
 const server = Fastify({
     logger: true
 }).withTypeProvider<TypeBoxTypeProvider>()
 
+// Register plugins
 server.register(prismaPlugin);
 server.register(sensiblePlug);
 await server.register(cors, {
@@ -44,17 +45,22 @@ server.register(compressionPlugin);
 server.register(routeInit);
 
 
-const port: number = Number(process.env.HTTP_PORT)? Number(process.env.HTTP_PORT) : 3000;
-const host: string = process.env.HOST? String(process.env.HOST) : '127.0.0.1';
+server.addHook('onReady', async () => {
+    setupColdArchiveCron(server);
+    server.log.info('Cron jobs initialized');
+});
 
-try{
+const port: number = Number(process.env.HTTP_PORT) ? Number(process.env.HTTP_PORT) : 3000;
+const host: string = process.env.HOST ? String(process.env.HOST) : '127.0.0.1';
+
+try {
     await server.listen({
         port: port,
         host: host
     })
-    server.log.info(`Server is running on port: ${port}`)
-}catch(err: unknown){
-    server.log.info("Server failed to run")
+    server.log.info(`🚀 Server is running on ${host}:${port}`)
+} catch (err: unknown) {
+    server.log.error(err, "Server failed to start")
     server.close();
-    console.log(err)
+    process.exit(1);
 }
