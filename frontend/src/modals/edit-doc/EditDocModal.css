@@ -1,0 +1,178 @@
+.editdoc-modal-content {
+  background: #ffffff;
+  border-radius: 14px;
+  max-width: 640px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  animation: editdocSlideUp 0.3s ease-out;
+  border: 2px solid #7a0000;
+}
+
+.editdoc-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px); /* optional: adds soft blur */
+}
+
+
+@keyframes editdocSlideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.editdoc-modal-header {
+  text-align: center;
+  border-bottom: 2px solid #8b0000;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.2rem;
+}
+
+.editdoc-modal-header h2 {
+  color: #8b0000;
+  font-weight: 700;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Form Layout */
+.editdoc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.editdoc-section-title {
+  color: #7a0000;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.editdoc-form-section {
+  background: #fdfdfd;
+  padding: 1.2rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e5e5e5;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.editdoc-form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.editdoc-form-group label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #222;
+}
+
+.editdoc-form-group textarea {
+  border: 1px solid #ccc;
+  color: #222;
+  border-radius: 8px;
+  padding: 0.7rem;
+  resize: vertical;
+  min-height: 90px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition: all 0.25s ease;
+  background: #fff;
+}
+
+.editdoc-form-group textarea:focus {
+  border-color: #a80000;
+  box-shadow: 0 0 6px rgba(168, 0, 0, 0.3);
+  outline: none;
+}
+
+/* Buttons */
+.editdoc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+.editdoc-btn-cancel,
+.editdoc-btn-save {
+  padding: 0.65rem 1.3rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.25s ease;
+}
+
+.editdoc-btn-cancel {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.editdoc-btn-cancel:hover {
+  background: #ccc;
+  transform: translateY(-2px);
+}
+
+.editdoc-btn-save {
+  background: #8b0000;
+  color: #fff;
+}
+
+.editdoc-btn-save:hover {
+  background: #b30000;
+  transform: translateY(-2px);
+}
+
+/* Error Message */
+.editdoc-form-error {
+  background: #ffe0e0;
+  color: #a40000;
+  border-left: 5px solid #a40000;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(164, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .editdoc-modal-content {
+    padding: 1.2rem;
+  }
+
+  .editdoc-form-section {
+    padding: 1rem;
+  }
+
+  .editdoc-btn-cancel,
+  .editdoc-btn-save {
+    width: 100%;
+  }
+
+  .editdoc-form-actions {
+    flex-direction: column;
+  }
+}

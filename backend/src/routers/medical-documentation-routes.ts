@@ -54,17 +54,18 @@ export async function medicalDocumentationRoutes(
     })
 
     fastify.route({
-        method: 'POST',
-        url: '/update-medical-documentation/:id',
-        schema: {
-            params: updateMedicalDocumentationParamsSchema,
-            body: updateMedicalDocumentationBodySchema,
-            response: {
-                200: updateMedicalDocumentationResponseSchema
-            }
-        }, preHandler: requireRole([Role.admin, Role.encoder]),
-        handler: updateMedicalDocumentationController
-    })
+  method: 'PATCH',
+  url: '/update-medical-documentation/:id',
+  schema: {
+    params: updateMedicalDocumentationParamsSchema,
+    body: updateMedicalDocumentationBodySchema,
+    response: {
+      200: updateMedicalDocumentationResponseSchema
+    }
+  },
+  preHandler: requireRole([Role.admin, Role.encoder]),
+  handler: updateMedicalDocumentationController
+});
 
     fastify.route({
         method: 'GET',

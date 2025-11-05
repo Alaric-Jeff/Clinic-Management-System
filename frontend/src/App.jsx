@@ -12,7 +12,6 @@ import Archive from "./components/Archive/Archive";
 import MedicalServices from "./components/MedicalServices/MedicalServices";
 import PatientDetail from "./components/PatientDetails/PatientDetails";
 import EncoderLayout from "./layouts/encoder-layout/EncoderLayout";
-import PatientRecordView from "./components/PatientRecord";
 import SuccesfulReset from "./modals/view-patient/SuccessfulReset";
 import UserManagement from "./components/UserManagement/UserManagement";
 import HistoryLog from "./components/HistoryLog/HistoryLog";

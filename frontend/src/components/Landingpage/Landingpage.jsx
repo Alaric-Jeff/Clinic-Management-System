@@ -10,27 +10,29 @@ const LandingPage = () => {
     <div className="landing-container">
       {/* Navbar */}
       <nav className="navbar">
-        <h1 className="clinic-name">LMS</h1>
-        <div className="nav-links">
-          <a href="#about">About</a>
-          <a href="#services">Services</a>
-          <a href="#contact">Contact</a>
-          <button className="login-btn" onClick={() => navigate("/login")}>
-            Login
-          </button>
-        </div>
-      </nav>
+  <div className="nav-left">
+    {/* put the image here */}
+  </div>
+  <div className="nav-links">
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
 
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-text">
-          <h2>Leonardo Medical Services</h2>
-          <p>
-            Providing compassionate medical care and trusted laboratory
-            services, ensuring your health is always our mission.
-          </p>
-        </div>
-      </section>
+     <section className="hero-section">
+  <div className="hero-text">
+    <h2>Leonardo Medical Services</h2>
+    <p>
+      Providing compassionate medical care and trusted laboratory
+      services, ensuring your health is always our mission.
+    </p>
+    <button className="login-btn" onClick={() => navigate("/login")}>
+      Login
+    </button>
+  </div>
+</section>
 
       {/* About Section */}
       <section id="about" className="about-section">
@@ -44,15 +46,13 @@ const LandingPage = () => {
           <div className="about-card">
             <h4>Our Mission</h4>
             <p>
-              To deliver high-quality and patient-centered healthcare through
-              professional service, modern technology, and compassion.
+              To establish a medical and diagnostic clinic that provides the highest quality and reliability while practices professional and medical ethics that are responsive to the needs of our clients.
             </p>
           </div>
           <div className="about-card">
             <h4>Our Vision</h4>
             <p>
-              To be the leading community clinic known for excellence,
-              innovation, and integrity in medical service.
+              To be recognized as a well-established and the most preferred medical and diagnostic clinic by offering a high quality, efficient and accurate testing with fast and reliable results locally or internationally.
             </p>
           </div>
         </div>
@@ -116,8 +116,7 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="footer">
         <p>
-          © {new Date().getFullYear()} Leonardo Medical Services — All Rights
-          Reserved.
+          © {new Date().getFullYear()} Leonardo Medical Services
         </p>
       </footer>
     </div>
