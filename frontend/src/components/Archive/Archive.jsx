@@ -6,11 +6,14 @@ import "./Archive.css";
 
 const Archive = () => {
   const [archivedPatients, setArchivedPatients] = useState([]);
+  const [archivedRecords, setArchivedRecords] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const [filteredRecords, setFilteredRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [restoringIds, setRestoringIds] = useState(new Set());
+  const [activeView, setActiveView] = useState("patients"); // "patients" or "records"
 
   // Modal and Toast states
   const [modalConfig, setModalConfig] = useState({
@@ -94,21 +97,62 @@ const Archive = () => {
     }
   };
 
+  const fetchArchivedRecords = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Placeholder API call - replace with actual endpoint when available
+      // const res = await api.get("/records/get-archived-records");
+      
+      // Simulated data for now
+      const simulatedRecords = [
+        {
+          id: 1,
+          patientName: "Doe, John",
+          recordType: "Medical History",
+          archivedAt: new Date().toISOString()
+        }
+      ];
+      
+      setArchivedRecords(simulatedRecords);
+      setFilteredRecords(simulatedRecords);
+    } catch (err) {
+      console.error("Error fetching archived records:", err);
+      setError("Unable to load archived records. Please try again.");
+      showToast("Unable to load archived records. Please try again.", 'error');
+      setArchivedRecords([]);
+      setFilteredRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
 
     if (!term.trim()) {
-      setFilteredPatients(archivedPatients);
+      if (activeView === "patients") {
+        setFilteredPatients(archivedPatients);
+      } else {
+        setFilteredRecords(archivedRecords);
+      }
       return;
     }
 
-    const filtered = archivedPatients.filter((p) => {
-      const fullName = `${p.firstName} ${p.middleName || ""} ${p.lastName}`.toLowerCase();
-      return fullName.includes(term);
-    });
-
-    setFilteredPatients(filtered);
+    if (activeView === "patients") {
+      const filtered = archivedPatients.filter((p) => {
+        const fullName = `${p.firstName} ${p.middleName || ""} ${p.lastName}`.toLowerCase();
+        return fullName.includes(term);
+      });
+      setFilteredPatients(filtered);
+    } else {
+      const filtered = archivedRecords.filter((r) => {
+        return r.patientName.toLowerCase().includes(term) || 
+               r.recordType.toLowerCase().includes(term);
+      });
+      setFilteredRecords(filtered);
+    }
   };
 
   const performRestore = async (patientId) => {
@@ -141,6 +185,34 @@ const Archive = () => {
     }
   };
 
+  const performRestoreRecord = async (recordId) => {
+    if (restoringIds.has(recordId)) return;
+
+    try {
+      setModalLoading(true);
+      setRestoringIds((prev) => new Set(prev).add(recordId));
+
+      // Placeholder API call - replace with actual endpoint when available
+      // const res = await api.post("/records/unarchive-record", { id: recordId });
+
+      // Simulated success for now
+      setArchivedRecords((prev) => prev.filter((r) => r.id !== recordId));
+      setFilteredRecords((prev) => prev.filter((r) => r.id !== recordId));
+      showToast('Record restored successfully', 'success');
+      closeModal();
+    } catch (err) {
+      console.error("Error restoring record:", err);
+      showToast("Unable to restore record. Please try again.", 'error');
+    } finally {
+      setRestoringIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(recordId);
+        return newSet;
+      });
+      setModalLoading(false);
+    }
+  };
+
   const handleRestore = (patientId) => {
     const patient = archivedPatients.find(p => p.id === patientId);
     const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'this patient';
@@ -154,16 +226,48 @@ const Archive = () => {
     );
   };
 
+  const handleRestoreRecord = (recordId) => {
+    const record = archivedRecords.find(r => r.id === recordId);
+    const recordName = record ? record.patientName : 'this record';
+    
+    showModal(
+      "Restore Record",
+      `Are you sure you want to restore the record for ${recordName}?`,
+      'warning',
+      () => performRestoreRecord(recordId),
+      recordId
+    );
+  };
+
+  const handleViewChange = (view) => {
+    setActiveView(view);
+    setSearchTerm("");
+    setError(null);
+    
+    if (view === "records" && archivedRecords.length === 0) {
+      fetchArchivedRecords();
+    }
+  };
+
   useEffect(() => {
     fetchArchivedPatients();
   }, []);
+
+  useEffect(() => {
+    setSearchTerm("");
+    if (activeView === "patients") {
+      setFilteredPatients(archivedPatients);
+    } else {
+      setFilteredRecords(archivedRecords);
+    }
+  }, [activeView]);
 
   if (loading) {
     return (
       <div className="archive-container">
         <div className="loading-state">
           <div className="spinner"></div>
-          <p>Loading archived patients...</p>
+          <p>Loading archived data...</p>
         </div>
       </div>
     );
@@ -209,12 +313,21 @@ const Archive = () => {
         </div>
       )}
 
-      {/* Search box positioned on the left */}
-      <div className="archive-search-container">
+      {/* View Selector and Search */}
+      <div className="archive-controls">
+        <select 
+          className="view-selector"
+          value={activeView}
+          onChange={(e) => handleViewChange(e.target.value)}
+        >
+          <option value="patients">Archived Patients</option>
+          <option value="records">Archived Medical Records</option>
+        </select>
+
         <div className="archive-search-box">
           <input
             type="text"
-            placeholder="Search patient by name"
+            placeholder={activeView === "patients" ? "Search patient by name" : "Search records"}
             value={searchTerm}
             onChange={handleSearch}
             className="archive-search-input"
@@ -222,52 +335,103 @@ const Archive = () => {
         </div>
       </div>
 
-      <div className="archive-table-container">
-        <table className="archive-table">
-          <thead>
-            <tr>
-              <th>Name of Patient</th>
-              <th>Created at</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => (
-                <tr key={patient.id}>
-                  <td>
-                    {`${patient.lastName}, ${patient.firstName}${
-                      patient.middleName ? ` ${patient.middleName}` : ""
-                    }`}
-                  </td>
-                  <td>
-                    {new Date(patient.createdAt).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "2-digit",
-                    })}
-                  </td>
-                  <td>
-                    <button
-                      className="restore-btn"
-                      onClick={() => handleRestore(patient.id)}
-                      disabled={restoringIds.has(patient.id)}
-                    >
-                      {restoringIds.has(patient.id) ? "Restoring..." : "Restore"}
-                    </button>
+      {/* Archived Patients Table */}
+      {activeView === "patients" && (
+        <div className="archive-table-container">
+          <table className="archive-table">
+            <thead>
+              <tr>
+                <th>Name of Patient</th>
+                <th>Created at</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((patient) => (
+                  <tr key={patient.id}>
+                    <td>
+                      {`${patient.lastName}, ${patient.firstName}${
+                        patient.middleName ? ` ${patient.middleName}` : ""
+                      }`}
+                    </td>
+                    <td>
+                      {new Date(patient.createdAt).toLocaleDateString("en-US", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "2-digit",
+                      })}
+                    </td>
+                    <td>
+                      <button
+                        className="restore-btn"
+                        onClick={() => handleRestore(patient.id)}
+                        disabled={restoringIds.has(patient.id)}
+                      >
+                        {restoringIds.has(patient.id) ? "Restoring..." : "Restore"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="no-data">
+                    No archived patients found
                   </td>
                 </tr>
-              ))
-            ) : (
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Archived Medical Records Table */}
+      {activeView === "records" && (
+        <div className="archive-table-container">
+          <table className="archive-table">
+            <thead>
               <tr>
-                <td colSpan="3" className="no-data">
-                  No archived patients found
-                </td>
+                <th>Patient Name</th>
+                <th>Record Type</th>
+                <th>Archived at</th>
+                <th>Action</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredRecords.length > 0 ? (
+                filteredRecords.map((record) => (
+                  <tr key={record.id}>
+                    <td>{record.patientName}</td>
+                    <td>{record.recordType}</td>
+                    <td>
+                      {new Date(record.archivedAt).toLocaleDateString("en-US", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "2-digit",
+                      })}
+                    </td>
+                    <td>
+                      <button
+                        className="restore-btn"
+                        onClick={() => handleRestoreRecord(record.id)}
+                        disabled={restoringIds.has(record.id)}
+                      >
+                        {restoringIds.has(record.id) ? "Restoring..." : "Restore"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="no-data">
+                    No archived records found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
