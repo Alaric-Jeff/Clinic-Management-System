@@ -60,7 +60,7 @@
   margin-bottom: 25px;
 }
 
-/* ADD USER BUTTON - Consistent with Medical Services */
+/* ADD USER BUTTON */
 .add-user-btn {
   background: linear-gradient(135deg, #a00000 0%, #810000 100%);
   color: #fff;
@@ -78,22 +78,9 @@
   background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
-  border-color: transparent !important;
-  outline: none;
 }
 
-.add-user-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.add-user-btn:focus {
-  outline: none;
-  border-color: transparent;
-}
-
-/* TABLE STYLING - Consistent with other pages */
+/* TABLE STYLING */
 .user-management-table-container {
   background-color: #fff;
   border-radius: 14px;
@@ -181,32 +168,7 @@
   display: inline-block;
 }
 
-/* ACTION BUTTONS - Consistent with Medical Services */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.view-btn {
-  background-color: #8b0000;
-  color: #660000;
-  border: 2px solid #8a0000;
-  padding: 6px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.25s ease;
-}
-
-.view-btn:hover:not(:disabled) {
-  background-color: #8b0000;
-  border-color: #660000;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(102, 0, 0, 0.2);
-}
-
+/* DELETE BUTTON */
 .delete-btn {
   background: linear-gradient(135deg, #a00000 0%, #810000 100%);
   color: #fff;
@@ -223,24 +185,12 @@
   background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
-  border-color: transparent !important;
-  outline: none;
 }
 
-.view-btn:disabled,
-.delete-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
+/* ... (keep all previous styles) ... */
 
-.view-btn:focus,
-.delete-btn:focus {
-  outline: none;
-}
-
-/* MODAL STYLES */
-.modal-overlay {
+/* ========== NEW ADD USER MODAL STYLES ========== */
+.add-user-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -251,129 +201,117 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
 
-.modal {
-  background-color: white;
+.add-user-modal-content {
+  background: white;
   border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
+  width: 100%;
+  max-width: 420px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
-.modal-small {
-  max-width: 400px;
-}
-
-.modal-header {
+.add-user-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 2px solid #8b0000;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+  border-radius: 12px 12px 0 0;
 }
 
-.modal-title {
-  font-size: 1.5rem;
+.add-user-modal-header h3 {
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #8b0000;
+  color: #ffffff;
   margin: 0;
 }
 
-.modal-close {
+.add-user-modal-close-btn {
   background: none;
   border: none;
   font-size: 2rem;
-  color: #8b0000;
+  color: #ffffff;
   cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.3s ease;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s ease;
 }
 
-.modal-close:hover {
-  color: #b30000;
+.add-user-modal-close-btn:hover {
+  color: #ffe1e1;
 }
 
-.modal-body {
-  padding: 20px;
+.add-user-modal-body {
+  padding: 20px 24px;
 }
 
-/* ERROR MESSAGE */
-.error-message {
+.add-user-error-alert {
   background-color: #ffe0e0;
   border: 2px solid #d32f2f;
   border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
   color: #8b0000;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
-.error-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
+.add-user-field {
+  margin-bottom: 12px;
 }
 
-/* FORM STYLES */
-.form-group {
-  margin-bottom: 20px;
-}
-
-.label {
+.add-user-field label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   font-weight: 600;
-  color: #400000;
-  font-size: 0.9rem;
+  color: #7a0000;
+  font-size: 0.85rem;
 }
 
-.input {
+.add-user-field input {
   width: 100%;
-  padding: 10px 12px;
-  border: 2px solid #6b0000;
+  padding: 9px 12px;
+  border: 2px solid #cccbcb;
   border-radius: 8px;
   font-size: 0.9rem;
   font-family: "Segoe UI", Arial, sans-serif;
-  transition: all 0.3s ease;
   color: #400000;
   background-color: #fff;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
-.input:focus {
+.add-user-field input:focus {
   outline: none;
   border-color: #b30000;
   box-shadow: 0 0 0 3px rgba(179, 0, 0, 0.1);
 }
 
-.input-readonly {
-  background-color: #f9fafb;
-  cursor: default;
-}
-
-.password-wrapper {
+.add-user-password-field {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.password-wrapper input {
-  padding-right: 45px;
+.add-user-password-field input {
+  padding-right: 42px;
 }
 
-.eye-button {
+.add-user-eye-btn {
   position: absolute;
-  right: 12px;
+  right: 10px;
   background: none;
   border: none;
   color: #6b0000;
@@ -382,72 +320,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.3s ease;
+  transition: color 0.2s ease;
 }
 
-.eye-button:hover {
+.add-user-eye-btn:hover {
   color: #b30000;
 }
 
-.hint {
+.add-user-field small {
   display: block;
-  margin-top: 4px;
-  font-size: 0.8rem;
+  margin-top: 3px;
+  font-size: 0.73rem;
   color: #666;
   font-style: italic;
 }
 
-.modal-buttons {
-  margin-top: 24px;
+.add-user-modal-footer {
+  padding: 16px 24px 20px;
   display: flex;
   justify-content: center;
 }
 
-.submit-btn {
+.add-user-submit-btn {
   background: linear-gradient(135deg, #a00000 0%, #810000 100%);
   color: white;
-  padding: 12px 40px;
+  padding: 11px 36px;
   font-weight: 700;
   border-radius: 20px;
-  border: 2px solid transparent;
+  border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-family: "Segoe UI", Arial, sans-serif;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
-.submit-btn:hover:not(:disabled) {
+.add-user-submit-btn:hover {
   background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
-}
-
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* VIEW MODAL STYLES */
-.view-group {
-  margin-bottom: 20px;
-}
-
-.view-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #8b0000;
-  font-size: 0.9rem;
-}
-
-.view-value {
-  padding: 10px 12px;
-  background-color: #8b0000;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  color: #400000;
-  border: none;
 }
 
 /* Responsive Design */
@@ -456,61 +366,11 @@
     padding: 20px;
   }
 
-  .header h1 {
-    font-size: 1.5rem;
+  .add-user-modal-content {
+    max-width: 95%;
   }
 
-  .header p {
-    font-size: 0.85rem;
-  }
-
-  .user-management-controls {
-    justify-content: center;
-  }
-
-  .add-user-btn {
-    width: 100%;
-    max-width: 200px;
-  }
-
-  .user-management-table th,
-  .user-management-table td {
-    padding: 10px 8px;
-    font-size: 0.8rem;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .view-btn,
-  .delete-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    width: 100%;
-  }
-
-  .modal {
-    width: 95%;
-    margin: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .user-management-container {
-    padding: 15px;
-  }
-
-  .header h1 {
-    font-size: 1.3rem;
-  }
-
-  .user-management-table-container {
-    overflow-x: auto;
-  }
-
-  .user-management-table {
-    min-width: 500px;
+  .add-user-modal-body {
+    padding: 16px 20px;
   }
 }

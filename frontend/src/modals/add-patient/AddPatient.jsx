@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Calendar } from "lucide-react";
 import api from "../../axios/api";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./AddPatient.css";
 
 const AddPatient = ({ onClose, onSuccess }) => {
@@ -20,9 +21,41 @@ const AddPatient = ({ onClose, onSuccess }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // Confirmation Modal State
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+    onConfirm: null,
+    isLoading: false
+  });
+
   // Refs for date pickers
   const birthDateRef = useRef(null);
   const registerDateRef = useRef(null);
+
+  // Show modal function
+  const showModal = (title, message, type = 'success', onConfirm) => {
+    setModalConfig({
+      isOpen: true,
+      type,
+      title,
+      message,
+      onConfirm,
+      isLoading: false
+    });
+  };
+
+  // Close modal function
+  const closeModal = () => {
+    setModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Set modal loading state
+  const setModalLoading = (isLoading) => {
+    setModalConfig(prev => ({ ...prev, isLoading }));
+  };
 
   // ---------------- AUTO AGE ----------------
   useEffect(() => {
@@ -81,6 +114,47 @@ const AddPatient = ({ onClose, onSuccess }) => {
     setErrors((prev) => ({ ...prev, [name]: message }));
   };
 
+  // ---------------- SAVE PATIENT LOGIC ----------------
+  const performSavePatient = async () => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      if (formData.registerDate > today) {
+        setErrors({ registerDate: "Register date cannot be in the future." });
+        closeModal();
+        return;
+      }
+
+      setModalLoading(true);
+      const payload = {
+        ...formData,
+        birthDate: formData.birthDate
+          ? new Date(formData.birthDate).toISOString()
+          : null,
+        registerDate: formData.registerDate || null,
+      };
+
+      const res = await api.post("/patient/create-patient", payload);
+      if (res.data.success) {
+        closeModal();
+        onSuccess?.();
+        onClose();
+      } else {
+        setErrors({ general: res.data.message || "Failed to create patient" });
+        closeModal();
+      }
+    } catch (err) {
+      console.error("Error creating patient:", err);
+      setErrors({
+        general:
+          err.response?.data?.message ||
+          "Unable to create patient. Please try again.",
+      });
+      closeModal();
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   // ---------------- SUBMIT ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,223 +169,210 @@ const AddPatient = ({ onClose, onSuccess }) => {
 
     if (Object.values(newErrors).some((err) => err)) return;
 
-    if (!window.confirm("Add new Patient?")) return;
-
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      if (formData.registerDate > today) {
-        setErrors({ registerDate: "Register date cannot be in the future." });
-        return;
-      }
-
-      setLoading(true);
-      const payload = {
-        ...formData,
-        birthDate: formData.birthDate
-          ? new Date(formData.birthDate).toISOString()
-          : null,
-        registerDate: formData.registerDate || null,
-      };
-
-      const res = await api.post("/patient/create-patient", payload);
-      if (res.data.success) {
-        onSuccess?.();
-        onClose();
-      } else {
-        setErrors({ general: res.data.message || "Failed to create patient" });
-      }
-    } catch (err) {
-      console.error("Error creating patient:", err);
-      setErrors({
-        general:
-          err.response?.data?.message ||
-          "Unable to create patient. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
+    // Show confirmation modal instead of window.confirm
+    showModal(
+      "Add New Patient",
+      "Are you sure you want to add this new patient? Please review the details before confirming.",
+      'success',
+      performSavePatient
+    );
   };
 
   // ---------------- RENDER ----------------
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Patient Details</h2>
-        </div>
+    <>
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        isLoading={modalConfig.isLoading}
+        confirmText="Save Patient"
+        cancelText="Cancel"
+      />
 
-        <form onSubmit={handleSubmit} className="patient-form">
-          {errors.general && <div className="form-error">{errors.general}</div>}
-
-          {/* PERSONAL INFO */}
-          <div className="form-section">
-            <h3 className="section-title">Personal Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Last Name *</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="Enter last name"
-                />
-                {errors.lastName && <small className="error">{errors.lastName}</small>}
-              </div>
-
-              <div className="form-group">
-                <label>First Name *</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="Enter first name"
-                />
-                {errors.firstName && <small className="error">{errors.firstName}</small>}
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Middle Name</label>
-                <input
-                  type="text"
-                  name="middleName"
-                  value={formData.middleName}
-                  onChange={handleChange}
-                  placeholder="Enter middle name (optional)"
-                />
-                {errors.middleName && <small className="error">{errors.middleName}</small>}
-              </div>
-              <div className="form-group">
-                <label>Sex *</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">-- Select Sex --</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-            </div>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Patient Details</h2>
           </div>
 
-          {/* DEMOGRAPHICS */}
-          <div className="form-section">
-            <h3 className="section-title">Demographics</h3>
-            <div className="form-row">
-              <div className="form-group date-field">
-                <label>Birth Date *</label>
-                <div className="input-with-icon">
+          <form onSubmit={handleSubmit} className="patient-form">
+            {errors.general && <div className="form-error">{errors.general}</div>}
+
+            {/* PERSONAL INFO */}
+            <div className="form-section">
+              <h3 className="section-title">Personal Information</h3>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Last Name *</label>
                   <input
-                    ref={birthDateRef}
-                    type="date"
-                    name="birthDate"
-                    value={formData.birthDate}
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Enter last name"
+                  />
+                  {errors.lastName && <small className="error">{errors.lastName}</small>}
+                </div>
+
+                <div className="form-group">
+                  <label>First Name *</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="Enter first name"
+                  />
+                  {errors.firstName && <small className="error">{errors.firstName}</small>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Middle Name</label>
+                  <input
+                    type="text"
+                    name="middleName"
+                    value={formData.middleName}
+                    onChange={handleChange}
+                    placeholder="Enter middle name (optional)"
+                  />
+                  {errors.middleName && <small className="error">{errors.middleName}</small>}
+                </div>
+                <div className="form-group">
+                  <label>Sex *</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
                     onChange={handleChange}
                     required
-                  />
-                  <Calendar
-                    className="calendar-icon"
-                    onClick={() => birthDateRef.current.showPicker()}
-                  />
+                  >
+                    <option value="">-- Select Sex --</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label>Age</label>
-                <input type="number" name="age" value={formData.age} readOnly />
+            {/* DEMOGRAPHICS */}
+            <div className="form-section">
+              <h3 className="section-title">Demographics</h3>
+              <div className="form-row">
+                <div className="form-group date-field">
+                  <label>Birth Date *</label>
+                  <div className="input-with-icon">
+                    <input
+                      ref={birthDateRef}
+                      type="date"
+                      name="birthDate"
+                      value={formData.birthDate}
+                      onChange={handleChange}
+                      required
+                    />
+                    <Calendar
+                      className="calendar-icon"
+                      onClick={() => birthDateRef.current.showPicker()}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Age</label>
+                  <input type="number" name="age" value={formData.age} readOnly />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* CONTACT INFO */}
-          <div className="form-section">
-            <h3 className="section-title">Contact Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Contact No.</label>
-                <input
-                  type="tel"
-                  name="mobileNumber"
-                  value={formData.mobileNumber}
-                  onChange={handleChange}
-                  placeholder="11-digit number"
-                />
-                {errors.mobileNumber && (
-                  <small className="error">{errors.mobileNumber}</small>
-                )}
-              </div>
-              <div className="form-group">
-                <label>Address</label>
-                <textarea
-                  name="residentialAddress"
-                  value={formData.residentialAddress}
-                  onChange={handleChange}
-                  placeholder="Enter residential address"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ADDITIONAL INFO */}
-          <div className="form-section">
-            <h3 className="section-title">Additional Information</h3>
-            <div className="form-row">
-              <div className="form-group date-field">
-                <label>Register Date</label>
-                <div className="input-with-icon">
+            {/* CONTACT INFO */}
+            <div className="form-section">
+              <h3 className="section-title">Contact Information</h3>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Contact No.</label>
                   <input
-                    ref={registerDateRef}
-                    type="date"
-                    name="registerDate"
-                    value={formData.registerDate}
+                    type="tel"
+                    name="mobileNumber"
+                    value={formData.mobileNumber}
                     onChange={handleChange}
-                    max={new Date().toISOString().split("T")[0]}
+                    placeholder="11-digit number"
                   />
-                  <Calendar
-                    className="calendar-icon"
-                    onClick={() => registerDateRef.current.showPicker()}
+                  {errors.mobileNumber && (
+                    <small className="error">{errors.mobileNumber}</small>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Address</label>
+                  <textarea
+                    name="residentialAddress"
+                    value={formData.residentialAddress}
+                    onChange={handleChange}
+                    placeholder="Enter residential address"
                   />
                 </div>
-                {errors.registerDate && (
-                  <small className="error">{errors.registerDate}</small>
-                )}
-              </div>
-              <div className="form-group">
-                <label>Senior/PWD ID No.</label>
-                <input
-                  type="text"
-                  name="csdIdOrPwdId"
-                  value={formData.csdIdOrPwdId}
-                  onChange={handleChange}
-                  placeholder="Enter ID number (optional)"
-                />
               </div>
             </div>
-          </div>
 
-          {/* ACTION BUTTONS */}
-          <div className="form-actions">
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? "Saving..." : "Save Patient"}
-            </button>
-          </div>
-        </form>
+            {/* ADDITIONAL INFO */}
+            <div className="form-section">
+              <h3 className="section-title">Additional Information</h3>
+              <div className="form-row">
+                <div className="form-group date-field">
+                  <label>Register Date</label>
+                  <div className="input-with-icon">
+                    <input
+                      ref={registerDateRef}
+                      type="date"
+                      name="registerDate"
+                      value={formData.registerDate}
+                      onChange={handleChange}
+                      max={new Date().toISOString().split("T")[0]}
+                    />
+                    <Calendar
+                      className="calendar-icon"
+                      onClick={() => registerDateRef.current.showPicker()}
+                    />
+                  </div>
+                  {errors.registerDate && (
+                    <small className="error">{errors.registerDate}</small>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Senior/PWD ID No.</label>
+                  <input
+                    type="text"
+                    name="csdIdOrPwdId"
+                    value={formData.csdIdOrPwdId}
+                    onChange={handleChange}
+                    placeholder="Enter ID number (optional)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? "Saving..." : "Save Patient"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

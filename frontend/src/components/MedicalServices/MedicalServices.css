@@ -7,7 +7,7 @@
   box-sizing: border-box;
 }
 
-/* HEADER - Same as Archive */
+/* HEADER */
 .header {
   text-align: center;
   margin-bottom: 30px;
@@ -138,7 +138,7 @@
   box-shadow: 0 0 0 3px rgba(179, 0, 0, 0.1);
 }
 
-/* ADD SERVICE BUTTON - Consistent with color palette */
+/* ADD SERVICE BUTTON */
 .add-service-btn {
   background: linear-gradient(135deg, #a00000 0%, #810000 100%);
   color: #fff;
@@ -171,7 +171,7 @@
   border-color: transparent;
 }
 
-/* TABLE STYLING - Consistent with Archive */
+/* TABLE STYLING */
 .services-table-container {
   background-color: #fff;
   border-radius: 14px;
@@ -238,7 +238,7 @@
   text-align: center;
 }
 
-/* ACTION BUTTONS - Consistent with color palette */
+/* ACTION BUTTONS */
 .edit-btn {
   background-color: #ffffff;
   color: #660000;
@@ -291,57 +291,304 @@
   outline: none;
 }
 
+/* MODAL STYLES */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background-color: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px; /* Narrower modal */
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  font-size: 1.8rem;
+  color: #ffffff;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  font-weight: 300;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 24px 32px 28px 32px;
+  background-color: #ffffff;
+  max-width: 400px; /* Slightly narrower body */
+  margin: 0 auto;
+}
+
+/* ERROR MESSAGE IN MODAL */
+.error-message {
+  background-color: #fee;
+  border-left: 4px solid #d32f2f;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  color: #c62828;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.error-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* FORM STYLES - Left aligned labels and inputs side-by-side */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 0;
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.label {
+  flex-basis: 130px;
+  font-weight: 700;
+  color: #6b0000;
+  font-size: 0.9rem;
+  text-align: left;
+  margin-bottom: 0;
+  padding-left: 0;
+}
+
+.input, select {
+  flex-grow: 1;
+  max-width: 220px;
+  padding: 10px 14px;
+  border: 1.5px solid #b30000;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #400000;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input:focus, select:focus {
+  border-color: #8b0000;
+  outline: none;
+  box-shadow: 0 0 6px rgba(179, 0, 0, 0.4);
+}
+
+/* For input with currency symbol */
+.input.price-input {
+  padding-left: 30px;
+  width: 100%;
+}
+
+/* Password wrapper to accommodate eye icon if any */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 220px;
+}
+
+.password-wrapper input {
+  padding-right: 45px;
+  width: 100%;
+}
+
+.eye-button {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #6b0000;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.eye-button:hover {
+  color: #b30000;
+  background-color: rgba(179, 0, 0, 0.05);
+}
+
+.hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
+  text-align: left;
+  padding-left: 130px; /* align with input start */
+}
+
+/* Buttons container aligned right with spacing */
+.modal-buttons {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  padding: 20px 30px 28px 30px !important;
+  margin-top: 0;
+  border-top: 1px solid #f0eeee;
+}
+
+.submit-btn {
+  padding: 12px 36px;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+  box-shadow: 0 4px 10px rgba(102, 0, 0, 0.35);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6b0000 0%, #8b0000 100%);
+}
+
+.cancel-btn {
+  padding: 12px 30px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px solid #8b0000;
+  color: #8b0000;
+  border-radius: 16px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.cancel-btn:hover {
+  background-color: #8b0000;
+  color: white;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-  .medical-services-container {
+  .modal {
+    width: 95%;
+    margin: 10px;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 20px 20px;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+  }
+
+  .modal-body {
     padding: 20px;
   }
 
-  .header h1 {
-    font-size: 1.5rem;
+  .form-row {
+    display: block;
   }
 
-  .header p {
-    font-size: 0.85rem;
+  .form-row .form-group {
+    margin-bottom: 20px;
   }
 
-  .services-controls {
+  .form-group {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
 
-  .services-search-filters {
-    justify-content: center;
+  .label {
+    flex-basis: auto;
+    margin-right: 0;
+    margin-bottom: 6px;
   }
 
-  .search-box {
+  .input, select, .password-wrapper {
     max-width: 100%;
   }
 
-  .search-input {
-    width: 100%;
+  .hint {
+    padding-left: 0;
   }
 
-  .add-service-btn {
-    align-self: center;
-    min-width: 200px;
-  }
-
-  .services-table th,
-  .services-table td {
-    padding: 10px 8px;
-    font-size: 0.8rem;
-  }
-
-  .edit-btn,
-  .delete-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    margin-right: 4px;
+  .modal-buttons {
+    justify-content: center !important;
   }
 }
 
 @media (max-width: 480px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+  
   .medical-services-container {
     padding: 15px;
   }

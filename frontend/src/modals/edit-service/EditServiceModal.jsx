@@ -90,16 +90,16 @@ const EditServiceModal = ({ service, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="edit-modal-overlay" onClick={onClose}>
+      <div className="edit-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="edit-modal-header">
           <h2>Edit Service</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="service-form">
-          {error && <div className="form-error">{error}</div>}
+        <form onSubmit={handleSubmit} className="edit-service-form">
+          {error && <div className="edit-form-error">{error}</div>}
 
-          <div className="form-group">
+          <div className="edit-form-group">
             <label>Service Name :</label>
             <input
               type="text"
@@ -110,7 +110,7 @@ const EditServiceModal = ({ service, onClose, onSuccess }) => {
             />
           </div>
 
-          <div className="form-group">
+          <div className="edit-form-group">
             <label>Category :</label>
             <select
               name="category"
@@ -126,10 +126,10 @@ const EditServiceModal = ({ service, onClose, onSuccess }) => {
             </select>
           </div>
 
-          <div className="form-group">
+          <div className="edit-form-group">
             <label>Default Price :</label>
-            <div className="price-input-wrapper">
-              <span className="currency">₽</span>
+            <div className="edit-price-input-wrapper">
+              <span className="edit-currency">₱</span>
               <input
                 type="number"
                 name="price"
@@ -142,10 +142,10 @@ const EditServiceModal = ({ service, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="form-actions">
+          <div className="edit-form-actions">
             <button
               type="button"
-              className="btn-save"
+              className="edit-btn-save"
               onClick={handleSubmit}
               disabled={loading}
             >
@@ -153,7 +153,7 @@ const EditServiceModal = ({ service, onClose, onSuccess }) => {
             </button>
             <button
               type="button"
-              className="btn-cancel"
+              className="edit-btn-cancel"
               onClick={onClose}
               disabled={loading}
             >

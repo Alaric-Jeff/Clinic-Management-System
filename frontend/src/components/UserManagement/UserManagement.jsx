@@ -35,11 +35,6 @@ const UserManagement = () => {
   const [pendingUserData, setPendingUserData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // View modal states
-  const [openViewModal, setOpenViewModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showViewPassword, setShowViewPassword] = useState(false);
-  
   // Error state
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -210,18 +205,6 @@ const UserManagement = () => {
     }
   };
 
-  const handleView = (user) => {
-    setSelectedUser(user);
-    setOpenViewModal(true);
-    setShowViewPassword(false);
-  };
-
-  const handleCloseViewModal = () => {
-    setOpenViewModal(false);
-    setSelectedUser(null);
-    setShowViewPassword(false);
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB');
@@ -261,6 +244,7 @@ const UserManagement = () => {
           <thead>
             <tr>
               <th>Full Name</th>
+              <th>Email</th>
               <th>Status</th>
               <th>Date Created</th>
               <th>Action</th>
@@ -269,14 +253,15 @@ const UserManagement = () => {
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="no-data">No users found</td>
+                <td colSpan={5} className="no-data">No users found</td>
               </tr>
             ) : (
-              users.map((user, index) => (
+              users.map((user) => (
                 <tr key={user.id}>
                   <td>
                     {user.firstName} {user.middleName || ''} {user.lastName}
                   </td>
+                  <td>{user.email}</td>
                   <td>
                     <span className={user.status === 'ACTIVATED' ? 'status-activated' : 'status-pending'}>
                       {user.status}
@@ -286,14 +271,9 @@ const UserManagement = () => {
                     {formatDate(user.createdAt)}
                   </td>
                   <td>
-                    <div className="action-buttons">
-                      <button className="view-btn" onClick={() => handleView(user)}>
-                        View
-                      </button>
-                      <button className="delete-btn" onClick={() => handleDeleteClick(user)}>
-                        Delete
-                      </button>
-                    </div>
+                    <button className="delete-btn" onClick={() => handleDeleteClick(user)}>
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
@@ -302,160 +282,113 @@ const UserManagement = () => {
         </table>
       </div>
 
-      {/* Add User Modal */}
+      {/* Add User Modal - REBUILT */}
       {openAddModal && (
-        <div className="modal-overlay" onClick={handleCloseAddModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Add New User</h3>
-              <button className="modal-close" onClick={handleCloseAddModal}>×</button>
+        <div className="add-user-modal-overlay" onClick={handleCloseAddModal}>
+          <div className="add-user-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="add-user-modal-header">
+              <h3>Add New User</h3>
+              <button className="add-user-modal-close-btn" onClick={handleCloseAddModal}>×</button>
             </div>
-            <form onSubmit={handleSubmitForm} className="modal-body">
-              {errorMessage && (
-                <div className="error-message">
-                  <span className="error-icon">⚠</span>
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-              
-              <div className="form-group">
-                <label className="label">First Name *</label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                  className="input"
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="label">Middle Name (Optional)</label>
-                <input
-                  type="text"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  className="input"
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="label">Last Name *</label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                  className="input"
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="label">Email *</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="label">Password *</label>
-                <div className="password-wrapper">
+            
+            <form onSubmit={handleSubmitForm}>
+              <div className="add-user-modal-body">
+                {errorMessage && (
+                  <div className="add-user-error-alert">
+                    <span>⚠</span>
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+                
+                <div className="add-user-field">
+                  <label>First Name *</label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="input"
-                    minLength={8}
+                    maxLength={50}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="eye-button"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
                 </div>
-                <small className="hint">Min 8 characters, include number & special character</small>
-              </div>
 
-              <div className="form-group">
-                <label className="label">Confirm Password *</label>
-                <div className="password-wrapper">
+                <div className="add-user-field">
+                  <label>Middle Name</label>
                   <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="input"
+                    type="text"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    maxLength={50}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="eye-button"
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+                </div>
+
+                <div className="add-user-field">
+                  <label>Last Name *</label>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    maxLength={50}
+                  />
+                </div>
+
+                <div className="add-user-field">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="add-user-field">
+                  <label>Password *</label>
+                  <div className="add-user-password-field">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className="add-user-eye-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <small>Min 8 characters, include number & special character</small>
+                </div>
+
+                <div className="add-user-field">
+                  <label>Confirm Password *</label>
+                  <div className="add-user-password-field">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="add-user-eye-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="modal-buttons">
-                <button type="submit" className="submit-btn">
+              <div className="add-user-modal-footer">
+                <button type="submit" className="add-user-submit-btn">
                   Create User
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* View User Modal */}
-      {openViewModal && selectedUser && (
-        <div className="modal-overlay" onClick={handleCloseViewModal}>
-          <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">User Details</h3>
-              <button className="modal-close" onClick={handleCloseViewModal}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="view-group">
-                <label className="view-label">Full Name</label>
-                <div className="view-value">
-                  {selectedUser.firstName} {selectedUser.middleName || ''} {selectedUser.lastName}
-                </div>
-              </div>
-
-              <div className="view-group">
-                <label className="view-label">Email</label>
-                <div className="view-value">{selectedUser.email}</div>
-              </div>
-
-              <div className="view-group">
-                <label className="view-label">Password</label>
-                <div className="password-wrapper">
-                  <input
-                    type={showViewPassword ? 'text' : 'password'}
-                    value={showViewPassword ? (selectedUser.password || 'N/A') : '********'}
-                    readOnly
-                    className="input input-readonly"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowViewPassword(!showViewPassword)}
-                    className="eye-button"
-                  >
-                    {showViewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

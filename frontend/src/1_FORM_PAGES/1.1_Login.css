@@ -1,15 +1,3 @@
-/* Remove these lines from the top:
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  overflow: hidden;
-}
-*/
-
 /* Container - Full Screen Centered */
 .login-container {
   width: 100vw;
@@ -30,29 +18,29 @@ body {
   align-items: center;
 }
 
-/* Rest of your CSS stays the same... */
-
 /* Header */
-.header {
+.login-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   width: 100%;
 }
 
-.company-name {
+.login-company-name {
   font-size: 1.75rem;
   font-weight: 700;
   color: #891315;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.2;
 }
 
-.address {
+.login-address {
   font-size: 0.95rem;
   color: #4b5563;
   margin: 0 0 1rem 0;
+  line-height: 1.3;
 }
 
-.divider {
+.login-divider {
   width: 150%;
   max-width: 1000px;
   height: 4px;
@@ -67,16 +55,17 @@ body {
   width: 100%;
 }
 
-.form-title {
+.login-form-title {
   font-size: 3rem;
   font-weight: 700;
   color: #891315;
   text-align: center;
   margin-bottom: 2.5rem;
   width: 100%;
+  line-height: 1;
 }
 
-.form-fields {
+.login-form-fields {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -84,14 +73,14 @@ body {
 }
 
 /* Input Groups */
-.input-group {
+.login-input-group {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
 }
 
-.icon {
+.login-icon {
   color: #891315;
   flex-shrink: 0;
   display: flex;
@@ -99,19 +88,19 @@ body {
   justify-content: center;
 }
 
-.icon svg {
+.login-icon svg {
   width: 35px;
   height: 35px;
   stroke-width: 2.5;
 }
 
-.input-wrapper {
+.login-input-wrapper {
   position: relative;
   width: 100%;
   flex: 1;
 }
 
-.input-field {
+.login-input-field {
   width: 100%;
   padding: 0.85rem 1rem;
   border: 2.5px solid #891315;
@@ -123,20 +112,20 @@ body {
   transition: all 0.2s;
 }
 
-.input-field.with-icon {
+.login-input-field.login-with-icon {
   padding-right: 3rem;
 }
 
-.input-field:focus {
+.login-input-field:focus {
   border-color: #891315;
-  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
+  box-shadow: 0 0 0 3px rgba(137, 19, 21, 0.1);
 }
 
-.input-field::placeholder {
+.login-input-field::placeholder {
   color: #9ca3af;
 }
 
-.toggle-password {
+.login-toggle-password {
   position: absolute;
   right: 1rem;
   top: 50%;
@@ -151,24 +140,24 @@ body {
   transition: color 0.2s;
 }
 
-.toggle-password svg {
+.login-toggle-password svg {
   width: 22px;
   height: 22px;
 }
 
-.toggle-password:hover {
+.login-toggle-password:hover {
   color: #b91c1c;
 }
 
 /* Button */
-.button-group {
+.login-button-group {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
 }
 
-.icon-spacer {
+.login-icon-spacer {
   width: 35px;
   flex-shrink: 0;
 }
@@ -187,7 +176,7 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
-.login-button:hover {
+.login-button:hover:not(:disabled) {
   background-color: #991b1b;
   box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
@@ -197,20 +186,25 @@ body {
   transform: translateY(0);
 }
 
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Links */
-.link-group {
+.login-link-group {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
 }
 
-.link-wrapper {
+.login-link-wrapper {
   width: 100%;
   text-align: center;
 }
 
-.forgot-link {
+.login-forgot-link {
   color: #7f1d1d;
   text-decoration: underline;
   font-weight: 500;
@@ -218,6 +212,34 @@ body {
   transition: color 0.2s;
 }
 
-.forgot-link:hover {
-  color: #b91c1b;
+.login-forgot-link:hover {
+  color: #b91c1c;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .login-wrapper {
+    padding: 0 1.5rem;
+  }
+
+  .login-company-name {
+    font-size: 1.5rem;
+  }
+
+  .login-address {
+    font-size: 0.85rem;
+  }
+
+  .login-form-title {
+    font-size: 2.5rem;
+  }
+
+  .login-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .login-icon-spacer {
+    width: 30px;
+  }
 }
