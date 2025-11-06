@@ -1,7 +1,7 @@
 import { Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../axios/api'
+import api from '../axios/api';
 import './2.1_Forgot_Pass.css';
 
 export default function ForgotPasswordPage() {
@@ -37,6 +37,7 @@ export default function ForgotPasswordPage() {
       if (res.data.success) {
         setSuccess(res.data.message || 'Password reset link has been sent to your email');
         setEmail('');
+        
         // Optionally redirect after a delay
         setTimeout(() => {
           navigate('/');
@@ -60,44 +61,44 @@ export default function ForgotPasswordPage() {
     <div className="forgot-container">
       <div className="forgot-wrapper">
         {/* Header */}
-        <div className="header">
-          <h1 className="company-name">LEONARDO MEDICAL SERVICES</h1>
-          <p className="address">B1 L17-E Neovista, Bagumbong, Caloocan City</p>
-          <div className="divider"></div>
+        <div className="forgot-header">
+          <h1 className="forgot-company-name">LEONARDO MEDICAL SERVICES</h1>
+          <p className="forgot-address">B1 L17-E Neovista, Bagumbong, Caloocan City</p>
+          <div className="forgot-divider"></div>
         </div>
 
         {/* Forgot Password Form */}
         <div className="forgot-form">
-          <h2 className="form-title">Forgot Password</h2>
+          <h2 className="forgot-form-title">Forgot Password</h2>
 
           {/* Error Message */}
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="forgot-error-message">{error}</div>}
 
           {/* Success Message */}
-          {success && <div className="success-message">{success}</div>}
+          {success && <div className="forgot-success-message">{success}</div>}
 
-          <div className="form-fields">
+          <div className="forgot-form-fields">
             {/* Email Input */}
-            <div className="input-group">
-              <div className="icon">
+            <div className="forgot-input-group">
+              <div className="forgot-icon">
                 <Mail size={35} strokeWidth={2.5} />
               </div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
+                className="forgot-input-field"
                 placeholder="Enter Email"
                 disabled={loading}
               />
             </div>
 
             {/* Send New Password Button */}
-            <div className="button-group">
-              <div className="icon-spacer"></div>
+            <div className="forgot-button-group">
+              <div className="forgot-icon-spacer"></div>
               <button 
                 onClick={handleSendPassword} 
-                className="send-password-button"
+                className="forgot-send-button"
                 disabled={loading}
               >
                 {loading ? 'Sending...' : 'Send new password'}
@@ -105,19 +106,15 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Back Link */}
-            <div className="link-group">
-              <div className="icon-spacer"></div>
-              <div className="link-wrapper">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleBack();
-                  }}
-                  className="back-link"
+            <div className="forgot-link-group">
+              <div className="forgot-icon-spacer"></div>
+              <div className="forgot-link-wrapper">
+                <button
+                  onClick={handleBack}
+                  className="forgot-back-link"
                 >
                   Back
-                </a>
+                </button>
               </div>
             </div>
           </div>
