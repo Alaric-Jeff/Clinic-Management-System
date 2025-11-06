@@ -30,7 +30,7 @@ export async function archiveMedicalDocument(
         where: { id },
         data: {
           isArchived: true,
-          archivedAt, // ✅ consistent timestamp usage
+          archivedAt, 
         },
       });
 
@@ -38,7 +38,7 @@ export async function archiveMedicalDocument(
         data: {
           medicalDocumentationId: id,
           action: "updated",
-          fieldsChanged: "isArchived, archivedAt", // ✅ include both
+          fieldsChanged: "isArchived, archivedAt", 
           previousData: JSON.stringify({
             isArchived: false,
             archivedAt: null,

@@ -5,6 +5,8 @@ import './PatientDetails.css'
 import EditPatientModal from '../../modals/patient-edit/PatientEditModal'
 import ViewMedicalDocModal from "../../modals/view-doc/ViewDocModal";
 import AddRecordModal from "../../modals/AddRecordModal/AddRecordModal";
+import Toast from "../Toast/Toast";
+import ConfirmModal from "../ConfirmModal/ConfirmModal";
 
 const PatientDetail = () => {
   const { id } = useParams();
@@ -91,7 +93,7 @@ const PatientDetail = () => {
       setArchiveLoading(docId);
       
       // Call the API to archive the medical documentation
-      const response = await api.post('/medical-documentation/archive', {
+      const response = await api.post('/document/archive-medical-documentation', {
         id: docId
       });
 
