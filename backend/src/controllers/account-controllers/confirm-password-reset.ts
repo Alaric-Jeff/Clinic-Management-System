@@ -71,10 +71,9 @@ export async function confirmPasswordReset(
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #dc2626;">Password Reset Successful</h2>
                     <p>Hello ${user.firstName},</p>
-                    <p>Your password has been successfully reset. Here are your new login credentials:</p>
+                    <p>Your password has been successfully reset. Here are your new password credentials:</p>
                     
                     <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 0; font-size: 16px;"><strong>Email:</strong> ${user.email}</p>
                         <p style="margin: 10px 0 0 0; font-size: 16px;"><strong>New Password:</strong> <code style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px;">${rawPassword}</code></p>
                     </div>
                     

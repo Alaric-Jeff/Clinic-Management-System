@@ -36,7 +36,6 @@ export async function accountRoutes(fastify: FastifyInstance) {
     timestamp: new Date().toISOString(),
   }));
 
-  // 🔐 Login route (rate limited)
   fastify.route({
     method: "POST",
     url: "/login",
@@ -53,7 +52,6 @@ export async function accountRoutes(fastify: FastifyInstance) {
     handler: accountLoginController,
   });
 
-  // 🚪 Logout route (no limit needed)
   fastify.route({
     method: "POST",
     url: "/logout",
@@ -68,7 +66,6 @@ export async function accountRoutes(fastify: FastifyInstance) {
     handler: accountLogoutController,
   });
 
-  // 🧑‍💼 Create account (rate limited to avoid spam)
   fastify.route({
     method: "POST",
     url: "/create-account",
@@ -86,7 +83,6 @@ export async function accountRoutes(fastify: FastifyInstance) {
     handler: createAccountController,
   });
 
-  // ❌ Delete account
   fastify.route({
     method: "DELETE",
     url: "/delete-account",

@@ -15,15 +15,9 @@ const PatientList = () => {
   const [loading, setLoading] = useState(true);
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [archivingIds, setArchivingIds] = useState(new Set());
-  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [dateFilter, setDateFilter] = useState("all");
-  const [customDate, setCustomDate] = useState({
-    day: "",
-    month: "",
-    year: "",
-  });
 
   // Modal and Toast states
   const [modalConfig, setModalConfig] = useState({
@@ -93,7 +87,6 @@ const PatientList = () => {
     try {
       setModalLoading(true);
       setArchivingIds((prev) => new Set(prev).add(patientId));
-      setError("");
       const res = await api.post("/patient/archive-patient", { id: patientId });
       if (res.data.success) {
         fetchPatients(currentCursor, pageDirection || "next", dateFilter);
@@ -132,7 +125,6 @@ const PatientList = () => {
   const fetchPatients = useCallback(async (cursor = null, dir = "next", filter = "all") => {
     try {
       setLoading(true);
-      setError("");
 
       let endpoint = "/patient/get-total-patients";
       if (filter === "today") {
@@ -159,13 +151,11 @@ const PatientList = () => {
         setPageDirection(dir);
       } else {
         setPatients([]);
-        setError(res.data.message || "Failed to fetch patients");
         showToast(res.data.message || "Failed to fetch patients", 'error');
       }
     } catch (err) {
       console.error("Error fetching patients:", err);
       setPatients([]);
-      setError("Unable to fetch patients. Please try again.");
       showToast("Unable to fetch patients. Please try again.", 'error');
     } finally {
       setLoading(false);
@@ -183,7 +173,6 @@ const PatientList = () => {
 
     try {
       setLoading(true);
-      setError("");
       const res = await api.post("/search/search-patient", {
         searchBody: query.trim(),
       });
@@ -198,13 +187,11 @@ const PatientList = () => {
         setHasPreviousPage(false);
       } else {
         setPatients([]);
-        setError("No patients found matching your search.");
         showToast("No patients found matching your search.", 'warning');
       }
     } catch (err) {
       console.error("Error searching patients:", err);
       setPatients([]);
-      setError("No patients found matching your search.");
       showToast("No patients found matching your search.", 'error');
     } finally {
       setLoading(false);
@@ -339,13 +326,6 @@ const PatientList = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          <span className="error-icon">⚠</span>
-          {error}
-        </div>
-      )}
-
       <div className="filter-bar">
         <div className="search-wrapper">
           <input
@@ -385,55 +365,7 @@ const PatientList = () => {
           <option value="today">Today</option>
           <option value="week">This Week</option>
           <option value="month">This Month</option>
-          <option value="custom">Custom Range</option>
         </select>
-
-        {dateFilter === "custom" && (
-          <div className="custom-range">
-            <select
-              value={customDate.day}
-              onChange={(e) =>
-                setCustomDate({ ...customDate, day: e.target.value })
-              }
-            >
-              <option value="">Day</option>
-              {[...Array(31)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
-            <select
-              value={customDate.month}
-              onChange={(e) =>
-                setCustomDate({ ...customDate, month: e.target.value })
-              }
-            >
-              <option value="">Month</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {new Date(0, i).toLocaleString("en", { month: "short" })}
-                </option>
-              ))}
-            </select>
-            <select
-              value={customDate.year}
-              onChange={(e) =>
-                setCustomDate({ ...customDate, year: e.target.value })
-              }
-            >
-              <option value="">Year</option>
-              {Array.from({ length: 10 }, (_, i) => {
-                const year = new Date().getFullYear() - i;
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        )}
 
         <button className="adds" onClick={() => setShowAddPatient(true)}>
           + Add Patient
