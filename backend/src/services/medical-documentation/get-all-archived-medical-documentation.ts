@@ -18,6 +18,7 @@ export async function getAllArchivedMedicalDocumentationService(
                 admittedByName: true,
                 createdAt: true,
                 lastUpdatedByName: true,
+                archivedAt: true,
                 patient: {
                     select: {
                         firstName: true,

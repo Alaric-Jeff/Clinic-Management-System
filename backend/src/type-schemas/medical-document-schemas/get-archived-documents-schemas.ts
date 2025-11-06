@@ -7,6 +7,7 @@ export const ArchivedDocumentsResponse = Type.Object({
     admittedByName: Type.String(),
     createdAt: Type.String({ format: 'date-time' }),
     lastUpdatedByName: Type.String(),
+    archivedAt: Type.String({ format: 'date-time' }),
     patient: Type.Object({
       firstName: Type.String(),
       lastName: Type.String(),

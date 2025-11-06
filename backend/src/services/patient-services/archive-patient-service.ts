@@ -60,7 +60,8 @@ export async function archivePatientService(
       where: { id },
       data: {
         isArchived: true,
-        updatedAt: new Date() 
+        updatedAt: new Date(),
+        archivedAt: new Date()
       }
     });
 

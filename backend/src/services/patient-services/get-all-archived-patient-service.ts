@@ -35,6 +35,7 @@ export async function getAllArchivedPatientsService(
                 firstName: true,
                 lastName: true,
                 middleName: true,
+                archivedAt: true,
                 createdAt: true
             },
             orderBy: {

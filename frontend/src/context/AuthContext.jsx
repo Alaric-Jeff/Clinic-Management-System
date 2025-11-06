@@ -25,21 +25,29 @@ export const AuthProvider = ({ children }) => {
     validateUser();
   }, []);
 
-const login = async (credentials) => {
-  try {
-    const res = await api.post("/account/login", credentials);
-    const userData = res.data?.data;
+  const login = async (credentials) => {
+    try {
+      const res = await api.post("/account/login", credentials);
+      const userData = res.data?.data;
 
-    if (!userData) throw new Error("Invalid login response: user data missing");
+      if (!userData) throw new Error("Invalid login response: user data missing");
 
-    setUser(userData);
-    navigate(`/${userData.role}/dashboard`);
-  } catch (err) {
-    console.error("Login failed:", err.response?.data || err.message);
-    throw err;
-  }
-};
-
+      setUser(userData);
+      
+      // Redirect based on role
+      if (userData.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (userData.role === "encoder") {
+        navigate("/encoder/patient-list");
+      } else {
+        // Fallback for unknown roles
+        navigate(`/${userData.role}/dashboard`);
+      }
+    } catch (err) {
+      console.error("Login failed:", err.response?.data || err.message);
+      throw err;
+    }
+  };
 
   const logout = async () => {
     try {

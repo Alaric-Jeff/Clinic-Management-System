@@ -24,6 +24,61 @@ const PatientDetail = () => {
   const [saveLoading, setSaveLoading] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(null); // Track which record is being archived
 
+  // Modal and Toast states
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    type: 'warning',
+    title: '',
+    message: '',
+    onConfirm: null,
+    isLoading: false,
+    actionType: null // 'saveNote' or 'archiveRecord'
+  });
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success',
+    duration: 4000
+  });
+
+  // Show toast function
+  const showToast = (message, type = 'success', duration = 4000) => {
+    setToastConfig({
+      isVisible: true,
+      message,
+      type,
+      duration
+    });
+  };
+
+  // Close toast function
+  const closeToast = () => {
+    setToastConfig(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // Show modal function
+  const showModal = (title, message, type = 'warning', onConfirm, actionType = null) => {
+    setModalConfig({
+      isOpen: true,
+      type,
+      title,
+      message,
+      onConfirm,
+      isLoading: false,
+      actionType
+    });
+  };
+
+  // Close modal function
+  const closeModal = () => {
+    setModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Set modal loading state
+  const setModalLoading = (isLoading) => {
+    setModalConfig(prev => ({ ...prev, isLoading }));
+  };
+
   const fetchPatient = async () => {
     try {
       setLoading(true);
@@ -48,9 +103,10 @@ const PatientDetail = () => {
     fetchPatient();
   }, [id]);
 
-  const handleSave = async () => {
+  const handleSaveNote = async () => {
     try {
       setSaveLoading(true);
+      setModalLoading(true);
       
       // Call the API to save the note
       const response = await api.post('/patient/add-note', {
@@ -66,16 +122,35 @@ const PatientDetail = () => {
         }));
         setIsEditing(false);
         
-        // Optional: Show success message
-        console.log('Note saved successfully:', response.data);
+        // Show success toast
+        showToast('Note saved successfully', 'success');
+        closeModal();
+      } else {
+        throw new Error("Failed to save note");
       }
     } catch (err) {
       console.error("Error saving note:", err);
-      // Handle error - you might want to show a toast or error message
-      alert("Failed to save note. Please try again.");
+      const errorMessage = err.response?.data?.message || "Failed to save note. Please try again.";
+      showToast(errorMessage, 'error');
     } finally {
       setSaveLoading(false);
+      setModalLoading(false);
     }
+  };
+
+  const handleSaveClick = () => {
+    if (!remarks.trim()) {
+      showToast("Please enter a note before saving", 'error');
+      return;
+    }
+
+    showModal(
+      "Save Note",
+      "Are you sure you want to save this note?",
+      'warning',
+      handleSaveNote,
+      'saveNote'
+    );
   };
 
   const handleCancel = () => {
@@ -85,12 +160,9 @@ const PatientDetail = () => {
   };
 
   const handleArchiveRecord = async (docId) => {
-    if (!window.confirm("Are you sure you want to archive this medical record?")) {
-      return;
-    }
-
     try {
       setArchiveLoading(docId);
+      setModalLoading(true);
       
       // Call the API to archive the medical documentation
       const response = await api.post('/document/archive-medical-documentation', {
@@ -101,16 +173,33 @@ const PatientDetail = () => {
         // Refresh patient data to update the medical records list
         await fetchPatient();
         
-        // Optional: Show success message
-        console.log('Record archived successfully:', response.data);
+        // Show success toast
+        showToast('Record archived successfully', 'success');
+        closeModal();
+      } else {
+        throw new Error("Failed to archive record");
       }
     } catch (err) {
       console.error("Error archiving record:", err);
-      // Handle error - show a toast or error message
-      alert("Failed to archive record. Please try again.");
+      const errorMessage = err.response?.data?.message || "Failed to archive record. Please try again.";
+      showToast(errorMessage, 'error');
     } finally {
       setArchiveLoading(null);
+      setModalLoading(false);
     }
+  };
+
+  const handleArchiveClick = (docId) => {
+    const doc = patient?.medicalDocumentations?.find(d => d.id === docId);
+    const admittedBy = doc?.admittedByName || doc?.createdByName || 'this record';
+    
+    showModal(
+      "Archive Medical Record",
+      `Are you sure you want to archive the medical record from ${admittedBy}? This action will move the record to the archive.`,
+      'warning',
+      () => handleArchiveRecord(docId),
+      'archiveRecord'
+    );
   };
 
   const formatDate = (dateString) => {
@@ -258,11 +347,12 @@ const PatientDetail = () => {
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="Enter assessment or remarks..."
+                rows="4"
               />
               <div className="assess-buttons-container">
                 <button 
                   className="assess-save-btn-unique" 
-                  onClick={handleSave}
+                  onClick={handleSaveClick}
                   disabled={saveLoading}
                 >
                   {saveLoading ? "SAVING..." : "SAVE"}
@@ -350,7 +440,7 @@ const PatientDetail = () => {
                       </button>
                       <button
                         className="archive-btn-modern"
-                        onClick={() => handleArchiveRecord(doc.id)}
+                        onClick={() => handleArchiveClick(doc.id)}
                         disabled={archiveLoading === doc.id}
                       >
                         {archiveLoading === doc.id ? "Archiving..." : "Archive"}
@@ -407,6 +497,29 @@ const PatientDetail = () => {
           }}
         />
       )}
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        isLoading={modalConfig.isLoading}
+        confirmText={modalConfig.actionType === 'saveNote' ? "Yes, Save" : "Yes, Archive"}
+        cancelText="Cancel"
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        isVisible={toastConfig.isVisible}
+        onClose={closeToast}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        position="bottom-right"
+      />
     </div>
   );
 };

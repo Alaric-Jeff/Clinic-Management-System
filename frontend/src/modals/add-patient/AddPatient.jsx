@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, AlertTriangle, Info, XCircle } from "lucide-react";
 import api from "../../axios/api";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import Toast from "../../components/Toast/Toast";
 import "./AddPatient.css";
 
 const AddPatient = ({ onClose, onSuccess }) => {
@@ -21,6 +22,17 @@ const AddPatient = ({ onClose, onSuccess }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // Duplicate detection state
+  const [duplicateCheck, setDuplicateCheck] = useState({
+    isChecking: false,
+    isDuplicate: false,
+    warning: null,
+    matches: []
+  });
+
+  // Debounce timer ref
+  const duplicateCheckTimer = useRef(null);
+
   // Confirmation Modal State
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -29,6 +41,14 @@ const AddPatient = ({ onClose, onSuccess }) => {
     message: '',
     onConfirm: null,
     isLoading: false
+  });
+
+  // Toast State
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success',
+    duration: 4000
   });
 
   // Refs for date pickers
@@ -56,6 +76,86 @@ const AddPatient = ({ onClose, onSuccess }) => {
   const setModalLoading = (isLoading) => {
     setModalConfig(prev => ({ ...prev, isLoading }));
   };
+
+  // Show toast function
+  const showToast = (message, type = 'success', duration = 4000) => {
+    setToastConfig({
+      isVisible: true,
+      message,
+      type,
+      duration
+    });
+  };
+
+  // Close toast function
+  const closeToast = () => {
+    setToastConfig(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // ---------------- DUPLICATE CHECK FUNCTION ----------------
+  const checkForDuplicates = async (firstName, lastName, middleName) => {
+    // Don't check if only first name is provided
+    if (!lastName || !firstName) {
+      setDuplicateCheck({
+        isChecking: false,
+        isDuplicate: false,
+        warning: null,
+        matches: []
+      });
+      return;
+    }
+
+    try {
+      setDuplicateCheck(prev => ({ ...prev, isChecking: true }));
+
+      const response = await api.post("/patient/find-existing", {
+        firstName: firstName || null,
+        lastName: lastName || null,
+        middleName: middleName || null
+      });
+
+      if (response.data.result) {
+        setDuplicateCheck({
+          isChecking: false,
+          isDuplicate: response.data.result.isDuplicate,
+          warning: response.data.result.warning,
+          matches: response.data.result.matches || []
+        });
+      }
+    } catch (error) {
+      console.error("Error checking for duplicates:", error);
+      setDuplicateCheck({
+        isChecking: false,
+        isDuplicate: false,
+        warning: null,
+        matches: []
+      });
+    }
+  };
+
+  // ---------------- DEBOUNCED DUPLICATE CHECK ----------------
+  useEffect(() => {
+    // Clear existing timer
+    if (duplicateCheckTimer.current) {
+      clearTimeout(duplicateCheckTimer.current);
+    }
+
+    // Set new timer for debounced check
+    duplicateCheckTimer.current = setTimeout(() => {
+      checkForDuplicates(
+        formData.firstName,
+        formData.lastName,
+        formData.middleName
+      );
+    }, 500); // 500ms debounce
+
+    // Cleanup
+    return () => {
+      if (duplicateCheckTimer.current) {
+        clearTimeout(duplicateCheckTimer.current);
+      }
+    };
+  }, [formData.firstName, formData.lastName, formData.middleName]);
 
   // ---------------- AUTO AGE ----------------
   useEffect(() => {
@@ -125,6 +225,8 @@ const AddPatient = ({ onClose, onSuccess }) => {
       }
 
       setModalLoading(true);
+      setLoading(true);
+      
       const payload = {
         ...formData,
         birthDate: formData.birthDate
@@ -135,23 +237,23 @@ const AddPatient = ({ onClose, onSuccess }) => {
 
       const res = await api.post("/patient/create-patient", payload);
       if (res.data.success) {
+        showToast('Patient created successfully', 'success');
         closeModal();
         onSuccess?.();
         onClose();
       } else {
-        setErrors({ general: res.data.message || "Failed to create patient" });
-        closeModal();
+        throw new Error(res.data.message || "Failed to create patient");
       }
     } catch (err) {
       console.error("Error creating patient:", err);
-      setErrors({
-        general:
-          err.response?.data?.message ||
-          "Unable to create patient. Please try again.",
-      });
+      const errorMessage = err.response?.data?.message ||
+        "Unable to create patient. Please try again.";
+      setErrors({ general: errorMessage });
+      showToast(errorMessage, 'error');
       closeModal();
     } finally {
       setModalLoading(false);
+      setLoading(false);
     }
   };
 
@@ -169,12 +271,109 @@ const AddPatient = ({ onClose, onSuccess }) => {
 
     if (Object.values(newErrors).some((err) => err)) return;
 
-    // Show confirmation modal instead of window.confirm
-    showModal(
-      "Add New Patient",
-      "Are you sure you want to add this new patient? Please review the details before confirming.",
-      'success',
-      performSavePatient
+    // If high-level duplicate warning, show confirmation with warning
+    if (duplicateCheck.isDuplicate && duplicateCheck.warning?.level === 'high') {
+      showModal(
+        "Potential Duplicate Patient Detected",
+        `${duplicateCheck.warning.message}\n\nAre you absolutely sure you want to proceed with adding this patient?`,
+        'warning',
+        performSavePatient
+      );
+    } else {
+      // Normal confirmation
+      showModal(
+        "Add New Patient",
+        "Are you sure you want to add this new patient? Please review the details before confirming.",
+        'success',
+        performSavePatient
+      );
+    }
+  };
+
+  // ---------------- RENDER WARNING COMPONENT ----------------
+  const renderDuplicateWarning = () => {
+    if (!duplicateCheck.isDuplicate || !duplicateCheck.warning) return null;
+
+    const { level, message } = duplicateCheck.warning;
+    
+    const getWarningStyle = () => {
+      switch (level) {
+        case 'high':
+          return { 
+            className: 'duplicate-warning-high', 
+            icon: <XCircle size={20} />,
+            bgColor: '#fee2e2',
+            borderColor: '#ef4444',
+            textColor: '#991b1b'
+          };
+        case 'medium':
+          return { 
+            className: 'duplicate-warning-medium', 
+            icon: <AlertTriangle size={20} />,
+            bgColor: '#fef3c7',
+            borderColor: '#f59e0b',
+            textColor: '#92400e'
+          };
+        case 'low':
+          return { 
+            className: 'duplicate-warning-low', 
+            icon: <Info size={20} />,
+            bgColor: '#dbeafe',
+            borderColor: '#3b82f6',
+            textColor: '#1e40af'
+          };
+        default:
+          return { 
+            className: 'duplicate-warning-low', 
+            icon: <Info size={20} />,
+            bgColor: '#dbeafe',
+            borderColor: '#3b82f6',
+            textColor: '#1e40af'
+          };
+      }
+    };
+
+    const style = getWarningStyle();
+
+    return (
+      <div 
+        className={`duplicate-warning ${style.className}`}
+        style={{
+          backgroundColor: style.bgColor,
+          border: `2px solid ${style.borderColor}`,
+          color: style.textColor,
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px'
+        }}
+      >
+        <div style={{ flexShrink: 0, marginTop: '2px' }}>
+          {style.icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: 0, fontWeight: 600, marginBottom: '8px' }}>
+            {message}
+          </p>
+          {duplicateCheck.matches.length > 0 && (
+            <div style={{ marginTop: '8px' }}>
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>
+                Existing Patient{duplicateCheck.matches.length > 1 ? 's' : ''}:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px' }}>
+                {duplicateCheck.matches.map((match) => (
+                  <li key={match.id} style={{ marginBottom: '4px' }}>
+                    <strong>{match.fullName}</strong> - {match.gender}, 
+                    Born: {new Date(match.birthDate).toLocaleDateString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -194,6 +393,16 @@ const AddPatient = ({ onClose, onSuccess }) => {
         cancelText="Cancel"
       />
 
+      {/* Toast Notification */}
+      <Toast
+        isVisible={toastConfig.isVisible}
+        onClose={closeToast}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        position="bottom-right"
+      />
+
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
@@ -202,6 +411,9 @@ const AddPatient = ({ onClose, onSuccess }) => {
 
           <form onSubmit={handleSubmit} className="patient-form">
             {errors.general && <div className="form-error">{errors.general}</div>}
+
+            {/* Duplicate Warning */}
+            {renderDuplicateWarning()}
 
             {/* PERSONAL INFO */}
             <div className="form-section">
@@ -243,6 +455,11 @@ const AddPatient = ({ onClose, onSuccess }) => {
                     placeholder="Enter middle name (optional)"
                   />
                   {errors.middleName && <small className="error">{errors.middleName}</small>}
+                  {duplicateCheck.isChecking && (
+                    <small style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                      Checking for duplicates...
+                    </small>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Sex *</label>

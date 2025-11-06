@@ -1,3 +1,7 @@
+/* ============================
+   Archive.css - full replacement
+   ============================ */
+
 .archive-container {
   font-family: "Segoe UI", Arial, sans-serif;
   background-color: #fff5f5;
@@ -7,7 +11,7 @@
   box-sizing: border-box;
 }
 
-/* HEADER - Same as PatientList */
+/* HEADER (page header, not modal header) */
 .header {
   text-align: center;
   margin-bottom: 30px;
@@ -68,12 +72,9 @@
   box-shadow: 0 2px 6px rgba(211, 47, 47, 0.15);
 }
 
-.error-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
+.error-icon { font-size: 1.2rem; font-weight: bold; }
 
-/* CONTROLS SECTION - Updated for view selector and search */
+/* CONTROLS (view/select/search) */
 .archive-controls {
   display: flex;
   justify-content: space-between;
@@ -83,59 +84,33 @@
   flex-wrap: wrap;
 }
 
-.view-selector {
+.view-selector,
+.archive-search-input {
   padding: 10px 16px;
   border: 2px solid #6b0000;
   border-radius: 24px;
-  background: #ffffff;
+  background: #fff;
   color: #400000;
   font-size: 0.9rem;
   outline: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 200px;
+  transition: all 0.2s ease;
   font-weight: 600;
 }
 
-.view-selector:focus {
-  border-color: #b30000;
-  box-shadow: 0 0 0 3px rgba(179, 0, 0, 0.1);
-}
-
-.archive-search-box {
-  position: relative;
-  min-width: 220px;
-  max-width: 350px;
-}
-
-.archive-search-input {
-  width: 100%;
-  padding: 10px 16px;
-  border: 2px solid #6b0000;
-  border-radius: 24px;
-  background: #ffffff;
-  color: #400000;
-  font-size: 0.9rem;
-  outline: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
+.view-selector { min-width: 200px; }
+.view-selector:focus,
 .archive-search-input:focus {
   border-color: #b30000;
-  box-shadow: 0 0 0 3px rgba(179, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 3px rgba(179,0,0,0.08);
 }
+.archive-search-box { min-width: 220px; max-width: 350px; flex: 1; }
 
-.archive-search-input::placeholder {
-  color: #999;
-}
-
-/* TABLE STYLING - Matching PatientList */
+/* TABLE / LIST */
 .archive-table-container {
   background-color: #fff;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 .archive-table {
@@ -146,8 +121,8 @@
 }
 
 .archive-table thead {
-  background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
-  color: white;
+  background: linear-gradient(135deg,#8b0000 0%,#6b0000 100%);
+  color: #fff;
 }
 
 .archive-table th {
@@ -156,11 +131,7 @@
   text-transform: uppercase;
   font-size: 0.85rem;
   letter-spacing: 1px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.archive-table th:last-child {
-  border-right: none;
+  border-right: 1px solid rgba(255,255,255,0.1);
 }
 
 .archive-table td {
@@ -172,124 +143,594 @@
   vertical-align: middle;
 }
 
-.archive-table td:last-child {
-  border-right: none;
+.archive-table tbody tr:nth-child(even) { background-color: #ffeaea; }
+.archive-table tbody tr:hover { background-color: #ffd8d8; transition: background 0.2s ease; }
+.no-data { padding: 40px 20px; color: #999; font-style: italic; font-size: 1rem; }
+
+/* ACTION BUTTONS - match heights */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: stretch; /* ensures equal height */
 }
 
-.archive-table tbody tr:nth-child(even) {
-  background-color: #ffeaea;
-}
-
-.archive-table tbody tr:nth-child(odd) {
-  background-color: #ffffff;
-}
-
-.archive-table tbody tr:hover {
-  background-color: #ffd8d8;
-  transition: background 0.2s ease;
-}
-
-.no-data {
-  padding: 40px 20px;
-  color: #999;
-  font-style: italic;
-  font-size: 1rem;
-  text-align: center;
-}
-
-/* Restore Button - Green gradient matching the restore action */
+.view-btn,
 .restore-btn {
-  background: linear-gradient(135deg, #6b0000 0%, #6b0000 100%);
-  color: #fff;
-  border: 2px solid transparent;
-  padding: 8px 20px;
-  border-radius: 20px;
-  cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 90px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.25s ease;
-  min-width: 100px;
-  text-align: center;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease;
+  box-sizing: border-box;
 }
 
+.view-btn {
+  background: #fff;
+  color: #8b0000;
+  border: 2px solid #8b0000;
+}
+.view-btn:hover { background: #8b0000; color: #fff; }
+
+.restore-btn {
+  background: #8b0000;
+  color: #fff;
+  border: 2px solid #8b0000;
+}
 .restore-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6b0000 0%, #6b0000 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
-  border-color: transparent !important;
-  outline: none;
+  background: #a71d1d; border-color: #a71d1d;
+}
+.restore-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ================================
+   Modal: KEEP existing overlay rules
+   (we add the vmdm modal that mirrors your ViewMedicalDocModal)
+   ================================ */
+
+/* overlay used by other modals (keep safe) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(3px);
+  padding: 20px;
 }
 
-.restore-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+/* ----------------------
+   vmdm (View Medical Doc Modal)
+   ---------------------- */
+
+/* Overlay */
+.vmdm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 20, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(3px);
+  padding: 20px;
 }
 
-.restore-btn:focus {
-  outline: none;
-  border-color: transparent;
+/* Modal Content */
+.vmdm-modal-content-medical {
+  background: #ffffff;
+  color: #000;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 0;
+  position: relative;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.4);
+  animation: vmdm-fadeIn 0.26s ease-in-out;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .archive-container {
-    padding: 20px;
+/* Fade Animation */
+@keyframes vmdm-fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Loading / Error states */
+.vmdm-loading-text {
+  text-align: center;
+  color: #444;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 40px;
+}
+
+.vmdm-error-state {
+  color: #8b0000;
+  font-weight: 600;
+  text-align: center;
+  padding: 40px;
+  font-size: 15px;
+}
+
+/* Header */
+.vmdm-medical-doc-header {
+  background: #8b0000;
+  color: white;
+  padding: 24px 28px;
+  position: relative;
+  text-align: center;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.vmdm-medical-doc-header > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vmdm-medical-doc-header h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.vmdm-medical-doc-header p {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #f0f0f0;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+/* Close Button */
+.vmdm-close-modal-btn {
+  position: absolute;
+  top: 22px;
+  right: 20px;
+  background: none;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 22px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.vmdm-close-modal-btn:hover {
+  transform: scale(1.08);
+}
+
+/* Body */
+.vmdm-medical-doc-body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #222;
+  padding: 20px 24px 28px;
+}
+
+/* Patient Header */
+.vmdm-patient-info-header {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  background: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vmdm-patient-full-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.vmdm-patient-mini-info {
+  font-size: 14px;
+  color: #000000;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Two Column Layout */
+.vmdm-doc-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+/* Left: Notes Section */
+.vmdm-medical-notes-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.vmdm-notes-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.vmdm-notes-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vmdm-note-section {
+  margin-bottom: 0;
+}
+
+.vmdm-note-section label {
+  font-weight: 700;
+  color: #8b0000;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.vmdm-note-text {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  white-space: pre-wrap;
+  min-height: 70px;
+  font-size: 14px;
+  color: #2a2a2a;
+  line-height: 1.5;
+}
+
+/* Right: Billing Section */
+.vmdm-billing-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.vmdm-billing-card {
+  border: 2.5px solid #8b0000;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Billing block header strip */
+.vmdm-billing-card::before {
+  content: "Medical Receipt";
+  display: block;
+  background: #8b0000;
+  color: white;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* Billing services */
+.vmdm-billing-services {
+  padding: 14px 16px;
+}
+
+.vmdm-service-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.vmdm-service-header {
+  font-weight: 700;
+  color: #1a1a1a;
+  border-bottom: 2px solid #8b0000;
+  margin-bottom: 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.vmdm-service-item {
+  color: #333;
+}
+
+.vmdm-align-right {
+  text-align: right;
+  font-weight: 600;
+}
+
+.vmdm-no-billing {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Billing Summary */
+.vmdm-billing-summary {
+  margin-top: 0;
+  border-top: 2px solid #e0e0e0;
+  padding: 12px 16px;
+  background: #fafafa;
+}
+
+.vmdm-summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vmdm-summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.vmdm-amount-value {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.vmdm-status-value {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: #8b0000;
+  background: rgba(139, 0, 0, 0.06);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.vmdm-payment-value {
+  font-weight: 600;
+  color: #444;
+}
+
+/* Footer Info */
+.vmdm-doc-footer-info {
+  background: #8b0000;
+  color: white;
+  padding: 20px 24px;
+  margin: 0 -24px -24px -24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.vmdm-footer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vmdm-footer-item label {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.95;
+}
+
+.vmdm-footer-item span {
+  font-size: 13px;
+  color: #f5f5f5;
+  font-weight: 100;
+  line-height: 1.4;
+}
+
+/* Scrollbar styling for modal */
+.vmdm-modal-content-medical::-webkit-scrollbar {
+  width: 9px;
+}
+.vmdm-modal-content-medical::-webkit-scrollbar-thumb {
+  background-color: #7a0000;
+  border-radius: 8px;
+}
+
+/* Responsiveness */
+@media (max-width: 992px) {
+  .vmdm-doc-two-column {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
-  .header h1 {
-    font-size: 1.5rem;
-  }
-
-  .header p {
-    font-size: 0.85rem;
-  }
-
-  .archive-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .view-selector {
-    width: 100%;
-  }
-
-  .archive-search-box {
+  .vmdm-modal-content-medical {
+    width: 96%;
     max-width: 100%;
-    min-width: 100%;
   }
 
-  .archive-search-input {
+  .vmdm-doc-footer-info {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .vmdm-modal-content-medical {
+    width: 98%;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+
+  .vmdm-medical-doc-header {
+    padding: 18px 16px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .vmdm-medical-doc-header h1 {
+    font-size: 20px;
+  }
+
+  .vmdm-medical-doc-header p {
+    font-size: 12px;
+  }
+
+  .vmdm-close-modal-btn {
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .vmdm-medical-doc-body {
+    padding: 18px;
+  }
+
+  .vmdm-patient-info-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .vmdm-patient-full-name {
+    font-size: 16px;
     width: 100%;
   }
 
-  .archive-table th,
-  .archive-table td {
-    padding: 10px 8px;
-    font-size: 0.8rem;
+  .vmdm-patient-mini-info {
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
   }
 
-  .restore-btn {
-    padding: 6px 14px;
-    font-size: 0.8rem;
-    min-width: 80px;
+  .vmdm-doc-two-column {
+    gap: 16px;
+  }
+
+  .vmdm-note-text {
+    font-size: 14px;
+    min-height: 64px;
+    padding: 10px 12px;
+  }
+
+  .vmdm-doc-footer-info {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+    margin: 0 -16px -16px -16px;
   }
 }
 
 @media (max-width: 480px) {
-  .archive-container {
-    padding: 15px;
+  .vmdm-modal-overlay {
+    padding: 10px;
   }
 
-  .header h1 {
-    font-size: 1.3rem;
+  .vmdm-medical-doc-header h1 {
+    font-size: 18px;
   }
 
-  .archive-table-container {
-    overflow-x: auto;
+  .vmdm-medical-doc-header p {
+    font-size: 11px;
   }
 
-  .archive-table {
-    min-width: 400px;
+  .vmdm-patient-full-name {
+    font-size: 15px;
   }
+
+  .vmdm-note-section label {
+    font-size: 13px;
+  }
+
+  .vmdm-note-text {
+    font-size: 13px;
+    min-height: 60px;
+  }
+
+  .vmdm-service-row {
+    font-size: 13px;
+  }
+
+  .vmdm-summary-row {
+    font-size: 13px;
+  }
+
+  .vmdm-footer-item label {
+    font-size: 12px;
+  }
+
+  .vmdm-footer-item span {
+    font-size: 13px;
+  }
+}
+
+/* Print Styles (if used) */
+@media print {
+  .vmdm-modal-overlay {
+    background: white;
+    position: static;
+    padding: 0;
+  }
+
+  .vmdm-modal-content-medical {
+    max-width: 100%;
+    max-height: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .vmdm-close-modal-btn {
+    display: none !important;
+  }
+
+  .vmdm-medical-doc-header {
+    border-radius: 0;
+  }
+}
+
+/* Keep the rest of your modal styles (if any) intact below for compatibility */
+.modal {
+  /* fallback modal box (kept minimal) */
+}
+
+/* small screens: keep buttons sized nicely */
+@media (max-width: 480px) {
+  .view-btn, .restore-btn { height: 36px; font-size: 0.85rem; }
 }

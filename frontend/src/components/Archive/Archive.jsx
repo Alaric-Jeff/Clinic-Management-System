@@ -6,14 +6,15 @@ import "./Archive.css";
 
 const Archive = () => {
   const [archivedPatients, setArchivedPatients] = useState([]);
-  const [archivedRecords, setArchivedRecords] = useState([]);
+  const [archivedDocuments, setArchivedDocuments] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
-  const [filteredRecords, setFilteredRecords] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [restoringIds, setRestoringIds] = useState(new Set());
-  const [activeView, setActiveView] = useState("patients"); // "patients" or "records"
+  const [activeView, setActiveView] = useState("patients"); // "patients" or "documents"
+  const [viewDocument, setViewDocument] = useState(null); // For viewing document details
 
   // Modal and Toast states
   const [modalConfig, setModalConfig] = useState({
@@ -23,7 +24,8 @@ const Archive = () => {
     message: '',
     onConfirm: null,
     isLoading: false,
-    patientId: null
+    itemId: null,
+    itemType: null // "patient" or "document"
   });
   const [toastConfig, setToastConfig] = useState({
     isVisible: false,
@@ -48,7 +50,7 @@ const Archive = () => {
   };
 
   // Show modal function
-  const showModal = (title, message, type = 'warning', onConfirm, patientId = null) => {
+  const showModal = (title, message, type = 'warning', onConfirm, itemId = null, itemType = null) => {
     setModalConfig({
       isOpen: true,
       type,
@@ -56,7 +58,8 @@ const Archive = () => {
       message,
       onConfirm,
       isLoading: false,
-      patientId
+      itemId,
+      itemType
     });
   };
 
@@ -76,20 +79,19 @@ const Archive = () => {
       setError(null);
       const res = await api.get("/patient/get-archived-patients");
 
-      if (res.data.success) {
+      if (res.data && res.data.data) {
         const patients = res.data.data || [];
         setArchivedPatients(patients);
         setFilteredPatients(patients);
       } else {
         setArchivedPatients([]);
         setFilteredPatients([]);
-        setError(res.data.message || "Failed to fetch archived patients");
-        showToast(res.data.message || "Failed to fetch archived patients", 'error');
+        setError("Failed to fetch archived patients");
       }
     } catch (err) {
       console.error("Error fetching archived patients:", err);
-      setError("Unable to load archived patients. Please try again.");
-      showToast("Unable to load archived patients. Please try again.", 'error');
+      const errorMessage = err.response?.data?.message || "Unable to load archived patients. Please try again.";
+      setError(errorMessage);
       setArchivedPatients([]);
       setFilteredPatients([]);
     } finally {
@@ -97,33 +99,45 @@ const Archive = () => {
     }
   };
 
-  const fetchArchivedRecords = async () => {
+  const fetchArchivedDocuments = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Placeholder API call - replace with actual endpoint when available
-      // const res = await api.get("/records/get-archived-records");
-      
-      // Simulated data for now
-      const simulatedRecords = [
-        {
-          id: 1,
-          patientName: "Doe, John",
-          recordType: "Medical History",
-          archivedAt: new Date().toISOString()
-        }
-      ];
-      
-      setArchivedRecords(simulatedRecords);
-      setFilteredRecords(simulatedRecords);
+      const res = await api.get("/document/get-archived-medical-documentations");
+
+      if (res.data && res.data.data) {
+        const documents = res.data.data || [];
+        setArchivedDocuments(documents);
+        setFilteredDocuments(documents);
+      } else {
+        setArchivedDocuments([]);
+        setFilteredDocuments([]);
+        setError("Failed to fetch archived documents");
+      }
     } catch (err) {
-      console.error("Error fetching archived records:", err);
-      setError("Unable to load archived records. Please try again.");
-      showToast("Unable to load archived records. Please try again.", 'error');
-      setArchivedRecords([]);
-      setFilteredRecords([]);
+      console.error("Error fetching archived documents:", err);
+      const errorMessage = err.response?.data?.message || "Unable to load archived documents. Please try again.";
+      setError(errorMessage);
+      setArchivedDocuments([]);
+      setFilteredDocuments([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDocumentDetails = async (documentId) => {
+    try {
+      const res = await api.get(`/document/medical-documentation/${documentId}`);
+      
+      if (res.data && res.data.data) {
+        setViewDocument(res.data.data);
+      } else {
+        throw new Error("Failed to fetch document details");
+      }
+    } catch (err) {
+      console.error("Error fetching document details:", err);
+      const errorMessage = err.response?.data?.message || "Unable to load document details. Please try again.";
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -135,7 +149,7 @@ const Archive = () => {
       if (activeView === "patients") {
         setFilteredPatients(archivedPatients);
       } else {
-        setFilteredRecords(archivedRecords);
+        setFilteredDocuments(archivedDocuments);
       }
       return;
     }
@@ -147,66 +161,75 @@ const Archive = () => {
       });
       setFilteredPatients(filtered);
     } else {
-      const filtered = archivedRecords.filter((r) => {
-        return r.patientName.toLowerCase().includes(term) || 
-               r.recordType.toLowerCase().includes(term);
+      const filtered = archivedDocuments.filter((doc) => {
+        const patientName = `${doc.patient.firstName} ${doc.patient.middleName || ""} ${doc.patient.lastName}`.toLowerCase();
+        const admittedByName = doc.admittedByName.toLowerCase();
+        const lastUpdatedByName = doc.lastUpdatedByName.toLowerCase();
+        
+        return patientName.includes(term) || 
+               admittedByName.includes(term) ||
+               lastUpdatedByName.includes(term);
       });
-      setFilteredRecords(filtered);
+      setFilteredDocuments(filtered);
     }
   };
 
   const performRestore = async (patientId) => {
-    if (restoringIds.has(patientId)) return;
+    if (restoringIds.has(`patient_${patientId}`)) return;
 
     try {
       setModalLoading(true);
-      setRestoringIds((prev) => new Set(prev).add(patientId));
+      setRestoringIds((prev) => new Set(prev).add(`patient_${patientId}`));
 
       const res = await api.post("/patient/unarchive-patient", { id: patientId });
 
-      if (res.data.success) {
+      if (res.data) {
         setArchivedPatients((prev) => prev.filter((p) => p.id !== patientId));
         setFilteredPatients((prev) => prev.filter((p) => p.id !== patientId));
         showToast('Patient restored successfully', 'success');
         closeModal();
       } else {
-        throw new Error(res.data.message || "Failed to restore patient");
+        throw new Error("Failed to restore patient");
       }
     } catch (err) {
       console.error("Error restoring patient:", err);
-      showToast("Unable to restore patient. Please try again.", 'error');
+      const errorMessage = err.response?.data?.message || "Unable to restore patient. Please try again.";
+      showToast(errorMessage, 'error');
     } finally {
       setRestoringIds((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(patientId);
+        newSet.delete(`patient_${patientId}`);
         return newSet;
       });
       setModalLoading(false);
     }
   };
 
-  const performRestoreRecord = async (recordId) => {
-    if (restoringIds.has(recordId)) return;
+  const performRestoreDocument = async (documentId) => {
+    if (restoringIds.has(`document_${documentId}`)) return;
 
     try {
       setModalLoading(true);
-      setRestoringIds((prev) => new Set(prev).add(recordId));
+      setRestoringIds((prev) => new Set(prev).add(`document_${documentId}`));
 
-      // Placeholder API call - replace with actual endpoint when available
-      // const res = await api.post("/records/unarchive-record", { id: recordId });
+      const res = await api.post("/document/unarchive-medical-documentation", { id: documentId });
 
-      // Simulated success for now
-      setArchivedRecords((prev) => prev.filter((r) => r.id !== recordId));
-      setFilteredRecords((prev) => prev.filter((r) => r.id !== recordId));
-      showToast('Record restored successfully', 'success');
-      closeModal();
+      if (res.data) {
+        setArchivedDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+        setFilteredDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+        showToast('Medical documentation restored successfully', 'success');
+        closeModal();
+      } else {
+        throw new Error("Failed to restore document");
+      }
     } catch (err) {
-      console.error("Error restoring record:", err);
-      showToast("Unable to restore record. Please try again.", 'error');
+      console.error("Error restoring document:", err);
+      const errorMessage = err.response?.data?.message || "Unable to restore document. Please try again.";
+      showToast(errorMessage, 'error');
     } finally {
       setRestoringIds((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(recordId);
+        newSet.delete(`document_${documentId}`);
         return newSet;
       });
       setModalLoading(false);
@@ -222,21 +245,31 @@ const Archive = () => {
       `Are you sure you want to restore ${patientName}? This will move the patient back to the active patients list.`,
       'warning',
       () => performRestore(patientId),
-      patientId
+      patientId,
+      "patient"
     );
   };
 
-  const handleRestoreRecord = (recordId) => {
-    const record = archivedRecords.find(r => r.id === recordId);
-    const recordName = record ? record.patientName : 'this record';
+  const handleRestoreDocument = (documentId) => {
+    const document = archivedDocuments.find(doc => doc.id === documentId);
+    const patientName = document ? `${document.patient.firstName} ${document.patient.lastName}` : 'this document';
     
     showModal(
-      "Restore Record",
-      `Are you sure you want to restore the record for ${recordName}?`,
+      "Restore Medical Documentation",
+      `Are you sure you want to restore the medical documentation for ${patientName}? This will move the document back to the active records.`,
       'warning',
-      () => performRestoreRecord(recordId),
-      recordId
+      () => performRestoreDocument(documentId),
+      documentId,
+      "document"
     );
+  };
+
+  const handleViewDocument = async (documentId) => {
+    await fetchDocumentDetails(documentId);
+  };
+
+  const handleCloseViewModal = () => {
+    setViewDocument(null);
   };
 
   const handleViewChange = (view) => {
@@ -244,9 +277,38 @@ const Archive = () => {
     setSearchTerm("");
     setError(null);
     
-    if (view === "records" && archivedRecords.length === 0) {
-      fetchArchivedRecords();
+    if (view === "documents" && archivedDocuments.length === 0) {
+      fetchArchivedDocuments();
     }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const getPatientFullName = (patient) => {
+    return `${patient.lastName}, ${patient.firstName}${patient.middleName ? ` ${patient.middleName}` : ""}`;
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP'
+    }).format(amount);
   };
 
   useEffect(() => {
@@ -258,9 +320,9 @@ const Archive = () => {
     if (activeView === "patients") {
       setFilteredPatients(archivedPatients);
     } else {
-      setFilteredRecords(archivedRecords);
+      setFilteredDocuments(archivedDocuments);
     }
-  }, [activeView]);
+  }, [activeView, archivedPatients, archivedDocuments]);
 
   if (loading) {
     return (
@@ -298,6 +360,176 @@ const Archive = () => {
         position="bottom-right"
       />
 
+      {/* View Document Modal */}
+      {viewDocument && (
+        <div className="vmdm-modal-overlay" onClick={handleCloseViewModal}>
+          <div
+            className="vmdm-modal-content-medical"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="vmdm-medical-doc-header">
+              <div>
+                <h1>LEONARDO MEDICAL SERVICES</h1>
+                <p>B1 L17, F. Novaliches, Bagumbong, Caloocan City</p>
+              </div>
+
+              <button
+                className="vmdm-close-modal-btn"
+                onClick={handleCloseViewModal}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="vmdm-medical-doc-body">
+              {/* Patient Info */}
+              <div className="vmdm-patient-info-header">
+                <p className="vmdm-patient-full-name">
+                  <span>Name:
+                    {` ${viewDocument.patient?.firstName || ""} ${viewDocument.patient?.middleName ? viewDocument.patient.middleName + " " : ""}${viewDocument.patient?.lastName || ""}`.trim()}
+                  </span>
+                </p>
+
+                <div className="vmdm-patient-mini-info">
+                  <span>Date: {formatDate(viewDocument.createdAt)}</span>
+                </div>
+              </div>
+
+              {/* Two Column Layout */}
+              <div className="vmdm-doc-two-column">
+                {/* Left Column - Medical Notes */}
+                <div className="vmdm-medical-notes-section">
+                  <div className="vmdm-notes-card">
+                    <div className="vmdm-notes-content">
+                      <div className="vmdm-note-section">
+                        <label>Assessment:</label>
+                        <div className="vmdm-note-text">
+                          {viewDocument.assessment || "No assessment provided"}
+                        </div>
+                      </div>
+
+                      <div className="vmdm-note-section">
+                        <label>Diagnosis:</label>
+                        <div className="vmdm-note-text">
+                          {viewDocument.diagnosis || "No diagnosis provided"}
+                        </div>
+                      </div>
+
+                      <div className="vmdm-note-section">
+                        <label>Treatment:</label>
+                        <div className="vmdm-note-text">
+                          {viewDocument.treatment || "No treatment provided"}
+                        </div>
+                      </div>
+
+                      <div className="vmdm-note-section">
+                        <label>Prescription:</label>
+                        <div className="vmdm-note-text">
+                          {viewDocument.prescription || "No prescription provided"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Billing */}
+                <div className="vmdm-billing-section">
+                  <div className="vmdm-billing-card">
+                    <div className="vmdm-billing-services">
+                      <div className="vmdm-service-row vmdm-service-header">
+                        <span>Services</span>
+                        <span className="vmdm-align-right">Amount</span>
+                      </div>
+
+                      {(!viewDocument.medicalBill || (viewDocument.medicalBill?.billedServices?.length === 0)) && (
+                        <div className="vmdm-no-billing">
+                          <p>No billed services available</p>
+                        </div>
+                      )}
+
+                      {viewDocument.medicalBill?.billedServices?.map((s) => (
+                        <div key={s.id} className="vmdm-service-row vmdm-service-item">
+                          <span>
+                            {s.serviceName}
+                            {s.quantity ? ` x${s.quantity}` : ""}
+                          </span>
+                          <span className="vmdm-align-right">
+                            {formatCurrency(s.subtotal)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="vmdm-billing-summary">
+                      <div className="vmdm-summary-row">
+                        <span>Total Amount:</span>
+                        <span className="vmdm-amount-value">
+                          {formatCurrency(viewDocument.medicalBill?.totalAmount || 0)}
+                        </span>
+                      </div>
+                      <div className="vmdm-summary-row">
+                        <span>Amount Paid:</span>
+                        <span className="vmdm-amount-value">
+                          {formatCurrency(viewDocument.medicalBill?.amountPaid || 0)}
+                        </span>
+                      </div>
+                      <div className="vmdm-summary-row">
+                        <span>Balance:</span>
+                        <span className="vmdm-amount-value">
+                          {formatCurrency(viewDocument.medicalBill?.balance || 0)}
+                        </span>
+                      </div>
+                      <div className="vmdm-summary-row">
+                        <span>Status:</span>
+                        <span className="vmdm-status-value">
+                          {viewDocument.medicalBill?.paymentStatus ?? viewDocument.status ?? "unpaid"}
+                        </span>
+                      </div>
+                      <div className="vmdm-summary-row">
+                        <span>Payment Method:</span>
+                        <span className="vmdm-payment-value">{viewDocument.medicalBill?.paymentOption || "Cash"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Info */}
+              <div className="vmdm-doc-footer-info">
+                {viewDocument.admittedByName && (
+                  <div className="vmdm-footer-item">
+                    <label>Admitted By:</label>
+                    <span>{viewDocument.admittedByName}</span>
+                  </div>
+                )}
+                <div className="vmdm-footer-item">
+                  <label>Created By:</label>
+                  <span>
+                    {viewDocument.createdByName ?? "N/A"}
+                    {viewDocument.createdByRole ? ` (${viewDocument.createdByRole})` : ""}
+                  </span>
+                </div>
+                <div className="vmdm-footer-item">
+                  <label>Last Updated:</label>
+                  <span>{formatDate(viewDocument.updatedAt)}</span>
+                </div>
+                {viewDocument.lastUpdatedByName && (
+                  <div className="vmdm-footer-item">
+                    <label>Last Updated By:</label>
+                    <span>
+                      {viewDocument.lastUpdatedByName}
+                      {viewDocument.lastUpdatedByRole ? ` (${viewDocument.lastUpdatedByRole})` : ""}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Leonardo Medical Services Header */}
       <div className="header">
         <div className="title-section">
@@ -321,13 +553,13 @@ const Archive = () => {
           onChange={(e) => handleViewChange(e.target.value)}
         >
           <option value="patients">Archived Patients</option>
-          <option value="records">Archived Medical Records</option>
+          <option value="documents">Archived Medical Documents</option>
         </select>
 
         <div className="archive-search-box">
           <input
             type="text"
-            placeholder={activeView === "patients" ? "Search patient by name" : "Search records"}
+            placeholder={activeView === "patients" ? "Search patient by name" : "Search by patient or doctor name"}
             value={searchTerm}
             onChange={handleSearch}
             className="archive-search-input"
@@ -343,6 +575,7 @@ const Archive = () => {
               <tr>
                 <th>Name of Patient</th>
                 <th>Created at</th>
+                <th>Archive Date</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -351,32 +584,29 @@ const Archive = () => {
                 filteredPatients.map((patient) => (
                   <tr key={patient.id}>
                     <td>
-                      {`${patient.lastName}, ${patient.firstName}${
-                        patient.middleName ? ` ${patient.middleName}` : ""
-                      }`}
+                      {getPatientFullName(patient)}
                     </td>
                     <td>
-                      {new Date(patient.createdAt).toLocaleDateString("en-US", {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "2-digit",
-                      })}
+                      {formatDate(patient.createdAt)}
+                    </td>
+                    <td>
+                      {patient.archivedAt ? formatDate(patient.archivedAt) : 'N/A'}
                     </td>
                     <td>
                       <button
                         className="restore-btn"
                         onClick={() => handleRestore(patient.id)}
-                        disabled={restoringIds.has(patient.id)}
+                        disabled={restoringIds.has(`patient_${patient.id}`)}
                       >
-                        {restoringIds.has(patient.id) ? "Restoring..." : "Restore"}
+                        {restoringIds.has(`patient_${patient.id}`) ? "Restoring..." : "Restore"}
                       </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="no-data">
-                    No archived patients found
+                  <td colSpan="4" className="no-data">
+                    {archivedPatients.length === 0 ? "No archived patients found" : "No patients match your search"}
                   </td>
                 </tr>
               )}
@@ -385,46 +615,52 @@ const Archive = () => {
         </div>
       )}
 
-      {/* Archived Medical Records Table */}
-      {activeView === "records" && (
+      {/* Archived Medical Documents Table */}
+      {activeView === "documents" && (
         <div className="archive-table-container">
           <table className="archive-table">
             <thead>
               <tr>
                 <th>Patient Name</th>
-                <th>Record Type</th>
-                <th>Archived at</th>
+                <th>Admitted By</th>
+                <th>Last Updated By</th>
+                <th>Created Date</th>
+                <th>Archive Date</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.length > 0 ? (
-                filteredRecords.map((record) => (
-                  <tr key={record.id}>
-                    <td>{record.patientName}</td>
-                    <td>{record.recordType}</td>
+              {filteredDocuments.length > 0 ? (
+                filteredDocuments.map((document) => (
+                  <tr key={document.id}>
+                    <td>{getPatientFullName(document.patient)}</td>
+                    <td>{document.admittedByName}</td>
+                    <td>{document.lastUpdatedByName || 'N/A'}</td>
+                    <td>{formatDateTime(document.createdAt)}</td>
+                    <td>{document.archivedAt ? formatDateTime(document.archivedAt) : 'N/A'}</td>
                     <td>
-                      {new Date(record.archivedAt).toLocaleDateString("en-US", {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "2-digit",
-                      })}
-                    </td>
-                    <td>
-                      <button
-                        className="restore-btn"
-                        onClick={() => handleRestoreRecord(record.id)}
-                        disabled={restoringIds.has(record.id)}
-                      >
-                        {restoringIds.has(record.id) ? "Restoring..." : "Restore"}
-                      </button>
+                      <div className="action-buttons">
+                        <button
+                          className="view-btn"
+                          onClick={() => handleViewDocument(document.id)}
+                        >
+                          View
+                        </button>
+                        <button
+                          className="restore-btn"
+                          onClick={() => handleRestoreDocument(document.id)}
+                          disabled={restoringIds.has(`document_${document.id}`)}
+                        >
+                          {restoringIds.has(`document_${document.id}`) ? "Restoring..." : "Restore"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="no-data">
-                    No archived records found
+                  <td colSpan="6" className="no-data">
+                    {archivedDocuments.length === 0 ? "No archived medical documents found" : "No documents match your search"}
                   </td>
                 </tr>
               )}

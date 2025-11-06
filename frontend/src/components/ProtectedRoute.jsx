@@ -6,7 +6,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (loading) return <div>Loading...</div>;
   if(!user)   console.warn("NO user found");
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;

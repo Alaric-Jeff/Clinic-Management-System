@@ -1,16 +1,17 @@
-import type{ FastifyInstance } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { Type } from "@fastify/type-provider-typebox";
-import { 
-  loginSchema, 
-  loginSuccessSchema, 
-  createAccountSuccessfulResponse, 
+
+import {
+  loginSchema,
+  loginSuccessSchema,
+  createAccountSuccessfulResponse,
   createAccountSchema,
   passwordResetRequestSchema,
   passwordResetRequestResponse,
   passwordResetConfirmResponse,
   getAccountResponse,
   accountIdSchema,
-  deleteResponse
+  deleteResponse,
 } from "../type-schemas/accounts-schemas.js";
 
 import { changedPasswordBodySchema } from "../type-schemas/accounts/change-password-schema.js";
@@ -26,139 +27,141 @@ import { deleteAccountController } from "../controllers/account-controllers/dele
 import { changePasswordController } from "../controllers/account-controllers/change-password-controller.js";
 import { requireRole } from "../hooks/authorization.js";
 import { Role } from "@prisma/client";
-export async function accountRoutes(fastify: FastifyInstance){
-    // Health check for account routes
-    fastify.get('/health', async (request, reply) => {
-        return { 
-            status: 'OK', 
-            service: 'account-routes',
-            timestamp: new Date().toISOString()
-        }
-    });
 
-    // Login route
-    fastify.route({
-        method: 'POST',
-        url: '/login',
-        schema: {
-            body: loginSchema, 
-            response: {
-                200: loginSuccessSchema
-            }
-        },
-        handler: accountLoginController
-    });
+export async function accountRoutes(fastify: FastifyInstance) {
+  // 🩺 Health check route
+  fastify.get("/health", async () => ({
+    status: "OK",
+    service: "account-routes",
+    timestamp: new Date().toISOString(),
+  }));
 
-    // Logout route
-    fastify.route({
-        method: 'POST',
-        url: '/logout',
-        schema: {
-            response: {
-                200: Type.Object({
-                    success: Type.Boolean(),
-                    message: Type.String()
-                })
-            }
-        },
-        handler: accountLogoutController
-    });
+  // 🔐 Login route (rate limited)
+  fastify.route({
+    method: "POST",
+    url: "/login",
+    config: {
+      rateLimit: {
+        max: 5, // 5 attempts
+        timeWindow: "1 minute", // per minute
+      },
+    },
+    schema: {
+      body: loginSchema,
+      response: { 200: loginSuccessSchema },
+    },
+    handler: accountLoginController,
+  });
 
-    // Create account route
-    fastify.route({
-        method: 'POST',
-        url: '/create-account',
-        schema: {
-            body: createAccountSchema, 
-            response: {
-                201: createAccountSuccessfulResponse
-            }
-        }, preHandler: requireRole([Role.admin, Role.encoder]),
-        handler: createAccountController
-    });
+  // 🚪 Logout route (no limit needed)
+  fastify.route({
+    method: "POST",
+    url: "/logout",
+    schema: {
+      response: {
+        200: Type.Object({
+          success: Type.Boolean(),
+          message: Type.String(),
+        }),
+      },
+    },
+    handler: accountLogoutController,
+  });
 
-    fastify.route({
-        method: 'DELETE',
-        url: '/delete-account',
-        schema: {
-            body: accountIdSchema, 
-            response: {
-                200: deleteResponse
-            }
-        }, preHandler: requireRole([Role.admin]),
-        handler: deleteAccountController
-    });
+  // 🧑‍💼 Create account (rate limited to avoid spam)
+  fastify.route({
+    method: "POST",
+    url: "/create-account",
+    config: {
+      rateLimit: {
+        max: 10, // 10 per 10 minutes
+        timeWindow: "10 minutes",
+      },
+    },
+    schema: {
+      body: createAccountSchema,
+      response: { 201: createAccountSuccessfulResponse },
+    },
+    preHandler: requireRole([Role.admin, Role.encoder]),
+    handler: createAccountController,
+  });
 
-    //verify-account
-    fastify.route({
-        method: 'GET',
-        url: '/activate',
-        schema: {
-            querystring: {
-                type: 'object',
-                properties: {
-                    token: { type: 'string' }
-                },
-                required: ['token']
-            }
-        },
-        handler: accountVerifyController
-    });
+  // ❌ Delete account
+  fastify.route({
+    method: "DELETE",
+    url: "/delete-account",
+    schema: {
+      body: accountIdSchema,
+      response: { 200: deleteResponse },
+    },
+    preHandler: requireRole([Role.admin]),
+    handler: deleteAccountController,
+  });
 
-    // Password reset request (Step 1: Send verification email)
-    fastify.route({
-        method: 'POST',
-        url: '/request-password-reset',
-        schema: {
-            body: passwordResetRequestSchema,
-            response: {
-                200: passwordResetRequestResponse
-            }
-        },
-        handler: requestPasswordReset
-    });
+  // ✅ Account verification
+  fastify.route({
+    method: "GET",
+    url: "/activate",
+    schema: {
+      querystring: {
+        type: "object",
+        properties: { token: { type: "string" } },
+        required: ["token"],
+      },
+    },
+    handler: accountVerifyController,
+  });
 
+  // 🔁 Password reset (Step 1: request)
+  fastify.route({
+    method: "POST",
+    url: "/request-password-reset",
+    config: {
+      rateLimit: {
+        max: 3, // only 3 requests per 10 minutes
+        timeWindow: "10 minutes",
+      },
+    },
+    schema: {
+      body: passwordResetRequestSchema,
+      response: { 200: passwordResetRequestResponse },
+    },
+    handler: requestPasswordReset,
+  });
 
-    fastify.route({
-        method: 'GET',
-        url: '/confirm-password-reset',
-        schema: {
-            querystring: {
-                type: 'object',
-                properties: {
-                    token: { type: 'string' }
-                },
-                required: ['token']
-            },
-            response: {
-                200: passwordResetConfirmResponse
-            }
-        },
-        handler: confirmPasswordReset
-    });
+  // 🔁 Password reset (Step 2: confirm)
+  fastify.route({
+    method: "GET",
+    url: "/confirm-password-reset",
+    schema: {
+      querystring: {
+        type: "object",
+        properties: { token: { type: "string" } },
+        required: ["token"],
+      },
+      response: { 200: passwordResetConfirmResponse },
+    },
+    handler: confirmPasswordReset,
+  });
 
+  // 👥 Get accounts (admin or encoder)
+  fastify.route({
+    method: "GET",
+    url: "/get-accounts",
+    schema: { response: { 200: getAccountResponse } },
+    preHandler: requireRole([Role.admin, Role.encoder]),
+    handler: getAccountsController,
+  });
 
-    fastify.route({
-        method: 'GET',
-        url: '/get-accounts',
-        schema: {
-            response: {
-                200: getAccountResponse
-            }
-        }, preHandler: requireRole([Role.admin, Role.encoder]),
-        handler: getAccountsController
-    });
-
-    fastify.route({
-        method: 'PUT',
-        url: '/change-password',
-        schema: {
-            body: changedPasswordBodySchema,
-            response: {
-                200: Type.Boolean()
-            }
-        }, preHandler: requireRole([Role.admin, Role.encoder]),
-        handler: changePasswordController
-    })
-
-};
+  // 🔑 Change password
+  fastify.route({
+    method: "PUT",
+    url: "/change-password",
+    schema: {
+      body: changedPasswordBodySchema,
+      response: { 200: Type.Boolean() },
+    },
+    preHandler: requireRole([Role.admin, Role.encoder]),
+    handler: changePasswordController,
+  });
+}

@@ -64,6 +64,7 @@ export const getTodayPatientSchemaResponse = Type.Object({
         firstName: Type.String(),
         lastName: Type.String(),
         middleName: Type.Union([Type.String(), Type.Null()]),
+        archivedAt: Type.String({ format: 'date-time' }),
         createdAt: Type.String({ format: 'date-time' })
     }))
 });

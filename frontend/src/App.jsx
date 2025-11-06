@@ -31,8 +31,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/verified-email" element={<VerifiedEmailPage />} />
           <Route path="/success-reset" element={<SuccesfulReset />} />
-          <Route path="/user-management" element={<UserManagement />} />
-
+          
           {/* Admin Routes */}
           <Route
             path="/admin"

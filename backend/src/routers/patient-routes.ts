@@ -12,6 +12,7 @@ import { getMaleCountController } from "../controllers/patient-controllers/get-m
 import { getFemaleCountController } from "../controllers/patient-controllers/get-female-count-controller.js";
 import { addNoteController } from "../controllers/patient-controllers/add-note-controller.js";
 import { getAgeRatioController } from "../controllers/patient-controllers/get-patient-ratio.js";
+import { findExistingNameController } from "../controllers/patient-controllers/find-existing-name-controller.js";
 import { Role } from "@prisma/client";
 import {
     createPatientSchema,
@@ -74,6 +75,74 @@ export async function patientRoutes(fastify: FastifyInstance) {
         preHandler: requireRole([Role.admin, Role.encoder]),
         handler: getAgeRatioController
     })
+
+
+fastify.route({
+    method: "POST",
+    url: "/find-existing",
+    schema: {
+        body: {
+            type: 'object',
+            properties: {
+                firstName: { 
+                    type: ['string', 'null'],
+                    minLength: 1,
+                    maxLength: 100
+                },
+                lastName: { 
+                    type: ['string', 'null'],
+                    minLength: 1,
+                    maxLength: 100
+                },
+                middleName: { 
+                    type: ['string', 'null'],
+                    minLength: 1,
+                    maxLength: 100
+                }
+            },
+            required: [] // All fields are optional since we check progressively
+        },
+        response: {
+            200: {
+                type: 'object',
+                properties: {
+                    message: { type: 'string' },
+                    result: {
+                        type: 'object',
+                        properties: {
+                            isDuplicate: { type: 'boolean' },
+                            warning: {
+                                type: ['object', 'null'],
+                                properties: {
+                                    level: { type: 'string', enum: ['low', 'medium', 'high'] },
+                                    message: { type: 'string' }
+                                }
+                            },
+                            matches: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        id: { type: 'string' },
+                                        fullName: { type: 'string' },
+                                        firstName: { type: 'string' },
+                                        lastName: { type: 'string' },
+                                        middleName: { type: ['string', 'null'] },
+                                        birthDate: { type: 'string' },
+                                        gender: { type: 'string' },
+                                        registeredAt: { type: 'string' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    preHandler: requireRole([Role.admin, Role.encoder]),
+    handler: findExistingNameController
+})
 
     /**
      * Get total count of all patients

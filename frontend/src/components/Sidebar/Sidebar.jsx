@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -10,13 +10,15 @@ import {
   History,
   Archive,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import ConfirmModal from "../ConfirmModal/ConfirmModal";
 import "./Sidebar.css";
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(true); // Always open, including mobile
+  const [isOpen, setIsOpen] = useState(true);
 
   // Modal state
   const [modalConfig, setModalConfig] = useState({
@@ -27,11 +29,6 @@ const Sidebar = () => {
     onConfirm: null,
     isLoading: false
   });
-
-  useEffect(() => {
-    // Always force sidebar open, regardless of window size
-    setIsOpen(true);
-  }, []);
 
   const allNavItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={18} />, roles: ["admin"] },
@@ -103,6 +100,18 @@ const Sidebar = () => {
         confirmText="Logout"
         cancelText="Cancel"
       />
+
+      {/* Hamburger Button */}
+      <button 
+        className="hamburger-btn"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle sidebar"
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isOpen && <div className="overlay" onClick={() => setIsOpen(false)} />}
 
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
         <div className="sidebar-header">

@@ -89,7 +89,8 @@ export async function unarchivePatientService(
       where: { id },
       data: {
         isArchived: false,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        archivedAt: null
       }
     });
 
