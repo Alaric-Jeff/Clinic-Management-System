@@ -31,6 +31,8 @@ export async function archiveMedicalDocument(
         data: {
           isArchived: true,
           archivedAt, 
+          lastUpdatedByName: changedByName,
+          lastUpdatedByRole: changedByRole
         },
       });
 

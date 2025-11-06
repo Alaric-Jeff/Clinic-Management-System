@@ -33,6 +33,8 @@ export async function unarchiveMedicalDocument(
         data: {
           isArchived: false,
           archivedAt: null,
+          lastUpdatedByName: changedByName,
+          lastUpdatedByRole: changedByRole
         },
       });
 
