@@ -100,25 +100,41 @@
   transition: color 0.25s ease;
 }
 
-/* Footer (Logout) */
+/* Footer (Change Password & Logout) */
 .sidebar-footer {
   border-top: 1px solid #333;
   padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
+.change-password-btn,
 .logout-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #ff4747;
   border: none;
   color: #fff;
   padding: 10px;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.change-password-btn {
+  background: #bd1b1b;
+}
+
+.change-password-btn:hover {
+  background: #8a0505;
+}
+
+.logout-btn {
+  background: #ff4747;
 }
 
 .logout-btn:hover {
@@ -161,12 +177,258 @@
   display: none;
 }
 
+/* ===== CHANGE PASSWORD MODAL ===== */
+.change-password-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.change-password-modal {
+  background: #ffffff;
+  width: 480px;
+  max-width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  display: flex;
+  flex-direction: column;
+}
+
+.change-password-header {
+  background: linear-gradient(90deg, #891315, #b80000);
+  color: #fff;
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.change-password-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.change-password-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.change-password-close:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.change-password-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.change-password-form {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.change-password-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.change-password-field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #891315;
+  text-align: left;
+  margin-bottom: 2px;
+}
+
+.change-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.change-password-field input {
+  width: 100%;
+  background-color: #fff;
+  border: 2px solid #e5b7b7;
+  border-radius: 6px;
+  padding: 10px 42px 10px 14px;
+  font-size: 14px;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+.change-password-field input::placeholder {
+  color: #aaa;
+}
+
+.change-password-field input:focus {
+  border-color: #891315;
+  box-shadow: 0 0 6px rgba(137, 19, 21, 0.25);
+}
+
+.change-password-field input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.change-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #891315;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.change-password-toggle:hover:not(:disabled) {
+  color: #b91c1c;
+}
+
+.change-password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.change-password-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.change-password-error {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.change-password-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+.change-password-btn-cancel,
+.change-password-btn-confirm {
+  padding: 11px 38px;
+  border-radius: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  min-width: 130px;
+}
+
+.change-password-btn-confirm {
+  background-color: #891315;
+  color: white;
+  box-shadow: 0 3px 8px rgba(137, 19, 21, 0.35);
+}
+
+.change-password-btn-confirm:hover:not(:disabled) {
+  background-color: #a01517;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(137, 19, 21, 0.4);
+}
+
+.change-password-btn-confirm:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.change-password-btn-confirm:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.change-password-btn-cancel {
+  background-color: #fff;
+  color: #891315;
+  border: 2px solid #891315;
+}
+
+.change-password-btn-cancel:hover:not(:disabled) {
+  background-color: #fff5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(137, 19, 21, 0.2);
+}
+
+.change-password-btn-cancel:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.change-password-btn-cancel:disabled {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .sidebar {
     width: 240px;
   }
-
   .overlay {
     display: block;
   }
@@ -176,12 +438,34 @@
   .hamburger-btn {
     display: none;
   }
-
   .sidebar {
     transform: translateX(0);
   }
-
   .overlay {
     display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .change-password-modal {
+    width: 95%;
+    max-width: 420px;
+  }
+
+  .change-password-form {
+    padding: 24px 20px;
+  }
+
+  .change-password-header h2 {
+    font-size: 20px;
+  }
+
+  .change-password-actions {
+    flex-direction: column;
+  }
+
+  .change-password-btn-cancel,
+  .change-password-btn-confirm {
+    width: 100%;
   }
 }
