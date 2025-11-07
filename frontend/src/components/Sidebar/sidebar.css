@@ -282,6 +282,11 @@
   box-sizing: border-box;
 }
 
+.change-password-field input.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 6px rgba(220, 38, 38, 0.25);
+}
+
 .change-password-field input::placeholder {
   color: #aaa;
 }
@@ -363,9 +368,9 @@
 }
 
 .change-password-btn-confirm:hover:not(:disabled) {
-  background-color: #a01517;
+  background-color: #b91c1c;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(137, 19, 21, 0.4);
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4);
 }
 
 .change-password-btn-confirm:active:not(:disabled) {
@@ -401,7 +406,86 @@
   cursor: not-allowed;
 }
 
+/* Password Requirements Styling */
+.password-requirements {
+  margin-top: 10px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
 
+.requirements-title {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.requirements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.validation-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.validation-item.valid {
+  color: #28a745;
+}
+
+.validation-item.valid svg {
+  color: #28a745;
+}
+
+.validation-item.invalid {
+  color: #6c757d;
+}
+
+.validation-item.invalid svg {
+  color: #dc3545;
+}
+
+/* Enhanced input styling for better visual feedback */
+.change-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.change-password-input-wrapper input:focus {
+  border-color: #891315;
+  box-shadow: 0 0 0 2px rgba(137, 19, 21, 0.25);
+}
+
+/* Button state improvements */
+.change-password-btn-confirm:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .change-password-modal {
+    margin: 20px;
+    width: calc(100% - 40px);
+  }
+  
+  .password-requirements {
+    padding: 8px;
+  }
+  
+  .requirements-list {
+    gap: 4px;
+  }
+}
 
 /* Animations */
 @keyframes fadeIn {

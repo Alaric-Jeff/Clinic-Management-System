@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+
 import {
   LayoutDashboard,
   FileText,
@@ -15,6 +16,8 @@ import {
   Key,
   Eye,
   EyeOff,
+  Check,
+  X as XIcon,
 } from "lucide-react";
 import api from "../../axios/api";
 import ConfirmModal from "../ConfirmModal/ConfirmModal";
@@ -39,14 +42,26 @@ const Sidebar = () => {
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
-    newPassword: ''
+    newPassword: '',
+    confirmPassword: ''
   });
   const [passwordErrors, setPasswordErrors] = useState({});
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    passwordsMatch: false,
+    isDifferentFromCurrent: true
+  });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Password visibility states
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Confirm Modal for password change
   const [passwordConfirmModal, setPasswordConfirmModal] = useState({
@@ -132,19 +147,91 @@ const Sidebar = () => {
     );
   };
 
+  // Password validation functions
+  const validatePassword = (password) => {
+    const minLength = password.length >= 8;
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+
+    return {
+      minLength,
+      hasNumber,
+      hasSpecialChar,
+      hasUppercase,
+      hasLowercase
+    };
+  };
+
+  // Real-time validation effect
+  useEffect(() => {
+    const newPasswordValidation = validatePassword(passwordData.newPassword);
+    const passwordsMatch = passwordData.newPassword === passwordData.confirmPassword && passwordData.confirmPassword.length > 0;
+    const isDifferentFromCurrent = passwordData.currentPassword === '' || 
+                                  passwordData.newPassword === '' || 
+                                  passwordData.currentPassword !== passwordData.newPassword;
+
+    setPasswordValidation({
+      ...newPasswordValidation,
+      passwordsMatch,
+      isDifferentFromCurrent
+    });
+
+    // Check if all validations pass
+    const allValid = Object.values(newPasswordValidation).every(Boolean) && 
+                    passwordsMatch && 
+                    passwordData.currentPassword.length > 0 &&
+                    isDifferentFromCurrent;
+
+    setIsFormValid(allValid);
+
+    // Update errors in real-time
+    const newErrors = { ...passwordErrors };
+    
+    if (passwordData.currentPassword && passwordData.newPassword && !isDifferentFromCurrent) {
+      newErrors.newPassword = 'New password must be different from current password';
+    } else if (newErrors.newPassword === 'New password must be different from current password') {
+      delete newErrors.newPassword;
+    }
+
+    if (passwordData.confirmPassword && !passwordsMatch) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    } else if (newErrors.confirmPassword === 'Passwords do not match') {
+      delete newErrors.confirmPassword;
+    }
+
+    setPasswordErrors(newErrors);
+  }, [passwordData]);
+
   // Change Password functions
   const handleChangePasswordClick = () => {
     setShowChangePasswordModal(true);
-    setPasswordData({ currentPassword: '', newPassword: '' });
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     setPasswordErrors({});
+    setPasswordValidation({
+      minLength: false,
+      hasNumber: false,
+      hasSpecialChar: false,
+      hasUppercase: false,
+      hasLowercase: false,
+      passwordsMatch: false,
+      isDifferentFromCurrent: true
+    });
     setShowCurrentPassword(false);
     setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setIsFormValid(false);
   };
 
   const handlePasswordInputChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
-    setPasswordErrors(prev => ({ ...prev, [name]: '' }));
+    
+    // Clear specific error when user starts typing
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const validatePasswordForm = () => {
@@ -156,12 +243,18 @@ const Sidebar = () => {
     
     if (!passwordData.newPassword.trim()) {
       errors.newPassword = 'New password is required';
-    } else if (passwordData.newPassword.length < 6) {
-      errors.newPassword = 'New password must be at least 6 characters';
+    }
+    
+    if (!passwordData.confirmPassword.trim()) {
+      errors.confirmPassword = 'Please confirm your new password';
     }
     
     if (passwordData.currentPassword === passwordData.newPassword) {
       errors.newPassword = 'New password must be different from current password';
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
     }
     
     setPasswordErrors(errors);
@@ -171,7 +264,10 @@ const Sidebar = () => {
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
     
-    if (!validatePasswordForm()) {
+    if (!validatePasswordForm() || !isFormValid) {
+      if (!isFormValid) {
+        showToast('Please meet all password requirements', 'error');
+      }
       return;
     }
 
@@ -196,23 +292,40 @@ const Sidebar = () => {
         newPassword: passwordData.newPassword
       });
 
-      if (response.data.success) {
+      // Handle boolean response directly
+      if (response.data === true) {
         setPasswordConfirmModal(prev => ({ ...prev, isOpen: false }));
         setShowChangePasswordModal(false);
-        setPasswordData({ currentPassword: '', newPassword: '' });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setShowCurrentPassword(false);
         setShowNewPassword(false);
+        setShowConfirmPassword(false);
         showToast('Password changed successfully', 'success');
       } else {
-        throw new Error(response.data.message || 'Failed to change password');
+        // If response is false or unexpected
+        throw new Error('Failed to change password. Please check your current password.');
       }
     } catch (error) {
       console.error('Error changing password:', error);
       setPasswordConfirmModal(prev => ({ ...prev, isOpen: false }));
-      showToast(
-        error.response?.data?.message || 'Failed to change password. Please try again.',
-        'error'
-      );
+      
+      // Handle different error response formats
+      let errorMessage = 'Failed to change password. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error status
+        if (error.response.data === false) {
+          errorMessage = 'Current password is incorrect.';
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showToast(errorMessage, 'error');
     } finally {
       setIsChangingPassword(false);
       setPasswordConfirmModal(prev => ({ ...prev, isLoading: false }));
@@ -226,12 +339,31 @@ const Sidebar = () => {
   const closeChangePasswordModal = () => {
     if (!isChangingPassword) {
       setShowChangePasswordModal(false);
-      setPasswordData({ currentPassword: '', newPassword: '' });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setPasswordErrors({});
+      setPasswordValidation({
+        minLength: false,
+        hasNumber: false,
+        hasSpecialChar: false,
+        hasUppercase: false,
+        hasLowercase: false,
+        passwordsMatch: false,
+        isDifferentFromCurrent: true
+      });
       setShowCurrentPassword(false);
       setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      setIsFormValid(false);
     }
   };
+
+  // Validation item component
+  const ValidationItem = ({ isValid, text }) => (
+    <div className={`validation-item ${isValid ? 'valid' : 'invalid'}`}>
+      {isValid ? <Check size={14} /> : <XIcon size={14} />}
+      <span>{text}</span>
+    </div>
+  );
 
   return (
     <>
@@ -297,6 +429,7 @@ const Sidebar = () => {
                     onChange={handlePasswordInputChange}
                     placeholder="Enter current password"
                     disabled={isChangingPassword}
+                    className={passwordData.currentPassword && !passwordValidation.isDifferentFromCurrent ? 'error' : ''}
                   />
                   <button
                     type="button"
@@ -322,6 +455,7 @@ const Sidebar = () => {
                     onChange={handlePasswordInputChange}
                     placeholder="Enter new password"
                     disabled={isChangingPassword}
+                    className={passwordData.newPassword && !passwordValidation.isDifferentFromCurrent ? 'error' : ''}
                   />
                   <button
                     type="button"
@@ -334,6 +468,69 @@ const Sidebar = () => {
                 </div>
                 {passwordErrors.newPassword && (
                   <span className="change-password-error">{passwordErrors.newPassword}</span>
+                )}
+
+                {/* Password Requirements */}
+                <div className="password-requirements">
+                  <p className="requirements-title">Password must contain:</p>
+                  <div className="requirements-list">
+                    <ValidationItem 
+                      isValid={passwordValidation.minLength} 
+                      text="At least 8 characters" 
+                    />
+                    <ValidationItem 
+                      isValid={passwordValidation.hasNumber} 
+                      text="At least 1 number (0-9)" 
+                    />
+                    <ValidationItem 
+                      isValid={passwordValidation.hasSpecialChar} 
+                      text="At least 1 special character (!@#$%^&*)" 
+                    />
+                    <ValidationItem 
+                      isValid={passwordValidation.hasUppercase} 
+                      text="At least 1 uppercase letter (A-Z)" 
+                    />
+                    <ValidationItem 
+                      isValid={passwordValidation.hasLowercase} 
+                      text="At least 1 lowercase letter (a-z)" 
+                    />
+                    <ValidationItem 
+                      isValid={passwordValidation.isDifferentFromCurrent} 
+                      text="Different from current password" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="change-password-field">
+                <label>Confirm New Password</label>
+                <div className="change-password-input-wrapper">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordInputChange}
+                    placeholder="Confirm new password"
+                    disabled={isChangingPassword}
+                    className={passwordData.confirmPassword && !passwordValidation.passwordsMatch ? 'error' : ''}
+                  />
+                  <button
+                    type="button"
+                    className="change-password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={isChangingPassword}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {passwordErrors.confirmPassword && (
+                  <span className="change-password-error">{passwordErrors.confirmPassword}</span>
+                )}
+                {passwordData.confirmPassword && (
+                  <ValidationItem 
+                    isValid={passwordValidation.passwordsMatch} 
+                    text="Passwords match" 
+                  />
                 )}
               </div>
 
@@ -349,9 +546,9 @@ const Sidebar = () => {
                 <button
                   type="submit"
                   className="change-password-btn-confirm"
-                  disabled={isChangingPassword}
+                  disabled={!isFormValid || isChangingPassword}
                 >
-                  Confirm
+                  {isChangingPassword ? "Changing..." : "Change Password"}
                 </button>
               </div>
             </form>
