@@ -189,42 +189,49 @@
 }
 
 .view-btn {
-  background-color: #8b0000;
-  color: #660000;
-  border: 2px solid #8a0000;
-  padding: 6px 16px;
-  border-radius: 20px;
-  cursor: pointer;
+  background-color: #660000;
+  color: #ffffff;
+  border: none;
+  width: 80px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.25s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .view-btn:hover:not(:disabled) {
-  background-color: #8b0000;
-  border-color: #660000;
+  background-color: #8a0000;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(102, 0, 0, 0.2);
 }
 
 .delete-btn {
-  background: linear-gradient(135deg, #a00000 0%, #810000 100%);
-  color: #fff;
-  border: 2px solid transparent;
-  padding: 6px 16px;
-  border-radius: 20px;
-  cursor: pointer;
+  background-color: #660000;
+  color: #ffffff;
+  border: none;
+  width: 80px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.25s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .delete-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
+  background-color: #8a0000;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
-  border-color: transparent !important;
-  outline: none;
+  box-shadow: 0 4px 8px rgba(102, 0, 0, 0.2);
 }
 
 .view-btn:disabled,

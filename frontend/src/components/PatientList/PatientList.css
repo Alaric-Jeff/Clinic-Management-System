@@ -291,60 +291,35 @@ tbody tr:hover {
   font-size: 1rem;
 }
 
-/* ACTION BUTTONS - FIXED SIZES */
 .view-btn,
 .archive-btn {
-  margin: 0 5px;
-  padding: 8px 20px;
-  cursor: pointer;
+  background-color: #660000;
+  color: #ffffff;
+  border: none;
+  width: 80px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
-  font-size: 0.85rem;
-  border-radius: 20px;
-  transition: all 0.25s ease;
-  border: 2px solid transparent;
-  min-width: 90px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
-.view-btn {
-  background-color: #ffffff;
-  color: #660000;
-  border-color: #8a0000;
-}
-
-.view-btn:hover {
-  background-color: #f5f5f5;
-  border-color: #660000;
+.view-btn:hover,
+.archive-btn:hover {
+  background-color: #8a0000;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(102, 0, 0, 0.2);
 }
 
-.archive-btn {
-  background: linear-gradient(135deg, #a00000 0%, #810000 100%);
-  color: #fff;
-  border-color: transparent;
-}
-
-.archive-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
-  /* Removed blue border effect */
-  border-color: transparent !important;
-  outline: none;
-}
-
-.archive-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
+.view-btn:focus,
 .archive-btn:focus {
   outline: none;
-  border-color: transparent;
 }
-
 /* PAGINATION */
 .pagination {
   display: flex;

@@ -4,8 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres:092323@localhost:5432/leonardo_medical_services?schema=public&client_encoding=utf8"
 }
+
 
 generator erd {
   provider = "prisma-erd-generator"

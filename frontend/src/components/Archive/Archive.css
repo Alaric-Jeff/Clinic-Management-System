@@ -177,26 +177,26 @@
 
 /* Restore Button - Green gradient matching the restore action */
 .restore-btn {
-  background: linear-gradient(135deg, #6b0000 0%, #6b0000 100%);
-  color: #fff;
-  border: 2px solid transparent;
-  padding: 8px 20px;
-  border-radius: 20px;
-  cursor: pointer;
+  background-color: #660000;
+  color: #ffffff;
+  border: none;
+  width: 80px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.25s ease;
-  min-width: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
 .restore-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6b0000 0%, #6b0000 100%);
+  background-color: #8a0000;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
-  /* Removed blue border effect */
-  border-color: transparent !important;
-  outline: none;
+  box-shadow: 0 4px 8px rgba(102, 0, 0, 0.2);
 }
 
 .restore-btn:disabled {
@@ -207,7 +207,6 @@
 
 .restore-btn:focus {
   outline: none;
-  border-color: transparent;
 }
 
 /* Responsive Design */
