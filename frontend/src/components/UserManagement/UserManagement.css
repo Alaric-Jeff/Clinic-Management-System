@@ -163,7 +163,7 @@
   color: #fff;
   font-weight: 700;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: 5px;
   background-color: #059669;
   display: inline-block;
 }
@@ -174,7 +174,7 @@
   color: #fff;
   border: 2px solid transparent;
   padding: 6px 16px;
-  border-radius: 20px;
+  border-radius: 5px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.85rem;
