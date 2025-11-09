@@ -4,7 +4,7 @@ import type {
 } from 'fastify'
 
 import type { SettleBillRequestType } from '../../type-schemas/payment/update-payment-schema.js'
-import { updatePaymentService } from '../../services/medical-bills-services.ts/update-payment-service.js';
+import { updatePaymentService } from '../../services/medical-bills-services/update-payment-service.js';
 import type { Role } from '@prisma/client';
 
 export async function updatePaymentController(

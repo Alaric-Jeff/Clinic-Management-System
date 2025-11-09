@@ -4,7 +4,7 @@ import type {
   updateMedicalBillResponseType,
   updateMedicalBillServiceInputType,
 } from "../../type-schemas/medical-bills-schema.js";
-import { updateMedicalBillWithServices } from "../../services/medical-bills-services.ts/update-medical-bill-services.js";
+import { updateMedicalBillWithServices } from "../../services/medical-bills-services/update-medical-bill-services.js";
 import type { Role } from "@prisma/client";
 
 /**

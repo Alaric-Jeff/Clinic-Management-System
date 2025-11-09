@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Calendar, AlertTriangle, Info, XCircle } from "lucide-react";
+import { Calendar, AlertTriangle, Info, XCircle, X } from "lucide-react";
 import api from "../../axios/api";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import Toast from "../../components/Toast/Toast";
@@ -177,6 +177,11 @@ const AddPatient = ({ onClose, onSuccess }) => {
     const nameRegex = /^[A-Za-z\s'-]+$/;
     const contactRegex = /^[0-9]{11}$/;
 
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const minRegisterDate = new Date('2015-01-01');
+    minRegisterDate.setHours(0,0,0,0);
+
     switch (name) {
       case "lastName":
       case "firstName":
@@ -190,6 +195,21 @@ const AddPatient = ({ onClose, onSuccess }) => {
       case "mobileNumber":
         if (value && !contactRegex.test(value))
           message = "Contact number must be 11 digits only.";
+        break;
+      case "birthDate":
+        if (value) {
+          const selected = new Date(value);
+          selected.setHours(0,0,0,0);
+          if (selected > today) message = "Birth date cannot be in the future.";
+        }
+        break;
+      case "registerDate":
+        if (value) {
+          const selected = new Date(value);
+          selected.setHours(0,0,0,0);
+          if (selected > today) message = "Register date cannot be in the future.";
+          else if (selected < minRegisterDate) message = "Register date cannot be earlier than 2015.";
+        }
         break;
       default:
         break;
@@ -217,11 +237,24 @@ const AddPatient = ({ onClose, onSuccess }) => {
   // ---------------- SAVE PATIENT LOGIC ----------------
   const performSavePatient = async () => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      if (formData.registerDate > today) {
-        setErrors({ registerDate: "Register date cannot be in the future." });
-        closeModal();
-        return;
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const minRegisterDate = new Date('2015-01-01');
+      minRegisterDate.setHours(0,0,0,0);
+
+      if (formData.registerDate) {
+        const selected = new Date(formData.registerDate);
+        selected.setHours(0,0,0,0);
+        if (selected > today) {
+          setErrors({ registerDate: "Register date cannot be in the future." });
+          closeModal();
+          return;
+        }
+        if (selected < minRegisterDate) {
+          setErrors({ registerDate: "Register date cannot be earlier than 2015." });
+          closeModal();
+          return;
+        }
       }
 
       setModalLoading(true);
@@ -229,10 +262,10 @@ const AddPatient = ({ onClose, onSuccess }) => {
       
       const payload = {
         ...formData,
-        birthDate: formData.birthDate
-          ? new Date(formData.birthDate).toISOString()
-          : null,
-        registerDate: formData.registerDate || null,
+        // birthDate: send full ISO date-time (backend expects date-time)
+        birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
+        // registerDate: send as 'date' (YYYY-MM-DD) or null to match backend schema
+        registerDate: formData.registerDate ? formData.registerDate : null,
       };
 
       const res = await api.post("/patient/create-patient", payload);
@@ -407,6 +440,9 @@ const AddPatient = ({ onClose, onSuccess }) => {
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <h2>Patient Details</h2>
+            <button className="close-button" onClick={onClose}>
+              <X size={24} />
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="patient-form">
@@ -491,12 +527,16 @@ const AddPatient = ({ onClose, onSuccess }) => {
                       value={formData.birthDate}
                       onChange={handleChange}
                       required
+                      max={new Date().toISOString().split('T')[0]}
                     />
                     <Calendar
                       className="calendar-icon"
                       onClick={() => birthDateRef.current.showPicker()}
                     />
                   </div>
+                  {errors.birthDate && (
+                    <small className="error">{errors.birthDate}</small>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -549,6 +589,7 @@ const AddPatient = ({ onClose, onSuccess }) => {
                       value={formData.registerDate}
                       onChange={handleChange}
                       max={new Date().toISOString().split("T")[0]}
+                      min={'2015-01-01'}
                     />
                     <Calendar
                       className="calendar-icon"

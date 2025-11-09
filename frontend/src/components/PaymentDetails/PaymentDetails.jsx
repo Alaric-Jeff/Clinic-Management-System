@@ -28,7 +28,7 @@ export default function PaymentDetails() {
     type: 'success'
   });
 
-  const statusOptions = ["Partially Paid"];
+  const statusOptions = ["Partially Paid", "Unpaid", "Paid"];
   const paymentMethods = [
     { value: "cash", label: "Cash" },
     { value: "card", label: "Card" },
@@ -349,12 +349,14 @@ export default function PaymentDetails() {
                     >
                       View
                     </button>
-                    <button
-                      className="update-btn"
-                      onClick={() => handleUpdateClick(record)}
-                    >
-                      Update
-                    </button>
+                    {record.paymentStatus.toLowerCase() !== 'paid' && (
+                      <button
+                        className="update-btn"
+                        onClick={() => handleUpdateClick(record)}
+                      >
+                        Update
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

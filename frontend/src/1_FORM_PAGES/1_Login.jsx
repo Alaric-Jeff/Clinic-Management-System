@@ -71,14 +71,14 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      {/* Toast Notification */}
+      {/* Toast Notification - Fixed to bottom-right */}
       <Toast
         isVisible={toastConfig.isVisible}
         onClose={closeToast}
         message={toastConfig.message}
         type={toastConfig.type}
         duration={toastConfig.duration}
-        position="top-center"
+        position="bottom-right"
       />
 
       <div className="login-wrapper">

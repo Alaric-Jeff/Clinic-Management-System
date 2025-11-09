@@ -58,6 +58,7 @@ CREATE TABLE "public"."patients" (
     "residentialAddress" TEXT,
     "registeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isArchived" BOOLEAN NOT NULL DEFAULT false,
+    "archivedAt" TIMESTAMP(3),
     "notes" TEXT,
     "createdByName" TEXT NOT NULL,
     "updatedByName" TEXT,
@@ -103,6 +104,8 @@ CREATE TABLE "public"."medical_documentations" (
     "treatment" TEXT,
     "prescription" TEXT,
     "status" "public"."DocumentationStatus" NOT NULL DEFAULT 'complete',
+    "isArchived" BOOLEAN NOT NULL DEFAULT false,
+    "archivedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

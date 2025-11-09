@@ -7,17 +7,20 @@ import "./AddRecordModal.css";
 /**
  * CALCULATION LOGIC (matches backend):
  * ─────────────────────────────────────────
- * Services Subtotal = Σ(service.price × quantity)
+ * Services Subtotal = Σ(service.price × quantity) [0 if no services]
  * 
  * Discount (applied to services ONLY):
  *   - Senior/PWD (20%): servicesSubtotal × 0.20
  *   - Custom Rate: servicesSubtotal × (customDiscount / 100)
  *   - Only one applies; Senior/PWD takes precedence
+ *   - Ignored if no services (consultation-only)
  * 
  * Services Total = Services Subtotal - Discount Amount
  * Consultation Fee = 250 or 350 (NOT discounted)
  * ─────────────────────────────────────────
  * TOTAL BILL = Services Total + Consultation Fee
+ * 
+ * SUPPORTS: Consultation-only bills (empty services array)
  */
 
 const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
@@ -56,7 +59,7 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     message: '',
     onConfirm: null,
     isLoading: false,
-    actionType: null // 'addRecord' or 'clearForm'
+    actionType: null
   });
   const [toastConfig, setToastConfig] = useState({
     isVisible: false,
@@ -89,40 +92,22 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     others: "Others",
   };
 
-  // Show toast function
   const showToast = (message, type = 'success', duration = 4000) => {
-    setToastConfig({
-      isVisible: true,
-      message,
-      type,
-      duration
-    });
+    setToastConfig({ isVisible: true, message, type, duration });
   };
 
-  // Close toast function
   const closeToast = () => {
     setToastConfig(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Show modal function
   const showModal = (title, message, type = 'warning', onConfirm, actionType = null) => {
-    setModalConfig({
-      isOpen: true,
-      type,
-      title,
-      message,
-      onConfirm,
-      isLoading: false,
-      actionType
-    });
+    setModalConfig({ isOpen: true, type, title, message, onConfirm, isLoading: false, actionType });
   };
 
-  // Close modal function
   const closeModal = () => {
     setModalConfig(prev => ({ ...prev, isOpen: false }));
   };
 
-  // Set modal loading state
   const setModalLoading = (isLoading) => {
     setModalConfig(prev => ({ ...prev, isLoading }));
   };
@@ -217,8 +202,10 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
 
   const calculateDiscountAmount = (subtotal) => {
+    if (subtotal === 0) return 0;
+    
     if (isSeniorPwdDiscount) {
-      return subtotal * 0.2; // 20% Senior/PWD discount
+      return subtotal * 0.2;
     } else if (customDiscountRate && parseFloat(customDiscountRate) > 0) {
       return subtotal * (parseFloat(customDiscountRate) / 100);
     }
@@ -235,7 +222,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     return calculateServicesTotal() + consultationFee;
   };
 
-  // Calculations
   const servicesSubtotal = calculateServicesSubtotal();
   const effectiveDiscountRate = isSeniorPwdDiscount ? 20 : (customDiscountRate ? parseFloat(customDiscountRate) : 0);
   const discountAmount = calculateDiscountAmount(servicesSubtotal);
@@ -245,8 +231,8 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   const balance = Math.max(totalAmount - initialPayment, 0);
 
   const hasAtLeastOneMedicalField = assessment || diagnosis || treatment || prescription;
+  const isConsultationOnly = selectedServices.length === 0;
 
-  // Validation functions
   const validateForm = () => {
     const errors = [];
 
@@ -254,20 +240,14 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
       errors.push("Please fill at least one medical field (Assessment, Diagnosis, Treatment, or Prescription).");
     }
 
-    if (selectedServices.length === 0) {
-      errors.push("Please add at least one service.");
-    }
-
     if (!admittedById) {
       errors.push("Please select a doctor.");
     }
 
-    // Validate custom discount
     if (customDiscountRate && parseFloat(customDiscountRate) > 100) {
       errors.push("Custom discount cannot exceed 100%.");
     }
 
-    // Validate initial payment
     if (initialPayment > totalAmount) {
       errors.push("Initial payment cannot exceed the total bill amount.");
     }
@@ -308,7 +288,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
       setModalLoading(true);
       setError(null);
 
-      // Validate form
       const validationErrors = validateForm();
       if (validationErrors.length > 0) {
         setError(validationErrors[0]);
@@ -317,7 +296,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
         return;
       }
 
-      // 1) Create medical documentation
       const docPayload = {
         patientId,
         admittedById: admittedById,
@@ -332,7 +310,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
       const medicalDocumentationId = docRes.data.data.id;
 
-      // 2) Create bill matching backend expectations
       const billPayload = {
         medicalDocumentationId,
         services: selectedServices.map((s) => ({
@@ -351,7 +328,11 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
       const billRes = await api.post("/bills/create-medical-bill", billPayload);
       if (!billRes.data?.success) throw new Error(billRes.data?.message || "Failed to create medical bill");
 
-      showToast('Medical record added successfully', 'success');
+      const successMessage = isConsultationOnly 
+        ? 'Consultation-only record added successfully' 
+        : 'Medical record added successfully';
+      
+      showToast(successMessage, 'success');
       closeModal();
       onSuccess?.();
     } catch (err) {
@@ -366,7 +347,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   };
 
   const handleAddRecordClick = () => {
-    // Validate before showing confirmation modal
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
       setError(validationErrors[0]);
@@ -374,9 +354,13 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
       return;
     }
 
+    const confirmMessage = isConsultationOnly
+      ? "This is a consultation-only bill with no services. Are you sure you want to add this record?"
+      : "Are you sure you want to add this medical record?";
+
     showModal(
       "Add New Record",
-      "Are you sure you want to add this medical record?",
+      confirmMessage,
       'warning',
       handleSubmit,
       'addRecord'
@@ -386,17 +370,14 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   const handleInitialPaymentChange = (e) => {
     const value = e.target.value;
     
-    // Prevent negative values and ensure only numbers and decimal point
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       const numValue = parseFloat(value) || 0;
       
-      // Validate against total amount
       if (numValue > totalAmount) {
         showToast("Initial payment cannot exceed total bill amount", 'error');
         return;
       }
       
-      // Remove leading zeros for better UX
       const cleanedValue = value === '' ? '' : numValue.toString();
       setInitialPaymentAmount(cleanedValue);
     }
@@ -405,17 +386,14 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
   const handleCustomDiscountChange = (e) => {
     const value = e.target.value;
     
-    // Allow empty string or valid numbers
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       const numValue = parseFloat(value) || 0;
       
-      // Validate maximum discount
       if (numValue > 100) {
         showToast("Discount cannot exceed 100%", 'error');
         return;
       }
       
-      // Remove leading zeros for better UX
       const cleanedValue = value === '' ? '' : numValue.toString();
       setCustomDiscountRate(cleanedValue);
     }
@@ -427,14 +405,12 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
     <>
       <div className="lms-modal-overlay-addrecord" onClick={onClose}>
         <div className="lms-modal-wrapper-addrecord" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-          {/* Header */}
           <div className="lms-header-addrecord">
             <h2 className="lms-title-addrecord">PATIENT'S MEDICAL RECORD</h2>
             <button className="lms-close-btn-addrecord" onClick={onClose} aria-label="Close">✕</button>
           </div>
 
           <div className="lms-body-addrecord">
-            {/* Patient Info */}
             <div className="lms-patient-info-addrecord">
               <div className="lms-patient-left-addrecord">
                 <label>PATIENT'S NAME:</label>
@@ -448,7 +424,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
             {error && <div className="lms-error-banner-addrecord">{error}</div>}
 
-            {/* Medical Documentation Form */}
             <div className="lms-form-section-addrecord">
               <div className="lms-form-full-addrecord">
                 <div className="lms-label-centered-addrecord">Assessment</div>
@@ -496,10 +471,9 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Services Section */}
             <div className="lms-services-section-addrecord">
               <div className="lms-services-header-addrecord">
-                <h3>CATEGORY SERVICES</h3>
+                <h3>CATEGORY SERVICES (Optional)</h3>
               </div>
 
               <div className="lms-category-row-addrecord">
@@ -542,7 +516,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                 </div>
               </div>
 
-              {/* Selected Services Table */}
               {selectedServices.length > 0 && (
                 <div className="lms-services-table-wrapper-addrecord">
                   <table className="lms-services-table-addrecord">
@@ -581,13 +554,11 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                 </div>
               )}
 
-              {/* Billing Container */}
               <div className="lms-billing-wrapper-addrecord">
                 <div className="lms-billing-title-addrecord">BILLING</div>
                 <div className="lms-billing-divider-addrecord"></div>
 
                 <div className="lms-billing-grid-addrecord">
-                  {/* Payment Method */}
                   <div className="lms-billing-col-addrecord">
                     <label className="lms-billing-label-addrecord">Payment Method</label>
                     <div className="lms-radio-stack-addrecord">
@@ -621,7 +592,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                     </div>
                   </div>
 
-                  {/* Consultation Type */}
                   <div className="lms-billing-col-addrecord">
                     <label className="lms-billing-label-addrecord">Consultation Type</label>
                     <div className="lms-radio-stack-addrecord">
@@ -646,9 +616,11 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                     </div>
                   </div>
 
-                  {/* Discount (applies to services only) */}
                   <div className="lms-billing-col-addrecord">
-                    <label className="lms-billing-label-addrecord">Discount (Services Only)</label>
+                    <label className="lms-billing-label-addrecord">
+                      Discount (Services Only)
+                      {isConsultationOnly && <span style={{ color: '#999', fontSize: '11px', marginLeft: '5px' }}>(N/A)</span>}
+                    </label>
                     <div className="lms-discount-stack-addrecord">
                       <label className="lms-checkbox-item-addrecord">
                         <input
@@ -658,6 +630,7 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                             setIsSeniorPwdDiscount(e.target.checked);
                             if (e.target.checked) setCustomDiscountRate("");
                           }}
+                          disabled={isConsultationOnly}
                         />
                         <span>Senior/PWD (20%)</span>
                       </label>
@@ -672,13 +645,13 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                             value={customDiscountRate}
                             onChange={handleCustomDiscountChange}
                             max="100"
+                            disabled={isConsultationOnly}
                           />
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Initial Payment */}
                   <div className="lms-billing-col-addrecord">
                     <label className="lms-billing-label-addrecord">Initial Payment (Optional)</label>
                     <input
@@ -692,17 +665,44 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                   </div>
                 </div>
 
-                {/* Receipt Summary */}
                 <div className="lms-receipt-box-addrecord">
                   <div className="lms-receipt-title-addrecord">RECEIPT</div>
 
-                  {selectedServices.length === 0 ? (
-                    <div className="lms-receipt-empty-addrecord">
-                      <p>No services added yet</p>
-                    </div>
+                  {isConsultationOnly ? (
+                    <>
+                      <div style={{ textAlign: 'center', padding: '15px', background: '#f0f8ff', borderRadius: '5px', marginBottom: '10px' }}>
+                        <p style={{ margin: 0, color: '#8b0000', fontWeight: 600, fontSize: '13px' }}>
+                           Consultation Only (No Services)
+                        </p>
+                      </div>
+
+                      <div className="lms-receipt-row-addrecord">
+                        <span>{consultationType === "first" ? "1st" : "Follow Up"} Consultation:</span>
+                        <span>₱{consultationFee.toFixed(2)}</span>
+                      </div>
+
+                      <div className="lms-receipt-separator-addrecord"></div>
+
+                      <div className="lms-receipt-row-addrecord lms-total-row-addrecord">
+                        <span><strong>TOTAL BILL:</strong></span>
+                        <span><strong>₱{totalAmount.toFixed(2)}</strong></span>
+                      </div>
+
+                      {initialPayment > 0 && (
+                        <>
+                          <div className="lms-receipt-row-addrecord">
+                            <span>Initial Payment:</span>
+                            <span>- ₱{initialPayment.toFixed(2)}</span>
+                          </div>
+                          <div className="lms-receipt-row-addrecord lms-balance-row-addrecord">
+                            <span><strong>Balance Due:</strong></span>
+                            <span><strong>₱{balance.toFixed(2)}</strong></span>
+                          </div>
+                        </>
+                      )}
+                    </>
                   ) : (
                     <>
-                      {/* Services */}
                       {selectedServices.map((service) => (
                         <div key={service.serviceId} className="lms-receipt-row-addrecord">
                           <span>{service.serviceName} (x{service.quantity})</span>
@@ -712,13 +712,11 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
                       <div className="lms-receipt-separator-addrecord"></div>
 
-                      {/* Services Subtotal */}
                       <div className="lms-receipt-row-addrecord">
                         <span>Services Subtotal:</span>
                         <span>₱{servicesSubtotal.toFixed(2)}</span>
                       </div>
 
-                      {/* Discount (only on services) */}
                       {effectiveDiscountRate > 0 && (
                         <div className="lms-receipt-row-addrecord lms-discount-row-addrecord">
                           <span>Discount ({isSeniorPwdDiscount ? "Senior/PWD 20%" : `${effectiveDiscountRate}%`}):</span>
@@ -726,13 +724,11 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
                         </div>
                       )}
 
-                      {/* Services Total */}
                       <div className="lms-receipt-row-addrecord">
                         <span>Services Total:</span>
                         <span>₱{servicesTotal.toFixed(2)}</span>
                       </div>
 
-                      {/* Consultation Fee (NOT discounted) */}
                       <div className="lms-receipt-row-addrecord">
                         <span>{consultationType === "first" ? "1st" : "Follow Up"} Consultation:</span>
                         <span>₱{consultationFee.toFixed(2)}</span>
@@ -740,13 +736,11 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
 
                       <div className="lms-receipt-separator-addrecord"></div>
 
-                      {/* Total Amount */}
                       <div className="lms-receipt-row-addrecord lms-total-row-addrecord">
                         <span><strong>TOTAL BILL:</strong></span>
                         <span><strong>₱{totalAmount.toFixed(2)}</strong></span>
                       </div>
 
-                      {/* Initial Payment */}
                       {initialPayment > 0 && (
                         <>
                           <div className="lms-receipt-row-addrecord">
@@ -765,7 +759,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Admitted By */}
             <div className="lms-admitted-section-addrecord">
               <label>ADMITTED BY: *</label>
               <select 
@@ -783,7 +776,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
               </select>
             </div>
 
-            {/* Action Buttons */}
             <div className="lms-actions-addrecord">
               <button
                 className="lms-clear-btn-addrecord"
@@ -795,7 +787,7 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
               <button
                 className="lms-submit-btn-addrecord"
                 onClick={handleAddRecordClick}
-                disabled={loading || selectedServices.length === 0}
+                disabled={loading}
               >
                 Add Record
               </button>
@@ -804,7 +796,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
         </div>
       </div>
 
-      {/* Confirm Modal */}
       <ConfirmModal
         isOpen={modalConfig.isOpen}
         onClose={closeModal}
@@ -817,7 +808,6 @@ const AddRecordModal = ({ patientId, patientName, onClose, onSuccess }) => {
         cancelText="Cancel"
       />
 
-      {/* Toast Notification */}
       <Toast
         isVisible={toastConfig.isVisible}
         onClose={closeToast}

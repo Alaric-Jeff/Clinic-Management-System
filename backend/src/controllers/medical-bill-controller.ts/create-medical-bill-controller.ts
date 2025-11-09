@@ -4,7 +4,7 @@ import type {
   createMedicalBillResponseType,
   createMedicalBillServiceInputType
 } from "../../type-schemas/medical-bills-schema.js";
-import { createMedicalBillWithServices } from "../../services/medical-bills-services.ts/create-medical-bills-service.js";
+import { createMedicalBillWithServices } from "../../services/medical-bills-services/create-medical-bills-service.js";
 import type { Role } from "@prisma/client";
 
 /**
@@ -13,12 +13,14 @@ import type { Role } from "@prisma/client";
  * Handles HTTP request/response for creating a medical bill with associated services.
  * Extracts auth data from JWT and combines with request body for service call.
  * Creates bill and all services in a single atomic transaction.
+ * Supports consultation-only bills (empty services array).
  *
  * CALCULATION:
- * - Services Subtotal = Σ(service.price × quantity)
+ * - Services Subtotal = Σ(service.price × quantity) [0 if no services]
  * - Discount applies ONLY to services:
  *   - 20% if isSeniorPwdDiscountApplied (requires valid csdIdOrPwdId)
  *   - Custom % if discountRate provided (0-100)
+ *   - Ignored if no services present
  * - Services Total = Services Subtotal - Discount
  * - Consultation Fee = 250 (default) or 350 (follow-up) — NOT discounted
  * - TOTAL BILL = Services Total + Consultation Fee
@@ -66,11 +68,15 @@ export async function createMedicalBillController(
     };
     const effectiveConsultationFee = normalizeConsultationFee(inputConsultationFee);
 
+    // Determine if this is a consultation-only bill
+    const isConsultationOnly = services.length === 0;
+
     // Log bill creation request
     request.server.log.info(
       {
         medicalDocumentationId,
         servicesCount: services.length,
+        isConsultationOnly,
         createdBy: name,
         userRole: role,
         consultationFee: effectiveConsultationFee ?? "default (250)",
@@ -79,7 +85,9 @@ export async function createMedicalBillController(
         isSeniorPwdDiscountApplied: isSeniorPwdDiscountApplied ?? false,
         discountRate: discountRate ?? 0
       },
-      "Medical bill creation requested"
+      isConsultationOnly 
+        ? "Consultation-only bill creation requested" 
+        : "Medical bill creation requested"
     );
 
     // Build service input
@@ -146,10 +154,8 @@ export async function createMedicalBillController(
         throw request.server.httpErrors.badRequest(err.message);
       }
 
-      // Services validation
-      if (err.message === "At least one service must be provided.") {
-        throw request.server.httpErrors.badRequest(err.message);
-      }
+      // ✅ REMOVED: "At least one service must be provided" validation
+      // Now supports consultation-only bills with empty services array
 
       // Service not found
       if (err.message.includes("Service not found:")) {
@@ -184,6 +190,11 @@ export async function createMedicalBillController(
       // Referenced record not found (Prisma P2025)
       if (err.message === "Referenced record not found") {
         throw request.server.httpErrors.notFound(err.message);
+      }
+
+      // Services array validation (must be array)
+      if (err.message.includes("Services must be an array")) {
+        throw request.server.httpErrors.badRequest(err.message);
       }
 
       // Unhandled service error

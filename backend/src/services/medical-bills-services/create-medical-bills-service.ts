@@ -8,10 +8,11 @@ import { updateDailyAnalytics } from "../sales-analytics-services/update-daily-a
  * @description
  * Creates a new medical bill linked to a patient's documentation with proper fee calculation.
  * If bill creation fails, the associated medical documentation is automatically deleted.
+ * Supports consultation-only bills (no services) and bills with services.
  *
  * CALCULATION FORMULA:
  * ────────────────────
- * Services Subtotal:  Σ(service.price × quantity)
+ * Services Subtotal:  Σ(service.price × quantity)  [0 if no services]
  * Services Discount:  Services Subtotal × (discountRate / 100)
  *                     - 20% if isSeniorPwdDiscountApplied
  *                     - Custom % if discountRate provided
@@ -21,6 +22,7 @@ import { updateDailyAnalytics } from "../sales-analytics-services/update-daily-a
  * TOTAL BILL:         Services Total + Consultation Fee
  *
  * Key Points:
+ * - Supports consultation-only bills (empty services array)
  * - Discounts apply ONLY to services, NOT to consultation fee
  * - Consultation fee is always added at full price
  * - Senior/PWD discount (20%) and custom discounts are mutually exclusive
@@ -74,9 +76,9 @@ export async function createMedicalBillWithServices(
   );
 
   try {
-    // ✅ Validate services array
-    if (!Array.isArray(services) || services.length === 0) {
-      throw new Error("At least one service must be provided.");
+    // ✅ Validate services array structure (allow empty for consultation-only bills)
+    if (!Array.isArray(services)) {
+      throw new Error("Services must be an array (can be empty for consultation-only bills).");
     }
 
     // ✅ Fetch medical documentation and verify patient data
@@ -106,31 +108,39 @@ export async function createMedicalBillWithServices(
       subtotal: number;
     }[] = [];
 
-    for (const item of services) {
-      const qty = Number(item.quantity ?? 1);
-      if (!item.serviceId) throw new Error("Each service must include serviceId");
-      if (!Number.isFinite(qty) || qty <= 0) throw new Error("Service quantity must be positive");
+    // Check if this is a consultation-only bill
+    const isConsultationOnly = services.length === 0;
 
-      const service = await fastify.prisma.service.findUnique({
-        where: { id: item.serviceId },
-        select: { id: true, name: true, category: true, price: true, isActivated: true, isAvailable: true },
-      });
+    if (isConsultationOnly) {
+      fastify.log.info("[Calculation] Creating consultation-only bill (no services)");
+    } else {
+      // Process services
+      for (const item of services) {
+        const qty = Number(item.quantity ?? 1);
+        if (!item.serviceId) throw new Error("Each service must include serviceId");
+        if (!Number.isFinite(qty) || qty <= 0) throw new Error("Service quantity must be positive");
 
-      if (!service) throw new Error(`Service not found: ${item.serviceId}`);
-      if (!service.isActivated) throw new Error(`Service is deactivated: ${service.name}`);
-      if (!service.isAvailable) throw new Error(`Service is not available: ${service.name}`);
+        const service = await fastify.prisma.service.findUnique({
+          where: { id: item.serviceId },
+          select: { id: true, name: true, category: true, price: true, isActivated: true, isAvailable: true },
+        });
 
-      const subtotal = Number((service.price * qty).toFixed(2));
-      servicesSubtotal += subtotal;
+        if (!service) throw new Error(`Service not found: ${item.serviceId}`);
+        if (!service.isActivated) throw new Error(`Service is deactivated: ${service.name}`);
+        if (!service.isAvailable) throw new Error(`Service is not available: ${service.name}`);
 
-      billedServicesData.push({
-        serviceId: service.id,
-        serviceName: service.name,
-        serviceCategory: service.category as ServiceCategory,
-        servicePriceAtTime: service.price,
-        quantity: qty,
-        subtotal,
-      });
+        const subtotal = Number((service.price * qty).toFixed(2));
+        servicesSubtotal += subtotal;
+
+        billedServicesData.push({
+          serviceId: service.id,
+          serviceName: service.name,
+          serviceCategory: service.category as ServiceCategory,
+          servicePriceAtTime: service.price,
+          quantity: qty,
+          subtotal,
+        });
+      }
     }
 
     fastify.log.debug(`[Calculation] Services Subtotal: ₱${servicesSubtotal.toFixed(2)}`);
@@ -141,18 +151,23 @@ export async function createMedicalBillWithServices(
     let effectiveDiscountRate = 0;
     let discountType = "none";
 
-    if (isSeniorPwdDiscountApplied) {
-      // 20% Senior/PWD discount applied to services only
-      discountAmount = Number((servicesSubtotal * 0.2).toFixed(2));
-      effectiveDiscountRate = 20;
-      discountType = "senior_pwd";
-      fastify.log.debug(`[Calculation] Senior/PWD Discount (20%): -₱${discountAmount.toFixed(2)}`);
-    } else if (validDiscountRate > 0) {
-      // Custom discount applied to services only
-      discountAmount = Number((servicesSubtotal * (validDiscountRate / 100)).toFixed(2));
-      effectiveDiscountRate = validDiscountRate;
-      discountType = "custom";
-      fastify.log.debug(`[Calculation] Custom Discount (${validDiscountRate}%): -₱${discountAmount.toFixed(2)}`);
+    // Only apply discounts if there are services
+    if (servicesSubtotal > 0) {
+      if (isSeniorPwdDiscountApplied) {
+        // 20% Senior/PWD discount applied to services only
+        discountAmount = Number((servicesSubtotal * 0.2).toFixed(2));
+        effectiveDiscountRate = 20;
+        discountType = "senior_pwd";
+        fastify.log.debug(`[Calculation] Senior/PWD Discount (20%): -₱${discountAmount.toFixed(2)}`);
+      } else if (validDiscountRate > 0) {
+        // Custom discount applied to services only
+        discountAmount = Number((servicesSubtotal * (validDiscountRate / 100)).toFixed(2));
+        effectiveDiscountRate = validDiscountRate;
+        discountType = "custom";
+        fastify.log.debug(`[Calculation] Custom Discount (${validDiscountRate}%): -₱${discountAmount.toFixed(2)}`);
+      }
+    } else if (isSeniorPwdDiscountApplied || validDiscountRate > 0) {
+      fastify.log.warn("[Calculation] Discount requested but no services to apply it to (consultation-only bill)");
     }
 
     // STEP 3: Calculate services total after discount
@@ -194,14 +209,18 @@ export async function createMedicalBillWithServices(
 
       fastify.log.debug(`[Transaction] Bill created: ${medicalBill.id}`);
 
-      await prisma.billedService.createMany({
-        data: billedServicesData.map((s) => ({
-          medicalBillId: medicalBill.id,
-          ...s,
-        })),
-      });
-
-      fastify.log.debug(`[Transaction] Added ${billedServicesData.length} billed services`);
+      // Only create billed services if there are any
+      if (billedServicesData.length > 0) {
+        await prisma.billedService.createMany({
+          data: billedServicesData.map((s) => ({
+            medicalBillId: medicalBill.id,
+            ...s,
+          })),
+        });
+        fastify.log.debug(`[Transaction] Added ${billedServicesData.length} billed services`);
+      } else {
+        fastify.log.debug("[Transaction] No services to add (consultation-only bill)");
+      }
 
       // Handle initial payment
       if (initialPaymentAmount && initialPaymentAmount > 0) {
@@ -247,6 +266,7 @@ export async function createMedicalBillWithServices(
           action: "created",
           fieldsChanged: "totalAmount,amountPaid,balance,paymentStatus,discountRate,isSeniorPwdDiscountApplied,consultationFee",
           newData: JSON.stringify({
+            isConsultationOnly,
             consultationFee: effectiveConsultationFee,
             servicesSubtotal,
             discountType,
@@ -272,6 +292,7 @@ export async function createMedicalBillWithServices(
         balance,
         paymentStatus,
         billedServicesCount: billedServicesData.length,
+        isConsultationOnly,
       };
     });
 
@@ -286,10 +307,13 @@ export async function createMedicalBillWithServices(
 
     return {
       success: true,
-      message: "Medical bill created successfully",
+      message: result.isConsultationOnly 
+        ? "Consultation-only bill created successfully" 
+        : "Medical bill created successfully",
       data: {
         ...result.updatedBill,
         billedServicesCount: result.billedServicesCount,
+        isConsultationOnly: result.isConsultationOnly,
       },
     };
   } catch (err: any) {

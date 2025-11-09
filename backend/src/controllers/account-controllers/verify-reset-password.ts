@@ -18,7 +18,7 @@ export async function requestPasswordReset(
         // 1. Find user
         const user = await request.server.prisma.account.findUnique({
             where: { email }, 
-            select: { id: true, firstName: true, email: true }
+            select: { id: true, firstName: true, email: true, status: true }
         });
 
         if (!user) {
@@ -27,6 +27,10 @@ export async function requestPasswordReset(
                 success: true,
                 message: "If an account with this email exists, a verification email has been sent.",
             });
+        }
+
+        if(user.status != "activated"){
+            throw request.server.httpErrors.badRequest("Account must be activated before requesting a new password")
         }
 
         // 2. Generate simple verification token (expires in 15 minutes)
@@ -38,6 +42,8 @@ export async function requestPasswordReset(
             },
             { expiresIn: "15m" }
         );
+
+        
 
         const verificationLink = `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/v1/account/confirm-password-reset?token=${verificationToken}`;
 

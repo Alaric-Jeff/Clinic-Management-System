@@ -32,8 +32,6 @@ const ServiceCategoryEnum = {
   others: "others"
 };
 
-// ============ SERVICE ITEM IN BILL ============
-
 export const billedServiceItemSchema = Type.Object({
   serviceId: Type.String({
     description: "Service ID to be billed"
@@ -50,7 +48,8 @@ export type billedServiceItemType = Static<typeof billedServiceItemSchema>;
 
 /**
  * Schema for creating a medical bill
- * Only accepts essentials - payment fields are calculated from PaymentHistory
+ * Supports both consultation-only bills (empty services) and bills with services
+ * Payment fields are calculated from PaymentHistory
  */
 export const createMedicalBillSchema = Type.Object({
   medicalDocumentationId: Type.String({
@@ -58,8 +57,8 @@ export const createMedicalBillSchema = Type.Object({
   }),
   
   services: Type.Array(billedServiceItemSchema, {
-    minItems: 1,
-    description: "Array of services to include in the bill",
+    minItems: 0, // ✅ Changed from 1 to 0 - allows consultation-only bills
+    description: "Array of services to include in the bill (can be empty for consultation-only)",
   }),
   
   notes: Type.Optional(
@@ -69,7 +68,9 @@ export const createMedicalBillSchema = Type.Object({
   ),
 
   consultationFee: Type.Optional(
-    Type.Union([Type.Number(), Type.Null()]) // only accepts either 250 or 350.
+    Type.Union([Type.Number(), Type.Null()], {
+      description: "Consultation fee - only accepts 250 (first consultation) or 350 (follow-up). Defaults to 250.",
+    })
   ),
   
   initialPaymentAmount: Type.Optional(
@@ -81,14 +82,14 @@ export const createMedicalBillSchema = Type.Object({
   
   paymentMethod: Type.Optional(
     Type.String({
-      description: "Payment method if initialPaymentAmount is provided (cash, card, insurance, gcash etc.)",
+      description: "Payment method if initialPaymentAmount is provided (cash, card, insurance, gcash, etc.)",
     })
   ),
   
   isSeniorPwdDiscountApplied: Type.Optional(
     Type.Boolean({
       default: false,
-      description: "Apply automatic 20% senior/PWD discount. Requires patient to have valid csdIdOrPwdId.",
+      description: "Apply automatic 20% senior/PWD discount. Requires patient to have valid csdIdOrPwdId. Only applies to services, not consultation fee.",
     })
   ),
   
@@ -97,7 +98,7 @@ export const createMedicalBillSchema = Type.Object({
       minimum: 0,
       maximum: 100,
       default: 0,
-      description: "Manual discount rate (0-100%). Can be used without senior/PWD ID. Applied to services only, not consultation fee.",
+      description: "Manual discount rate (0-100%). Can be used without senior/PWD ID. Applied to services only, not consultation fee. Ignored if no services present.",
     })
   ),
 });

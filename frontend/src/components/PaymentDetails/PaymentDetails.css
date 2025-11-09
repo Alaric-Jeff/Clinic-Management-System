@@ -8,7 +8,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
-  color: white;
+  color: red;
   border: none;
 }
 

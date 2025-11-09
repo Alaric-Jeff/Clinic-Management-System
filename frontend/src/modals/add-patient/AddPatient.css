@@ -30,6 +30,7 @@
   text-align: center;
   padding: 20px 0;
   flex-shrink: 0;
+  position: relative;
 }
 
 .modal-header h2 {
@@ -37,6 +38,27 @@
   font-weight: 700;
   margin: 0;
   letter-spacing: 0.3px;
+}
+
+/* ===== CLOSE BUTTON ===== */
+.close-button {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== FORM CONTAINER ===== */
@@ -228,6 +250,7 @@
 .patient-form::-webkit-scrollbar-thumb:hover {
   background: #b80000;
 }
+
 .input-with-icon {
   position: relative;
   display: flex;

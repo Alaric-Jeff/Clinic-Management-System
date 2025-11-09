@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { getUnsettledBills } from "../../services/medical-bills-services.ts/get-all-unsettled-service.js";
+import { getUnsettledBills } from "../../services/medical-bills-services/get-all-unsettled-service.js";
 
 export async function getUnsettledBillsController(
     request: FastifyRequest,

@@ -16,12 +16,6 @@ export async function getUnsettledBills(fastify: FastifyInstance) {
     try {
         fastify.log.debug("Starting to fetch the unsettled bills from medical bills");
         const result = await fastify.prisma.medicalBill.findMany({
-            where: {
-                OR: [
-                    { paymentStatus: 'partially_paid' },
-                    { paymentStatus: 'unpaid' }
-                ]
-            },
             select: {
                 // Medical bill fields
                 id: true,

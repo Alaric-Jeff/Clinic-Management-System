@@ -202,9 +202,27 @@ const PatientDetail = () => {
     );
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateInput) => {
+    // Accepts ISO strings, timestamps, or Date objects. Returns human readable date or "N/A".
+    if (dateInput === null || dateInput === undefined || dateInput === "") return "N/A";
+
+    let d;
+    if (typeof dateInput === "string" || typeof dateInput === "number") {
+      d = new Date(dateInput);
+    } else if (dateInput instanceof Date) {
+      d = dateInput;
+    } else {
+      // try to coerce unknown shapes (e.g., { date: '...' })
+      try {
+        d = new Date(dateInput);
+      } catch (e) {
+        return "N/A";
+      }
+    }
+
+    if (Number.isNaN(d.getTime())) return "N/A";
+
+    return d.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -325,7 +343,7 @@ const PatientDetail = () => {
               </div>
               <div className="info-col">
                 <label>Register Date</label>
-                <span>{formatDate(patient.createdAt)}</span>
+                <span>{formatDate(patient.registeredAt)}</span>
               </div>
               <div className="info-col">
                 <label>Member Status</label>
