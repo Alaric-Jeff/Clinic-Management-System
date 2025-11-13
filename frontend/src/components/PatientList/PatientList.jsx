@@ -19,6 +19,12 @@ const PatientList = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [dateFilter, setDateFilter] = useState("all");
 
+  // Custom range states
+  const [showCustomRange, setShowCustomRange] = useState(false);
+  const [customDay, setCustomDay] = useState("");
+  const [customMonth, setCustomMonth] = useState("");
+  const [customYear, setCustomYear] = useState("");
+
   // Modal and Toast states
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -162,6 +168,55 @@ const PatientList = () => {
     }
   }, []);
 
+  const fetchCustomRangePatients = async (offset = 0) => {
+    try {
+      setLoading(true);
+
+      // Build the request body based on what's filled
+      const body = {
+        limit: LIMIT,
+        offset: offset
+      };
+
+      // If all fields are filled, send as exact date
+      if (customDay && customMonth && customYear) {
+        const paddedDay = customDay.padStart(2, '0');
+        const paddedMonth = customMonth.padStart(2, '0');
+        body.date = `${paddedDay}/${paddedMonth}/${customYear}`;
+      } 
+      // Otherwise send year, month individually
+      else {
+        if (customYear) body.year = parseInt(customYear);
+        if (customMonth) body.month = parseInt(customMonth);
+      }
+
+      const res = await api.post("/patient/get-patient-based-on-date", body);
+
+      if (res.data.message && res.data.data) {
+        const fetchedPatients = res.data.data.data || [];
+        const pagination = res.data.data.pagination;
+        
+        setPatients(fetchedPatients);
+        setHasNextPage(pagination.hasMore);
+        setHasPreviousPage(pagination.offset > 0);
+        
+        // For custom range, we'll use offset-based pagination
+        setCurrentCursor(null);
+        setPageDirection(null);
+        setCursorHistory([]);
+      } else {
+        setPatients([]);
+        showToast("No patients found for the selected range", 'warning');
+      }
+    } catch (err) {
+      console.error("Error fetching custom range patients:", err);
+      setPatients([]);
+      showToast("Unable to fetch patients for custom range.", 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const searchPatients = useCallback(async (query) => {
     if (!query.trim()) {
       setCursorHistory([]);
@@ -221,32 +276,92 @@ const PatientList = () => {
     setCurrentCursor(null);
     setPageDirection(null);
     setSearchQuery("");
-    fetchPatients(null, "next", filter);
+    
+    if (filter === "custom") {
+      setShowCustomRange(true);
+      setPatients([]);
+    } else {
+      setShowCustomRange(false);
+      setCustomDay("");
+      setCustomMonth("");
+      setCustomYear("");
+      fetchPatients(null, "next", filter);
+    }
+  };
+
+  const handleApplyCustomRange = () => {
+    if (!customYear) {
+      showToast("Please select at least a year", 'warning');
+      return;
+    }
+
+    if (customMonth && !customYear) {
+      showToast("Please select a year when selecting a month", 'warning');
+      return;
+    }
+
+    if (customDay && !customMonth) {
+      showToast("Please select a month when selecting a day", 'warning');
+      return;
+    }
+
+    fetchCustomRangePatients(0);
+  };
+
+  const handleClearCustomRange = () => {
+    setCustomDay("");
+    setCustomMonth("");
+    setCustomYear("");
+    setShowCustomRange(false);
+    setDateFilter("all");
+    setPatients([]);
+    fetchPatients(null, "next", "all");
   };
 
   const handleNextPage = () => {
     if (hasNextPage && patients.length > 0) {
-      const lastPatient = patients[patients.length - 1];
-      const nextCursor = `${lastPatient.createdAt}|${lastPatient.id}`;
-      setCursorHistory((prev) => [...prev, currentCursor]);
-      fetchPatients(nextCursor, "next", dateFilter);
+      if (dateFilter === "custom") {
+        // For custom range, use offset-based pagination
+        const currentOffset = (cursorHistory.length) * LIMIT;
+        fetchCustomRangePatients(currentOffset + LIMIT);
+        setCursorHistory(prev => [...prev, currentOffset]);
+      } else {
+        // For regular pagination, use cursor-based
+        const lastPatient = patients[patients.length - 1];
+        const nextCursor = `${lastPatient.createdAt}|${lastPatient.id}`;
+        setCursorHistory((prev) => [...prev, currentCursor]);
+        fetchPatients(nextCursor, "next", dateFilter);
+      }
     }
   };
 
   const handlePreviousPage = () => {
-    if (hasPreviousPage && cursorHistory.length > 0) {
-      const newHistory = [...cursorHistory];
-      const prevCursor = newHistory.pop();
-      setCursorHistory(newHistory);
-      if (prevCursor === null) {
-        fetchPatients(null, "next", dateFilter);
+    if (hasPreviousPage) {
+      if (dateFilter === "custom") {
+        // For custom range, use offset-based pagination
+        if (cursorHistory.length > 0) {
+          const newHistory = [...cursorHistory];
+          const prevOffset = newHistory.pop();
+          setCursorHistory(newHistory);
+          fetchCustomRangePatients(prevOffset);
+        }
       } else {
-        fetchPatients(prevCursor, "next", dateFilter);
+        // For regular pagination, use cursor-based
+        if (cursorHistory.length > 0) {
+          const newHistory = [...cursorHistory];
+          const prevCursor = newHistory.pop();
+          setCursorHistory(newHistory);
+          if (prevCursor === null) {
+            fetchPatients(null, "next", dateFilter);
+          } else {
+            fetchPatients(prevCursor, "next", dateFilter);
+          }
+        } else {
+          const firstPatient = patients[0];
+          const prevCursor = `${firstPatient.createdAt}|${firstPatient.id}`;
+          fetchPatients(prevCursor, "prev", dateFilter);
+        }
       }
-    } else if (hasPreviousPage) {
-      const firstPatient = patients[0];
-      const prevCursor = `${firstPatient.createdAt}|${firstPatient.id}`;
-      fetchPatients(prevCursor, "prev", dateFilter);
     }
   };
 
@@ -275,6 +390,34 @@ const PatientList = () => {
       ? nameA.localeCompare(nameB)
       : nameB.localeCompare(nameA);
   });
+
+  // Generate year options (current year and 10 years back)
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - i);
+
+  // Generate month options
+  const monthOptions = [
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
+  ];
+
+  // Generate day options based on selected month and year
+  const getDaysInMonth = () => {
+    if (!customMonth || !customYear) return 31;
+    return new Date(parseInt(customYear), parseInt(customMonth), 0).getDate();
+  };
+
+  const dayOptions = Array.from({ length: getDaysInMonth() }, (_, i) => i + 1);
 
   useEffect(() => {
     fetchPatients(null, "next", dateFilter);
@@ -365,12 +508,72 @@ const PatientList = () => {
           <option value="today">Today</option>
           <option value="week">This Week</option>
           <option value="month">This Month</option>
+          <option value="custom">Custom Range</option>
         </select>
 
         <button className="adds" onClick={() => setShowAddPatient(true)}>
           + Add Patient
         </button>
       </div>
+
+      {/* Custom Range Controls */}
+      {showCustomRange && (
+        <div className="custom-range-container">
+          <div className="custom-range-controls">
+            <select
+              value={customYear}
+              onChange={(e) => setCustomYear(e.target.value)}
+              className="custom-select"
+            >
+              <option value="">Select Year</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={customMonth}
+              onChange={(e) => setCustomMonth(e.target.value)}
+              className="custom-select"
+              disabled={!customYear}
+            >
+              <option value="">Select Month (Optional)</option>
+              {monthOptions.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={customDay}
+              onChange={(e) => setCustomDay(e.target.value)}
+              className="custom-select"
+              disabled={!customMonth || !customYear}
+            >
+              <option value="">Select Day (Optional)</option>
+              {dayOptions.map((day) => (
+                <option key={day} value={day}>
+                  {day}
+                </option>
+              ))}
+            </select>
+
+            <button 
+              className="apply-custom-btn" 
+              onClick={handleApplyCustomRange}
+              disabled={!customYear}
+            >
+              Apply
+            </button>
+            <button className="clear-custom-btn" onClick={handleClearCustomRange}>
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="table-wrapper">
         <table>
@@ -409,6 +612,8 @@ const PatientList = () => {
                 <td colSpan="3" className="no-data">
                   {searchQuery
                     ? "No patients found matching your search"
+                    : showCustomRange
+                    ? "Select a date range and click Apply"
                     : "No records found"}
                 </td>
               </tr>

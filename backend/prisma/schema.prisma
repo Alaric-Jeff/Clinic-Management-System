@@ -74,6 +74,20 @@ enum PaymentStatus {
 
 // ---------------- MODELS ----------------
 
+model Sessions {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  account   Account  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("sessions")
+}
+
+
+
 model Account {
   id                    String                 @id @default(cuid())
   firstName             String
@@ -85,6 +99,7 @@ model Account {
   status                AccountStatus          @default(pending)
   // Relations
   medicalDocumentations MedicalDocumentation[]
+  sessions Sessions?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

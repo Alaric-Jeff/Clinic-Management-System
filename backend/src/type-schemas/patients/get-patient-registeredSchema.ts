@@ -1,4 +1,4 @@
-import { Type, type Static } from "@fastify/type-provider-typebox";
+import { Type, type Static } from "@sinclair/typebox";
 
 export const getPatientBasedOnDateSchema = Type.Object({
   year: Type.Optional(Type.Integer({ minimum: 1900, maximum: 2100 })),

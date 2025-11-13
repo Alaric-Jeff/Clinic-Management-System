@@ -13,7 +13,12 @@ import { getFemaleCountController } from "../controllers/patient-controllers/get
 import { addNoteController } from "../controllers/patient-controllers/add-note-controller.js";
 import { getAgeRatioController } from "../controllers/patient-controllers/get-patient-ratio.js";
 import { findExistingNameController } from "../controllers/patient-controllers/find-existing-name-controller.js";
+import { getPatientBasedOnDateController } from "../controllers/patient-controllers/get-patient-based-on-date-controller.js";
+
 import { Role } from "@prisma/client";
+
+import { getPatientBasedOnDateSchema } from "../type-schemas/patients/get-patient-registeredSchema.js";
+
 import {
     createPatientSchema,
     createPatientSuccessResponse,
@@ -34,6 +39,7 @@ import  {
 import { addNoteSchema } from "../type-schemas/patients/add-note-schema.js";
 
 import { Type } from "@sinclair/typebox";
+import { getPatientsByDate } from "../services/patient-services/get-patient-date-registered.js";
 
 export async function patientRoutes(fastify: FastifyInstance) {
     /**
@@ -303,8 +309,66 @@ fastify.route({
     })
     //example:
 
-}
+fastify.route({
+  method: 'POST',
+  url: '/get-patient-based-on-date',
+  schema: {
+    body: {
+      type: 'object',
+      properties: {
+        year: { type: 'integer', minimum: 1900, maximum: 2100 },
+        month: { type: 'integer', minimum: 1, maximum: 12 },
+        week: { type: 'integer', minimum: 1, maximum: 5 },
+        date: { type: 'string', pattern: '^\\d{2}/\\d{2}/\\d{4}$' },
+        limit: { type: 'integer', minimum: 1, maximum: 500, default: 100 },
+        offset: { type: 'integer', minimum: 0, default: 0 }
+      },
+      additionalProperties: false
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+          data: {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    firstName: { type: 'string' },
+                    lastName: { type: 'string' },
+                    createdAt: { type: 'string' }
+                  },
+                  required: ['id', 'firstName', 'lastName', 'createdAt']
+                }
+              },
+              pagination: {
+                type: 'object',
+                properties: {
+                  total: { type: 'integer' },
+                  limit: { type: 'integer' },
+                  offset: { type: 'integer' },
+                  hasMore: { type: 'boolean' }
+                },
+                required: ['total', 'limit', 'offset', 'hasMore']
+              }
+            },
+            required: ['data', 'pagination']
+          }
+        },
+        required: ['message', 'data']
+      }
+    }
+  },
+  preHandler: requireRole([Role.admin, Role.encoder]),
+  handler: getPatientBasedOnDateController
+});
 
+}
 /**
  * EXAMPLE JSON PAYLOADS
  * 

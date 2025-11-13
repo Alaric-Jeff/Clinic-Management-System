@@ -63,7 +63,7 @@ export async function accountLoginController(
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 15 * 60, // 15 minutes (in seconds, not ms)
+      maxAge: 45 * 60, // 45 minutes (in seconds, not ms)
     });
 
     /**

@@ -50,8 +50,6 @@ export async function loginAccount(
       throw new Error("Invalid email or password");
     }
 
-    fastify.log.info("Successful logging in, now we can return a payload to be stored in jwt.");
-
     // We will only return these as payload to make it light but useful
     return {
       id: account.id,

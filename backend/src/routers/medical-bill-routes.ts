@@ -6,6 +6,9 @@ import { createMedicalBillController } from "../controllers/medical-bill-control
 import { getUnsettledBillsController } from "../controllers/medical-bill-controller.ts/get-unsettled-bills-controller.js";
 import { updateMedicalBillController } from "../controllers/medical-bill-controller.ts/update-medical-bill-controller.js";
 import { updatePaymentController } from "../controllers/medical-bill-controller.ts/update-payment-controller.js";
+import { getUnpaidMedicalController } from "../controllers/medical-bill-controller.ts/get-unpaid-medical-bill-controller.js";
+import { getPartiallyPaidMedicalController } from "../controllers/medical-bill-controller.ts/get-partially-paid-controller.js";
+import { getTotalMedicalBillsParams } from "../type-schemas/medical-bills/get-total-medical-bills-schemas.js";
 import {
     createMedicalBillSchema,
     createMedicalBillResponseSchema,
@@ -62,5 +65,23 @@ export async function medicalBillRoutes(
             body: settleBillRequestSchema
         }, preHandler: requireRole([Role.admin, Role.encoder]),
         handler: updatePaymentController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-unpaid-bills',
+        schema: {
+            querystring: getTotalMedicalBillsParams
+        },preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getUnpaidMedicalController
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/get-partially-paid-bills',
+        schema: {
+            querystring: getTotalMedicalBillsParams
+        },preHandler: requireRole([Role.admin, Role.encoder]),
+        handler: getUnpaidMedicalController
     })
 }

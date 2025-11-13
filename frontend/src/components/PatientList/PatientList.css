@@ -171,29 +171,95 @@
   background-color: #f5f5f5;
 }
 
-/* CUSTOM DATE RANGE */
-.custom-range {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+/* CUSTOM RANGE CONTAINER */
+.custom-range-container {
+  background: #ffffff;
+  border: 2px solid #6b0000;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
-.custom-range select {
-  padding: 10px 14px;
+.custom-range-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.custom-select {
+  padding: 10px 16px;
   border: 2px solid #6b0000;
   border-radius: 20px;
   background: #ffffff;
   color: #400000;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   outline: none;
   cursor: pointer;
-  transition: all 0.25s ease;
-  min-width: 80px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  min-width: 140px;
 }
 
-.custom-range select:focus {
+.custom-select:hover:not(:disabled) {
+  border-color: #8b0000;
+}
+
+.custom-select:focus {
   border-color: #b30000;
-  box-shadow: 0 0 6px rgba(179, 0, 0, 0.3);
+  box-shadow: 0 0 0 3px rgba(179, 0, 0, 0.1);
+}
+
+.custom-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+.apply-custom-btn {
+  background: linear-gradient(135deg, #8b0000 0%, #700000 100%);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(112, 0, 0, 0.3);
+  min-width: 100px;
+}
+
+.apply-custom-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a00000 0%, #8b0000 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(112, 0, 0, 0.4);
+}
+
+.apply-custom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clear-custom-btn {
+  background: #ffffff;
+  color: #8b0000;
+  border: 2px solid #8b0000;
+  padding: 10px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.clear-custom-btn:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(139, 0, 0, 0.2);
 }
 
 /* ADD PATIENT BUTTON */
@@ -329,7 +395,6 @@ tbody tr:hover {
   background: linear-gradient(135deg, #b30000 0%, #8b0000 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(129, 0, 0, 0.3);
-  /* Removed blue border effect */
   border-color: transparent !important;
   outline: none;
 }
@@ -422,11 +487,17 @@ tbody tr:hover {
     margin-left: 0;
   }
 
-  .custom-range {
+  .custom-range-container {
+    padding: 15px;
+  }
+
+  .custom-range-controls {
     flex-direction: column;
   }
 
-  .custom-range select {
+  .custom-select,
+  .apply-custom-btn,
+  .clear-custom-btn {
     width: 100%;
   }
 
@@ -436,8 +507,8 @@ tbody tr:hover {
     padding: 10px 8px;
   }
 
-  .view-btn,
-  .archive-btn {
+  .view-btnxx,
+  .archive-btnxx {
     padding: 6px 14px;
     font-size: 0.8rem;
     margin: 3px;

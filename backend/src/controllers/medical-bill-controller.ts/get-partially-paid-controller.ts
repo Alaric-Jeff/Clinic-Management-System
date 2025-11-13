@@ -6,7 +6,7 @@ import type {
   getMedicalBillsPaginatedType,
 } from "../../type-schemas/medical-bills/get-total-medical-bills-schemas.js";
 
-export async function getUnpaidMedicalController(
+export async function getPartiallyPaidMedicalController(
     request: FastifyRequest<{Querystring: getTOtalMedicalBillsType}>,
     reply: FastifyReply
 ): Promise<getMedicalBillsPaginatedType>{
