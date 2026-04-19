@@ -26,7 +26,7 @@ const getCookieConfig = () => {
 
 const cookiePlugin: FastifyPluginAsync = async (fastify) => {
   const config = getCookieConfig()
-  fastify.register(cookie, config)
+  await fastify.register(cookie, config)
 }
 
 export default cookiePlugin

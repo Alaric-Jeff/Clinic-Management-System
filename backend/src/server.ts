@@ -14,26 +14,23 @@ import cors from '@fastify/cors';
 
 dotenv.config();
 
-// Standard Fastify initialization without manual SSL checks
 const server = Fastify({
     logger: true,
 }).withTypeProvider<TypeBoxTypeProvider>();
 
 async function startServer() {
   try {
-    // Register plugins
-    server.register(prismaPlugin);
-    server.register(sensiblePlug);
+    await server.register(prismaPlugin);
+    await server.register(sensiblePlug);
     
-    // CORS configuration
-    server.register(cors, {
+    await server.register(cors, {
       origin: [String(process.env.APP_ORIGIN)],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     });
     
-    server.register(cookiePlugin);
-    server.register(fjwt, {
+    await server.register(cookiePlugin);
+    await server.register(fjwt, {
       secret: process.env.JWT_SECRET || 'Secret',
       sign: {
         iss: process.env.JWT_ISSUER || 'clinic-app',
@@ -45,20 +42,17 @@ async function startServer() {
       },
     });
     
-    server.register(rateLimitPlugin);
-    server.register(mailerPlugin);
-    server.register(compressionPlugin);
-    server.register(routeInit);
+    await server.register(rateLimitPlugin);
+    await server.register(mailerPlugin);
+    await server.register(compressionPlugin);
+    await server.register(routeInit);
 
     server.addHook('onReady', async () => {
       setupColdArchiveCron(server);
       server.log.info('Cron jobs initialized');
     });
 
-    // Cloud platforms usually inject 'PORT', fallback to HTTP_PORT or 3000
     const port = Number(process.env.PORT) || Number(process.env.HTTP_PORT) || 3000;
-    
-    // Enforce 0.0.0.0 as the fallback host for cloud container accessibility
     const host = String(process.env.HOST || '0.0.0.0');
 
     await server.listen({ port, host });
