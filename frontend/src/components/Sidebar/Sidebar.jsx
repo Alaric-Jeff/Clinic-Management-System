@@ -22,7 +22,7 @@ import {
 import api from "../../axios/api";
 import ConfirmModal from "../ConfirmModal/ConfirmModal";
 import Toast from "../Toast/Toast";
-import "./Sidebar.css";
+import "./sidebar.css";
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
