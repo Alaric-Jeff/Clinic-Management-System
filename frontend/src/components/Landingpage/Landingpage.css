@@ -59,7 +59,7 @@
 /* ===================== HERO SECTION ===================== */
 .hero-section {
   height: 100vh;
-  background: url("./src/assets/BackGround.webp") center/cover no-repeat;
+  background: url("../../../public/assets/BackGround.webp") center/cover no-repeat;
   display: flex;
   align-items: center;
   padding-left: 10%;
