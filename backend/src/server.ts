@@ -48,7 +48,7 @@ async function startServer() {
     server.register(rateLimitPlugin);
     server.register(mailerPlugin);
     server.register(compressionPlugin);
-    server.register(routeInit, {prefix: "api/"});
+    server.register(routeInit);
 
     server.addHook('onReady', async () => {
       setupColdArchiveCron(server);

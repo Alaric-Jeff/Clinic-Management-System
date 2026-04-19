@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://clinic-management-system-1n1l.vercel.app/api/",
+  baseURL: "https://clinic-management-system-1n1l.vercel.app/api/v1",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
