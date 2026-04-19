@@ -13,7 +13,7 @@ import { setupColdArchiveCron } from './hooks/cron-cold-archive.js';
 import cors from '@fastify/cors';
 
 dotenv.config();
-
+//stuffs are breaking for weird reason
 const server = Fastify({
     logger: true,
 }).withTypeProvider<TypeBoxTypeProvider>();
