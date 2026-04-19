@@ -10,7 +10,6 @@ datasource db {
 
 generator erd {
   provider = "prisma-erd-generator"
-  output   = "./ERD.png" // or "./ERD.png" if you prefer a PNG file
 }
 
 // ---------------- ENUMS ----------------
