@@ -18,7 +18,7 @@ const getCookieConfig = () => {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
+      sameSite: "none" as const,
       maxAge: parseInt(process.env.COOKIE_MAX_AGE || '86400000')
     }
   }
