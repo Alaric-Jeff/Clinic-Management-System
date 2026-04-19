@@ -8,9 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL") // Add this line
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-}
 
 // ---------------- ENUMS ----------------
 
