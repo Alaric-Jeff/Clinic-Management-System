@@ -44,12 +44,13 @@
     "simple-statistics": "^7.8.8"
   },
   "devDependencies": {
-    "@prisma/client": "^6.18.0",
+    "@prisma/client": "^6.19.3",
     "@types/bcrypt": "^6.0.0",
     "@types/ms": "^2.1.0",
     "@types/node": "^24.5.2",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.1",
+    "@vercel/node": "^5.7.11",
     "prisma": "^6.16.2",
     "prisma-erd-generator": "^2.1.0",
     "ts-node": "^10.9.2",
