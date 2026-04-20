@@ -10,12 +10,12 @@ const prismaPlugin: FastifyPluginAsync = async (fastify) => {
   try {
     await prisma.$connect()
     fastify.log.info('✅ Database connected')
-  } catch (err: any) {
-    fastify.log.error('❌ Failed to connect to the database:', err)
+  } catch (err: unknown) {
+    fastify.log.error('❌ Failed to connect to the database:')
     process.exit(1)
   }
 
-  fastify.decorate('prisma', prisma)
+  fastify.decorate('prisma', prisma as any)
 
   fastify.addHook('onClose', async () => {
     await prisma.$disconnect()

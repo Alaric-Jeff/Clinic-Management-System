@@ -13,7 +13,9 @@ declare module 'fastify' {
       unauthorized: (message?: string) => Error;
       forbidden: (message?: string) => Error;
       notFound: (message?: string) => Error;
+      conflict: (message?: string) => Error;
       internalServerError: (message?: string) => Error;
+      HttpError: new (statusCode: number, message?: string) => Error;
     }
   }
 }
