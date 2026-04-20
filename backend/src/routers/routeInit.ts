@@ -13,7 +13,7 @@ import { manualArchiveRoute } from "./cron-routes.js";
 import { Role } from "@prisma/client";
 import { auditLogRoutes } from "./auditLogs.js";
 
-const PREFIX = "/backend/api/v1";
+const PREFIX = "/api/v1";
 
 const routeInit = async (fastify: FastifyInstance) => {
     fastify.get('/', async () => {
