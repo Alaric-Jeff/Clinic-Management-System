@@ -1,12 +1,19 @@
 {
+  "version": 2,
+  "functions": {
+    "backend/api/index.ts": {
+      "runtime": "@vercel/node",
+      "includeFiles": "backend/prisma/**"
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/v1/(.*)",
-      "destination": "/backend/dist/server.js"
+      "source": "/api/v1/:match*",
+      "destination": "/backend/api/index.ts"
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/dist/index.html"
+      "destination": "/frontend/index.html"
     }
   ]
 }
