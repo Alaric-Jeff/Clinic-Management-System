@@ -96,9 +96,6 @@ export default function LoginPage() {
           <div className="login-form-fields">
             {/* Email Input */}
             <div className="login-input-group">
-              <div className="login-icon">
-                <Mail size={35} strokeWidth={2.5} />
-              </div>
               <input
                 type="email"
                 value={email}
@@ -111,9 +108,6 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div className="login-input-group">
-              <div className="login-icon">
-                <Lock size={32} strokeWidth={2.5} />
-              </div>
               <div className="login-input-wrapper">
                 <input
                   type={showPassword ? 'text' : 'password'}
