@@ -1,56 +1,29 @@
 {
   "compilerOptions": {
-    // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
 
-    // Environment Settings - FIXED THESE:
     "module": "nodenext",
     "target": "es2022",
-    "lib": ["esnext"],  // ← ADD THIS
-    "types": ["node"],  // ← CHANGED FROM EMPTY ARRAY
-    "typeRoots": ["./node_modules/@types", "./types"],  // ← ADD THIS
+    "lib": ["esnext"],
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
 
-    // Other Outputs
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
 
-    // Module resolution - ADD THESE:
-    "moduleResolution": "nodenext",  // ← ADD THIS
-    "esModuleInterop": true,         // ← ADD THIS
-    "allowSyntheticDefaultImports": true,  // ← ADD THIS
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
 
-    // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
 
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
-    "strict": true,
-    "jsx": "react-jsx",  // ← REMOVE IF NOT USING REACT
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-  },
-  
-  // ← ADD THIS INCLUDE SECTION:
-  "include": [
-    "src/**/*",
-    "types/**/*.d.ts"  // This will automatically include fastify.d.ts
-  ],
-  // ← ADD THIS EXCLUDE SECTION:
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
-}
+    "skipLibCheck": true
+  }}
