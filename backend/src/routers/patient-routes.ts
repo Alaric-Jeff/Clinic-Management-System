@@ -297,8 +297,6 @@ fastify.route({
         method: 'GET',
         url: '/get-total-patients',
         schema: {
-            description: 'Get paginated list of patients with cursor-based pagination',
-            tags: ['Patients'],
             querystring: getTotalPatientsParams,
             response: {
                 200: totalPatientPaginatedResponseSchema
