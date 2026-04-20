@@ -13,13 +13,15 @@ import { manualArchiveRoute } from "./cron-routes.js";
 import { Role } from "@prisma/client";
 import { auditLogRoutes } from "./auditLogs.js";
 
+const PREFIX = "/backend/api/v1";
+
 const routeInit = async (fastify: FastifyInstance) => {
     fastify.get('/', async () => {
         return { message: 'Server is running!' }
     });
 
     fastify.get(
-    "/api/v1/validate",
+    `${PREFIX}/validate`,
     {
       preHandler: requireRole([Role.admin, Role.encoder]), 
     },
@@ -35,16 +37,16 @@ const routeInit = async (fastify: FastifyInstance) => {
         return { status: 'OK', timestamp: new Date().toISOString() }
     });
 
-    fastify.register(accountRoutes, { prefix: "/api/v1/account" });
-    fastify.register(patientRoutes, {prefix: "/api/v1/patient"});
-    fastify.register(medicalServiceRoutes, {prefix: "/api/v1/service"});
-    fastify.register(medicalBillRoutes, {prefix: "/api/v1/bills"});
-    fastify.register(medicalDocumentationRoutes, {prefix: "/api/v1/document"});
-    fastify.register(doctorRoutes, {prefix: "/api/v1/doctors"});
-    fastify.register(auditLogRoutes, {prefix: "/api/v1/logs"})
-    fastify.register(statisticRoutes, {prefix: "/api/v1/statistics"})
-    fastify.register(searchEngineRoutes, {prefix: "/api/v1/search"})
-    fastify.register(manualArchiveRoute, {prefix: "/api/v1/cron"})
+    fastify.register(accountRoutes,              { prefix: `${PREFIX}/account` });
+    fastify.register(patientRoutes,              { prefix: `${PREFIX}/patient` });
+    fastify.register(medicalServiceRoutes,       { prefix: `${PREFIX}/service` });
+    fastify.register(medicalBillRoutes,          { prefix: `${PREFIX}/bills` });
+    fastify.register(medicalDocumentationRoutes, { prefix: `${PREFIX}/document` });
+    fastify.register(doctorRoutes,               { prefix: `${PREFIX}/doctors` });
+    fastify.register(auditLogRoutes,             { prefix: `${PREFIX}/logs` });
+    fastify.register(statisticRoutes,            { prefix: `${PREFIX}/statistics` });
+    fastify.register(searchEngineRoutes,         { prefix: `${PREFIX}/search` });
+    fastify.register(manualArchiveRoute,         { prefix: `${PREFIX}/cron` });
 };
 
 export default routeInit;
