@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import prismaPlugin from './plugins/prisma-plug.js';
 import sensiblePlug from '@fastify/sensible';
-import cookiePlugin from './plugins/cookies-plug.js';
+import cookie from '@fastify/cookie';
 import fjwt from '@fastify/jwt';
 import routeInit from './routers/routeInit.js';
 import compressionPlugin from './plugins/compression-route-plug.js';
@@ -29,8 +29,21 @@ export async function buildApp() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
-//just added this for serverless
-  await server.register(cookiePlugin);
+
+  await server.register(cookie, {
+    secret: process.env.NODE_ENV === 'production'
+      ? process.env.PRODUCTION_SECRET_COOKIE
+      : process.env.DEVELOPMENT_SECRET_COOKIE,
+    hook: 'onRequest',
+    parseOptions: {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none' as const,
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE || '86400000')
+    }
+  });
+
   await server.register(fjwt, {
     secret: process.env.JWT_SECRET || 'Secret',
     sign: {
