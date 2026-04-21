@@ -2,7 +2,7 @@
   "name": "Clinic-Management-System",
   "version": "1.0.0",
   "description": "Clinic Management System for leonardo medical services.",
-  "main": "./src/server.ts",
+  "main": "./api/index.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
@@ -19,7 +19,6 @@
   "keywords": [],
   "author": "Jeffrey M. Aspiras",
   "license": "GPL-3.0-only",
-  "type": "module",
   "dependencies": {
     "@fastify/compress": "^8.1.0",
     "@fastify/cookie": "11.0.2",
@@ -31,6 +30,7 @@
     "@fastify/sensible": "^6.0.3",
     "@fastify/swagger": "^9.5.2",
     "@fastify/type-provider-typebox": "^6.0.0",
+    "@prisma/client": "^6.18.0",
     "@sinclair/typebox": "^0.34.41",
     "bcrypt": "^6.0.0",
     "date-fns": "^4.1.0",
@@ -44,13 +44,12 @@
     "simple-statistics": "^7.8.8"
   },
   "devDependencies": {
-    "@prisma/client": "^6.19.3",
     "@types/bcrypt": "^6.0.0",
     "@types/ms": "^2.1.0",
     "@types/node": "^24.5.2",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^7.0.1",
-    "@vercel/node": "^5.7.11",
+    "@vercel/node": "^5.3.2",
     "prisma": "^6.16.2",
     "prisma-erd-generator": "^2.1.0",
     "ts-node": "^10.9.2",
