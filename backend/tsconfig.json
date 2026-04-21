@@ -13,8 +13,7 @@
     "declaration": true,
     "declarationMap": true,
 
-    "moduleResolution": "Node",
-    "ignoreDeprecations": "6.0",
+    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
