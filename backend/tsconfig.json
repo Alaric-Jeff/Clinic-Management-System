@@ -27,11 +27,11 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "api/**/*",
-    "server.ts"
-  ],
+ "include": [
+  "src/**/*",
+  "api/**/*",
+  "server.ts"
+],
   "exclude": [
     "node_modules",
     "dist"
