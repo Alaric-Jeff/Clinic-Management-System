@@ -29,7 +29,7 @@ export async function buildApp() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
-
+//just added this for serverless
   await server.register(cookiePlugin);
   await server.register(fjwt, {
     secret: process.env.JWT_SECRET || 'Secret',
