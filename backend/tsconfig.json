@@ -3,7 +3,8 @@
     "rootDir": ".",
     "outDir": "./dist",
 
-    "module": "CommonJS",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "es2022",
     "lib": ["esnext"],
     "types": ["node"],
@@ -13,7 +14,6 @@
     "declaration": true,
     "declarationMap": true,
 
-    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
