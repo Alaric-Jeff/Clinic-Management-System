@@ -3,7 +3,7 @@
     "rootDir": ".",
     "outDir": "./dist",
 
-    "module": "nodenext",
+    "module": "CommonJS",
     "target": "es2022",
     "lib": ["esnext"],
     "types": ["node"],
@@ -13,7 +13,7 @@
     "declaration": true,
     "declarationMap": true,
 
-    "moduleResolution": "nodenext",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
@@ -22,7 +22,7 @@
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
 
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "moduleDetection": "force",
     "skipLibCheck": true
